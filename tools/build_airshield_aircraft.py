@@ -689,6 +689,19 @@ def create_asymmetric_fuselage(
     mesh = bpy.data.meshes.new(f"{name} mesh")
     mesh.from_pydata(vertices, [], faces)
     mesh.update()
+    # Preserve the four longitudinal shoulder/chine breaks that define the
+    # composite Ximango fuselage section. Without these split normals, fully
+    # smooth shading makes even a superelliptic body read as a round tube.
+    chine_indices = {
+        round(ring_segments * fraction) % ring_segments
+        for fraction in (0.125, 0.375, 0.625, 0.875)
+    }
+    for edge in mesh.edges:
+        first, second = edge.vertices
+        first_index = first % ring_segments
+        second_index = second % ring_segments
+        if first_index == second_index and first_index in chine_indices:
+            edge.use_edge_sharp = True
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
     assign(obj, mat)
@@ -1032,24 +1045,24 @@ def create_aircraft() -> bpy.types.Object:
             # The forward spinner transition remains locally rounded.  From
             # the cowling rearward, lower exponents create flatter shoulders,
             # defined side walls and a shallower belly instead of a long tube.
-            (-3.84, 0.195, 0.160, 0.145, 0.000, 0.86),
-            (-3.62, 0.305, 0.220, 0.185, 0.005, 0.70),
-            (-3.30, 0.380, 0.250, 0.235, 0.010, 0.62),
-            (-2.92, 0.425, 0.260, 0.265, 0.018, 0.56),
-            (-2.50, 0.455, 0.255, 0.295, 0.026, 0.52),
-            (-2.08, 0.480, 0.245, 0.315, 0.034, 0.50),
-            (-1.62, 0.488, 0.235, 0.325, 0.040, 0.50),
-            (-1.18, 0.455, 0.220, 0.295, 0.045, 0.54),
-            (-0.76, 0.410, 0.205, 0.255, 0.048, 0.58),
-            (-0.34, 0.355, 0.185, 0.215, 0.046, 0.62),
-            (0.18, 0.305, 0.165, 0.180, 0.038, 0.66),
-            (0.78, 0.252, 0.148, 0.156, 0.024, 0.70),
-            (1.48, 0.205, 0.132, 0.132, 0.002, 0.74),
-            (2.18, 0.160, 0.112, 0.110, -0.025, 0.78),
-            (2.82, 0.118, 0.094, 0.086, -0.054, 0.82),
-            (3.36, 0.086, 0.076, 0.066, -0.082, 0.86),
-            (3.72, 0.060, 0.058, 0.052, -0.105, 0.90),
-            (3.90, 0.042, 0.046, 0.043, -0.120, 0.94),
+            (-3.84, 0.195, 0.165, 0.150, 0.000, 0.82),
+            (-3.62, 0.305, 0.235, 0.205, 0.005, 0.62),
+            (-3.30, 0.390, 0.285, 0.270, 0.010, 0.50),
+            (-2.92, 0.445, 0.305, 0.310, 0.016, 0.44),
+            (-2.50, 0.475, 0.300, 0.350, 0.024, 0.42),
+            (-2.08, 0.495, 0.290, 0.370, 0.032, 0.42),
+            (-1.62, 0.500, 0.280, 0.380, 0.038, 0.42),
+            (-1.18, 0.465, 0.250, 0.330, 0.042, 0.46),
+            (-0.76, 0.405, 0.218, 0.270, 0.044, 0.50),
+            (-0.34, 0.340, 0.188, 0.215, 0.040, 0.56),
+            (0.18, 0.285, 0.158, 0.172, 0.030, 0.62),
+            (0.78, 0.232, 0.138, 0.142, 0.014, 0.68),
+            (1.48, 0.188, 0.122, 0.120, -0.006, 0.72),
+            (2.18, 0.148, 0.104, 0.100, -0.030, 0.76),
+            (2.82, 0.110, 0.088, 0.080, -0.058, 0.80),
+            (3.36, 0.082, 0.072, 0.062, -0.084, 0.84),
+            (3.72, 0.058, 0.055, 0.049, -0.106, 0.88),
+            (3.90, 0.042, 0.045, 0.042, -0.120, 0.92),
         ],
         IAF_GRAY,
     )
@@ -1471,8 +1484,8 @@ def setup_scene() -> None:
     world_links = world.node_tree.links
     bg = world_nodes.get("Background")
     environment = world_nodes.new("ShaderNodeTexEnvironment")
-    environment.name = "CC0 cloudy hangar apron environment"
-    environment.image = bpy.data.images.load(str(ROOT / "environments" / "apron-cloudy-1k.hdr"), check_existing=True)
+    environment.name = "CC0 neutral studio environment"
+    environment.image = bpy.data.images.load(str(ROOT / "environments" / "studio-softbox-1k.hdr"), check_existing=True)
     environment.interpolation = "Linear"
     world_links.new(environment.outputs["Color"], bg.inputs["Color"])
     bg.inputs["Strength"].default_value = 0.62

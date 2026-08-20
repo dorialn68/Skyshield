@@ -708,19 +708,9 @@ button {
   --poster-color: transparent;
 }
 
-.hero-model[data-lighting="hangar"] model-viewer {
-  background:
-    radial-gradient(circle at 44% 35%, #9ca7aa 0, #5f6a6e 46%, #303a3e 100%);
-}
-
-.hero-model[data-lighting="inspection"] model-viewer {
-  background:
-    radial-gradient(circle at 50% 38%, #edf1f0 0, #cdd5d5 48%, #9ba8aa 100%);
-}
-
 .hero-model[data-lighting="studio"] model-viewer {
   background:
-    radial-gradient(circle at 48% 38%, #f5f6f4 0, #d8dcda 52%, #aeb6b5 100%);
+    radial-gradient(ellipse at 48% 38%, #f7f8f7 0, #dfe3e1 50%, #afb8b7 100%);
 }
 
 .hero-model[data-lighting="daylight"] model-viewer {
@@ -733,6 +723,16 @@ button {
     radial-gradient(circle at 62% 28%, #dce8ed 0, #abc3cf 46%, #7f98a4 100%);
 }
 
+.hero-model[data-lighting="golden"] model-viewer {
+  background:
+    radial-gradient(circle at 22% 38%, #f5d5aa 0, #9fb2bf 46%, #5e7280 100%);
+}
+
+.hero-model[data-lighting="night"] model-viewer {
+  background:
+    radial-gradient(circle at 68% 24%, #637789 0, #273947 48%, #101b24 100%);
+}
+
 .hero-model model-viewer::part(default-progress-bar) {
   display: none;
 }
@@ -741,7 +741,7 @@ button {
   --min-hotspot-opacity: 0.16;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 0;
   min-width: 0;
   padding: 0;
   color: #f7fafb;
@@ -753,7 +753,11 @@ button {
   white-space: nowrap;
   cursor: pointer;
   transform: translate(-15px, -15px);
-  transition: opacity 180ms ease, filter 180ms ease;
+  transition: opacity 180ms ease, filter 180ms ease, transform 180ms ease;
+}
+
+.model-hotspot[hidden] {
+  display: none;
 }
 
 .model-hotspot:not([data-visible]) {
@@ -785,6 +789,33 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 50%;
   box-shadow: 0 0 0 5px rgba(23, 101, 143, 0.20), 0 5px 16px rgba(0, 0, 0, 0.25);
+  transition: width 180ms ease, height 180ms ease, flex-basis 180ms ease, background 180ms ease;
+}
+
+.hero-model[data-hotspot-density="overview"] .model-hotspot {
+  transform: translate(-12px, -12px);
+}
+
+.hero-model[data-hotspot-density="overview"] .hotspot-index {
+  width: 24px;
+  height: 24px;
+  flex-basis: 24px;
+  font-size: 8px;
+}
+
+.hero-model[data-hotspot-density="systems"] .model-hotspot {
+  transform: translate(-14px, -14px);
+}
+
+.hero-model[data-hotspot-density="systems"] .hotspot-index {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+
+.model-hotspot-aux .hotspot-index {
+  border-style: dashed;
+  color: #b8d9e8;
 }
 
 .hotspot-index::after {
@@ -803,12 +834,32 @@ button {
 }
 
 .hotspot-label {
+  position: absolute;
+  inset-inline-start: calc(100% + 8px);
+  top: 50%;
   padding: 7px 9px;
   color: #fff;
   background: rgba(10, 26, 38, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.26);
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.20);
   backdrop-filter: blur(7px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(-5px);
+  transition: opacity 150ms ease, visibility 150ms ease, transform 150ms ease;
+}
+
+.model-hotspot:hover .hotspot-label,
+.model-hotspot:focus-visible .hotspot-label,
+.model-hotspot.active .hotspot-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+html[dir="rtl"] .hotspot-label {
+  direction: rtl;
 }
 
 @keyframes hotspotPulse {
@@ -953,9 +1004,9 @@ button {
 
 .lighting-presets {
   display: inline-grid;
-  grid-template-columns: repeat(3, minmax(74px, 1fr));
+  grid-template-columns: repeat(5, minmax(68px, 1fr));
   align-items: center;
-  min-width: 270px;
+  min-width: 420px;
   border: 1px solid rgba(11, 23, 34, 0.18);
 }
 
@@ -973,12 +1024,8 @@ button {
   cursor: pointer;
 }
 
-.lighting-presets button:nth-child(3n) {
+.lighting-presets button:last-child {
   border-inline-end: 0;
-}
-
-.lighting-presets button:nth-child(-n + 3) {
-  border-block-end: 1px solid rgba(11, 23, 34, 0.14);
 }
 
 .lighting-presets button:hover,
@@ -2026,12 +2073,21 @@ html[dir="rtl"] .person-card h3 {
 
   .lighting-presets {
     flex: 1 1 auto;
-    min-width: min(100%, 250px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 100%;
   }
 
   .lighting-presets button {
     flex: 1;
     padding-inline: 7px;
+  }
+
+  .lighting-presets button:nth-child(3) {
+    border-inline-end: 0;
+  }
+
+  .lighting-presets button:nth-child(-n + 3) {
+    border-block-end: 1px solid rgba(11, 23, 34, 0.14);
   }
 
   .model-exposure {

@@ -95,33 +95,47 @@ const translations = {
     heroSecondary: "Program overview",
     heroAlt: "Interactive 3D concept model of the AI.onSuper Ximango-derived unmanned aircraft",
     modelStatus: "Interactive 3D model",
-    modelInstruction: "Drag for a full 360° view · Scroll to zoom",
+    modelInstruction: "Drag for 360° · Zoom to reveal system stations",
     modelLighting: "Lighting",
-    lightingAirport: "Airport",
-    lightingHangar: "Hangar",
-    lightingInspection: "Inspection",
     lightingStudio: "Studio",
     lightingDaylight: "Daylight",
     lightingSky: "Sky",
+    lightingGolden: "Golden hour",
+    lightingNight: "Night",
     lightingExposure: "Exposure",
     modelOverview: "360° overview",
     modelFocusOverview: "Return to 360° overview",
     componentFocus: "Component focus",
-    hotspotAirframe: "Airframe",
-    hotspotEoir: "EO / IR",
-    hotspotMissionMount: "Mission mount",
+    hotspotPropeller: "Propeller",
+    hotspotEngine: "Engine",
+    hotspotFlightComputer: "Flight computer",
+    hotspotDatalink: "Datalink mast",
+    hotspotWing: "Laminar wing",
+    hotspotTail: "Tail group",
+    hotspotRemoteWeapon: "Gimballed weapon station",
+    hotspotEoir: "EO / IR gimbal",
+    hotspotFuselageBay: "Fuselage bay",
     hotspotExternalInterface: "External interface",
-    hotspotPropulsion: "Propulsion",
-    focusAirframeTitle: "Ximango-derived airframe",
-    focusAirframeText: "Flattened composite sections, a tapered belly and low-wing root blending follow the reference aircraft silhouette.",
-    focusEoirTitle: "Stabilized EO / IR payload",
-    focusEoirText: "Close inspection view of the multi-aperture electro-optical and infrared sensor presentation geometry.",
-    focusMissionMountTitle: "Stabilized mission mount",
-    focusMissionMountText: "Presentation-only external geometry showing the receiver housing, visible trunnion and forward barrel envelope.",
+    focusPropellerTitle: "Propeller and spinner",
+    focusPropellerText: "Two-blade variable-pitch propeller envelope and spinner transition at the forward end of the Ximango-derived cowling.",
+    focusEngineTitle: "Powerplant installation",
+    focusEngineText: "The station identifies the engine-cowling volume and its changing cross-section; internal powerplant geometry is not shown.",
+    focusFlightComputerTitle: "Flight control computer (FCC)",
+    focusFlightComputerText: "Reserved avionics volume beneath the opaque upper cover for flight-control and mission-compute integration.",
+    focusDatalinkTitle: "Datalink mast",
+    focusDatalinkText: "Low-profile dorsal communications fairing for the command, telemetry and mission-data link architecture.",
+    focusWingTitle: "Laminar-flow wing",
+    focusWingText: "Low-mounted, high-aspect-ratio wing with blended root fairings, restrained dihedral and upturned tips.",
+    focusTailTitle: "Tail group",
+    focusTailText: "T-tail assembly, control-surface break lines and the compact tail-wheel installation used for the ground attitude.",
+    focusRemoteWeaponTitle: "Gimballed remote weapon station",
+    focusRemoteWeaponText: "Presentation-only external geometry for the stabilized mount, receiver, trunnion, optic and forward barrel envelope.",
+    focusEoirTitle: "EO / IR gimbal — Eagle Eye",
+    focusEoirText: "Gyro-stabilized multi-aperture sensor presentation with electro-optical and infrared viewing channels.",
+    focusFuselageBayTitle: "Fuselage mission bay",
+    focusFuselageBayText: "Reserved aft-fuselage mission volume carried forward from the original station map; detailed doors and internal racks remain conceptual.",
     focusExternalInterfaceTitle: "External mission interface",
     focusExternalInterfaceText: "Symmetric underwing pylon and aerodynamic store mockup; configuration remains subject to engineering review.",
-    focusPropulsionTitle: "Forward propulsion installation",
-    focusPropulsionText: "Close view of the spinner, variable-pitch propeller envelope and the changing engine-cowling cross-section.",
     heroCaption: "Parametric concept model · Ximango-derived proportions · Configuration subject to change",
     targetsHeading: "Program targets",
     metricEnduranceValue: "50+ hr",
@@ -254,33 +268,47 @@ const translations = {
     heroSecondary: "סקירת התוכנית",
     heroAlt: "מודל תלת־ממד אינטראקטיבי של קונספט AI.onSuper, המבוסס על פרופורציות Ximango",
     modelStatus: "מודל תלת־ממד אינטראקטיבי",
-    modelInstruction: "גררו לצפייה מלאה ב־360° · גלגלו לקירוב",
+    modelInstruction: "גררו לצפייה ב־360° · קרבו כדי לחשוף תחנות מערכת",
     modelLighting: "תאורה",
-    lightingAirport: "שדה תעופה",
-    lightingHangar: "האנגר",
-    lightingInspection: "בדיקה",
     lightingStudio: "סטודיו",
     lightingDaylight: "אור יום",
     lightingSky: "שמים",
+    lightingGolden: "שעת זהב",
+    lightingNight: "לילה",
     lightingExposure: "חשיפה",
     modelOverview: "סקירת 360°",
     modelFocusOverview: "חזרה לתצוגת 360°",
     componentFocus: "מיקוד ברכיב",
-    hotspotAirframe: "גוף המטוס",
-    hotspotEoir: "מערכת EO / IR",
-    hotspotMissionMount: "מתלה משימה",
+    hotspotPropeller: "מדחף",
+    hotspotEngine: "מנוע",
+    hotspotFlightComputer: "מחשב טיסה",
+    hotspotDatalink: "תורן קישור נתונים",
+    hotspotWing: "כנף למינרית",
+    hotspotTail: "מכלול זנב",
+    hotspotRemoteWeapon: "עמדת נשק מגומבלת",
+    hotspotEoir: "גימבל EO / IR",
+    hotspotFuselageBay: "תא משימה בגוף",
     hotspotExternalInterface: "ממשק חיצוני",
-    hotspotPropulsion: "מערכת הנעה",
-    focusAirframeTitle: "גוף מטוס המבוסס על Ximango",
-    focusAirframeText: "חתכי גוף שטוחים יותר, בטן מתחדדת וחיבור כנף נמוכה עוצבו בהתאם לצללית מטוס הייחוס.",
-    focusEoirTitle: "מטען EO / IR מיוצב",
-    focusEoirText: "תצוגת תקריב של הגאומטריה החיצונית למערכת החישה האלקטרו־אופטית והאינפרה־אדומה מרובת המפתחים.",
-    focusMissionMountTitle: "מתלה משימה מיוצב",
-    focusMissionMountText: "גאומטריה חיצונית להמחשה בלבד, המציגה את בית המכלול, ציר ההטיה והמעטפת הקדמית.",
+    focusPropellerTitle: "מדחף וכיפה קדמית",
+    focusPropellerText: "מעטפת של מדחף דו־להבי בעל פסיעה משתנה והמעבר אל בית המנוע המבוסס על פרופורציות Ximango.",
+    focusEngineTitle: "התקנת מערכת ההנעה",
+    focusEngineText: "התחנה מסמנת את נפח בית המנוע ואת החתך המשתנה שלו; גאומטריית המנוע הפנימית אינה מוצגת.",
+    focusFlightComputerTitle: "מחשב בקרת טיסה (FCC)",
+    focusFlightComputerText: "נפח אוויוניקה שמור מתחת לכיסוי העליון האטום, לשילוב בקרת טיסה ומחשוב משימה.",
+    focusDatalinkTitle: "תורן קישור נתונים",
+    focusDatalinkText: "חיפוי תקשורת גבי נמוך עבור ארכיטקטורת פיקוד, טלמטריה ונתוני משימה.",
+    focusWingTitle: "כנף בזרימה למינרית",
+    focusWingText: "כנף נמוכה בעלת מנת־ממדים גבוהה, חיבורי שורש משולבים, דיהדרל מתון וקצות כנף מורמים.",
+    focusTailTitle: "מכלול הזנב",
+    focusTailText: "מכלול זנב בתצורת T, קווי משטחי היגוי וכן נסע זנבי קומפקטי הקובע את זווית העמידה.",
+    focusRemoteWeaponTitle: "עמדת נשק מרחוק מגומבלת",
+    focusRemoteWeaponText: "גאומטריה חיצונית להמחשה בלבד של המתלה המיוצב, בית המכלול, ציר ההטיה, הכוונת ומעטפת הקנה.",
+    focusEoirTitle: "גימבל EO / IR — Eagle Eye",
+    focusEoirText: "המחשה של חיישן רב־מפתחים מיוצב גירוסקופית, עם ערוצי תצפית אלקטרו־אופטיים ואינפרה־אדומים.",
+    focusFuselageBayTitle: "תא משימה בגוף המטוס",
+    focusFuselageBayText: "נפח משימה שמור בגוף האחורי בהתאם למפת התחנות המקורית; הדלתות והמסילות הפנימיות עדיין קונספטואליות.",
     focusExternalInterfaceTitle: "ממשק משימה חיצוני",
     focusExternalInterfaceText: "מתלה כנף סימטרי ומדמה מטען אווירודינמי; התצורה כפופה להמשך בחינה הנדסית.",
-    focusPropulsionTitle: "מערכת ההנעה הקדמית",
-    focusPropulsionText: "תקריב של הכיפה הקדמית, מעטפת המדחף בעל הפסיעה המשתנה והחתך המשתנה של בית המנוע.",
     heroCaption: "מודל קונספט פרמטרי · פרופורציות המבוססות על Ximango · התצורה עשויה להשתנות",
     targetsHeading: "יעדי תוכנית",
     metricEnduranceValue: "50+ שעות",
@@ -598,54 +626,59 @@ const exposureControl = document.getElementById("modelExposure");
 const lightingButtons = Array.from(document.querySelectorAll("[data-lighting-preset]"));
 const modelHotspots = Array.from(model?.querySelectorAll(".model-hotspot") ?? []);
 const modelFocusCard = document.getElementById("modelFocusCard");
+const modelFocusStation = document.getElementById("modelFocusStation");
 const modelFocusTitle = document.getElementById("modelFocusTitle");
 const modelFocusText = document.getElementById("modelFocusText");
 const modelOverviewControl = document.getElementById("modelOverviewControl");
 const modelFocusOverview = document.getElementById("modelFocusOverview");
 let activeModelComponent = null;
 const modelFocusContent = {
-  airframe: ["focusAirframeTitle", "focusAirframeText"],
-  eoir: ["focusEoirTitle", "focusEoirText"],
-  missionMount: ["focusMissionMountTitle", "focusMissionMountText"],
-  externalInterface: ["focusExternalInterfaceTitle", "focusExternalInterfaceText"],
-  propulsion: ["focusPropulsionTitle", "focusPropulsionText"]
+  propeller: { station: "STA 01", title: "focusPropellerTitle", text: "focusPropellerText" },
+  engine: { station: "STA 02", title: "focusEngineTitle", text: "focusEngineText" },
+  flightComputer: { station: "STA 03", title: "focusFlightComputerTitle", text: "focusFlightComputerText" },
+  datalink: { station: "STA 04", title: "focusDatalinkTitle", text: "focusDatalinkText" },
+  wing: { station: "STA 06", title: "focusWingTitle", text: "focusWingText" },
+  tail: { station: "STA 07", title: "focusTailTitle", text: "focusTailText" },
+  remoteWeapon: { station: "STA 08", title: "focusRemoteWeaponTitle", text: "focusRemoteWeaponText" },
+  eoir: { station: "STA 09", title: "focusEoirTitle", text: "focusEoirText" },
+  fuselageBay: { station: "STA 10", title: "focusFuselageBayTitle", text: "focusFuselageBayText" },
+  externalInterface: { station: "AUX 01", title: "focusExternalInterfaceTitle", text: "focusExternalInterfaceText" }
 };
 const lightingPresets = {
-  airport: {
-    environment: "environments/apron-cloudy-1k.hdr",
-    exposure: 1.08,
-    shadowIntensity: 1.35,
-    shadowSoftness: 0.72
-  },
-  hangar: {
-    environment: "environments/hangar-interior-1k.hdr",
-    exposure: 0.92,
-    shadowIntensity: 1.55,
-    shadowSoftness: 0.48
-  },
-  inspection: {
-    environment: "environments/inspection-workshop-1k.hdr",
-    exposure: 1.18,
-    shadowIntensity: 1.15,
-    shadowSoftness: 0.58
-  },
   studio: {
     environment: "environments/studio-softbox-1k.hdr",
+    skybox: null,
     exposure: 1.04,
     shadowIntensity: 1.08,
     shadowSoftness: 0.82
   },
   daylight: {
     environment: "environments/daylight-noon-1k.hdr",
+    skybox: "environments/daylight-noon-1k.hdr",
     exposure: 0.96,
     shadowIntensity: 1.62,
     shadowSoftness: 0.34
   },
   sky: {
     environment: "environments/sky-partly-cloudy-1k.hdr",
+    skybox: "environments/sky-partly-cloudy-1k.hdr",
     exposure: 1.02,
     shadowIntensity: 1.30,
     shadowSoftness: 0.60
+  },
+  golden: {
+    environment: "environments/golden-sunset-1k.hdr",
+    skybox: "environments/golden-sunset-1k.hdr",
+    exposure: 1.02,
+    shadowIntensity: 1.44,
+    shadowSoftness: 0.50
+  },
+  night: {
+    environment: "environments/night-moonrise-1k.hdr",
+    skybox: "environments/night-moonrise-1k.hdr",
+    exposure: 1.12,
+    shadowIntensity: 1.04,
+    shadowSoftness: 0.70
   }
 };
 
@@ -653,7 +686,8 @@ function applyLightingPreset(presetName) {
   if (!model || !lightingPresets[presetName]) return;
   const preset = lightingPresets[presetName];
   model.setAttribute("environment-image", preset.environment);
-  model.setAttribute("skybox-image", preset.environment);
+  if (preset.skybox) model.setAttribute("skybox-image", preset.skybox);
+  else model.removeAttribute("skybox-image");
   model.setAttribute("exposure", String(preset.exposure));
   model.setAttribute("shadow-intensity", String(preset.shadowIntensity));
   model.setAttribute("shadow-softness", String(preset.shadowSoftness));
@@ -676,15 +710,41 @@ exposureControl?.addEventListener("input", () => {
 
 function updateModelFocusCard() {
   if (!activeModelComponent || !modelFocusCard || !modelFocusTitle || !modelFocusText) return;
-  const contentKeys = modelFocusContent[activeModelComponent];
-  if (!contentKeys) return;
-  modelFocusTitle.textContent = translations[language][contentKeys[0]];
-  modelFocusText.textContent = translations[language][contentKeys[1]];
+  const content = modelFocusContent[activeModelComponent];
+  if (!content) return;
+  if (modelFocusStation) modelFocusStation.textContent = content.station;
+  modelFocusTitle.textContent = translations[language][content.title];
+  modelFocusText.textContent = translations[language][content.text];
+}
+
+let hotspotDensityFrame = 0;
+
+function updateHotspotDensity() {
+  hotspotDensityFrame = 0;
+  if (!model || !modelStage || typeof model.getCameraOrbit !== "function") return;
+  const orbit = model.getCameraOrbit();
+  const fieldOfView = model.getFieldOfView();
+  const visibleHalfHeight = orbit.radius * Math.tan(fieldOfView * Math.PI / 360);
+  const maximumLevel = visibleHalfHeight > 3.0 ? 1 : visibleHalfHeight > 1.25 ? 2 : 3;
+  modelStage.dataset.hotspotDensity = maximumLevel === 1 ? "overview" : maximumLevel === 2 ? "systems" : "detail";
+  modelHotspots.forEach((hotspot) => {
+    const isActive = hotspot.dataset.component === activeModelComponent;
+    const shouldShow = isActive || Number(hotspot.dataset.detailLevel ?? 1) <= maximumLevel;
+    hotspot.hidden = !shouldShow;
+    hotspot.setAttribute("aria-hidden", String(!shouldShow));
+  });
+}
+
+function scheduleHotspotDensityUpdate() {
+  if (hotspotDensityFrame) return;
+  hotspotDensityFrame = window.requestAnimationFrame(updateHotspotDensity);
 }
 
 function focusModelComponent(hotspot) {
   if (!model) return;
   activeModelComponent = hotspot.dataset.component;
+  hotspot.hidden = false;
+  hotspot.setAttribute("aria-hidden", "false");
   model.removeAttribute("auto-rotate");
   model.cameraTarget = hotspot.dataset.target;
   model.cameraOrbit = hotspot.dataset.orbit;
@@ -696,6 +756,7 @@ function focusModelComponent(hotspot) {
   });
   updateModelFocusCard();
   if (modelFocusCard) modelFocusCard.hidden = false;
+  scheduleHotspotDensityUpdate();
 }
 
 function resetModelOverview() {
@@ -710,6 +771,7 @@ function resetModelOverview() {
     button.setAttribute("aria-pressed", "false");
   });
   if (modelFocusCard) modelFocusCard.hidden = true;
+  scheduleHotspotDensityUpdate();
 }
 
 modelHotspots.forEach((hotspot) => {
@@ -724,9 +786,11 @@ modelOverviewControl?.addEventListener("click", resetModelOverview);
 modelFocusOverview?.addEventListener("click", resetModelOverview);
 
 if (model) {
+  model.addEventListener("camera-change", scheduleHotspotDensityUpdate);
   model.addEventListener("load", () => {
     const progress = model.querySelector(".model-progress");
     if (progress) progress.hidden = true;
+    updateHotspotDensity();
   });
 }
 
