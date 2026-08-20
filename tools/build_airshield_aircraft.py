@@ -57,7 +57,7 @@ def material(
 
 
 IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
-IAF_GRAY_DARK = material("Neutral smoked-gray canopy", (0.075, 0.082, 0.085, 1.0), 0.08, 0.19)
+IAF_GRAY_DARK = material("IAF gray opaque avionics canopy", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
 CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.30)
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
@@ -228,6 +228,48 @@ def build_pbr_materials() -> None:
     )
     attach_gltf_occlusion(IAF_GRAY, skin_ao)
 
+    # The unmanned canopy is an opaque gray avionics shell rather than dark
+    # glazing.  Its finer, satin surface keeps it visibly distinct from the
+    # larger composite airframe panels without reading as black glass.
+    canopy_broad = broad[::2, ::2]
+    canopy_grain = grain[::2, ::2]
+    canopy_variation = canopy_broad * 0.010 + canopy_grain * 0.007
+    canopy_rgb = np.clip(
+        np.array([0.385, 0.400, 0.407], dtype=np.float32)[None, None, :] + canopy_variation[..., None],
+        0.0,
+        1.0,
+    )
+    canopy_roughness = np.clip(0.34 + canopy_broad * 0.025 + canopy_grain * 0.018, 0.27, 0.43)
+    canopy_height = canopy_broad * 0.028 + canopy_grain * 0.018
+    canopy_occlusion = np.clip(0.985 - np.abs(canopy_grain) * 0.016, 0.94, 1.0)
+    canopy_base = write_texture("airshield_canopy_basecolor", rgba_from_rgb(canopy_rgb), "sRGB")
+    canopy_rough = write_texture(
+        "airshield_canopy_roughness",
+        rgba_from_gray(canopy_roughness),
+        "Non-Color",
+    )
+    canopy_normal = write_texture(
+        "airshield_canopy_normal",
+        normal_map_from_height(canopy_height, 2.4),
+        "Non-Color",
+    )
+    canopy_ao = write_texture(
+        "airshield_canopy_occlusion",
+        rgba_from_gray(canopy_occlusion),
+        "Non-Color",
+    )
+    textured_principled_material(
+        IAF_GRAY_DARK,
+        canopy_base,
+        canopy_rough,
+        canopy_normal,
+        metallic=0.02,
+        normal_strength=0.16,
+        coat_weight=0.32,
+        coat_roughness=0.24,
+    )
+    attach_gltf_occlusion(IAF_GRAY_DARK, canopy_ao)
+
     carbon_size = 512
     cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
     warp = np.sin(2.0 * math.pi * (cx + cy) * 52.0)
@@ -263,12 +305,11 @@ def build_pbr_materials() -> None:
     attach_gltf_occlusion(CARBON, carbon_ao)
 
     fairing_bsdf = IAF_GRAY_DARK.node_tree.nodes.get("Principled BSDF")
-    set_bsdf_input(fairing_bsdf, "Metallic", 0.04)
-    set_bsdf_input(fairing_bsdf, "Roughness", 0.13)
-    set_bsdf_input(fairing_bsdf, "Transmission Weight", 0.08)
-    set_bsdf_input(fairing_bsdf, "Coat Weight", 0.90)
-    set_bsdf_input(fairing_bsdf, "Coat Roughness", 0.07)
-    set_bsdf_input(fairing_bsdf, "Specular IOR Level", 0.46)
+    set_bsdf_input(fairing_bsdf, "Metallic", 0.02)
+    set_bsdf_input(fairing_bsdf, "Transmission Weight", 0.0)
+    set_bsdf_input(fairing_bsdf, "Coat Weight", 0.32)
+    set_bsdf_input(fairing_bsdf, "Coat Roughness", 0.24)
+    set_bsdf_input(fairing_bsdf, "Specular IOR Level", 0.36)
     set_bsdf_input(fairing_bsdf, "IOR", 1.47)
 
     graphite_bsdf = GRAPHITE.node_tree.nodes.get("Principled BSDF")
@@ -413,6 +454,7 @@ def elliptical_ring(
     parent: bpy.types.Object,
     segments: int = 72,
     tube_segments: int = 8,
+    y_offset: float = 0.0,
 ) -> bpy.types.Object:
     """A fine manufacturing joint wrapped around an elliptical shell section."""
     vertices: list[tuple[float, float, float]] = []
@@ -426,7 +468,7 @@ def elliptical_ring(
             vertices.append(
                 (
                     x + tube_radius * math.cos(tube_angle),
-                    (radius_y + radial) * cosine,
+                    y_offset + (radius_y + radial) * cosine,
                     center_z + (radius_z + radial) * sine,
                 )
             )
@@ -612,6 +654,7 @@ def create_loft(
     sections: list[tuple[float, float, float, float]],
     mat: bpy.types.Material,
     ring_segments: int = 32,
+    y_offset: float = 0.0,
 ) -> bpy.types.Object:
     """Loft elliptical rings along X. Each section is x, radius_y, radius_z, z_offset."""
     vertices: list[tuple[float, float, float]] = []
@@ -620,7 +663,7 @@ def create_loft(
     for x, ry, rz, z_offset in sections:
         for idx in range(ring_segments):
             angle = 2 * math.pi * idx / ring_segments
-            vertices.append((x, math.cos(angle) * ry, z_offset + math.sin(angle) * rz))
+            vertices.append((x, y_offset + math.cos(angle) * ry, z_offset + math.sin(angle) * rz))
 
     for ring in range(len(sections) - 1):
         for idx in range(ring_segments):
@@ -644,6 +687,94 @@ def create_loft(
     bevel(obj, 0.018, 2)
     smooth(obj)
     mark_export(obj)
+    return obj
+
+
+def create_asymmetric_fuselage(
+    name: str,
+    sections: list[tuple[float, float, float, float, float, float]],
+    mat: bpy.types.Material,
+    ring_segments: int = 48,
+) -> bpy.types.Object:
+    """Loft a non-cylindrical fuselage with independent crown and belly.
+
+    Each section is x, half-width, crown height, belly depth, center z and
+    superellipse exponent.  The changing section shape follows the Ximango's
+    engine cowling, broad cockpit shoulders, lower wing saddle and slender
+    structural tail boom instead of scaling one tube along its length.
+    """
+    vertices: list[tuple[float, float, float]] = []
+    faces: list[tuple[int, ...]] = []
+    for x, half_width, crown, belly, center_z, exponent in sections:
+        for index in range(ring_segments):
+            angle = 2.0 * math.pi * index / ring_segments
+            cosine = math.cos(angle)
+            sine = math.sin(angle)
+            y = math.copysign(abs(cosine) ** exponent, cosine) * half_width
+            vertical_radius = crown if sine >= 0.0 else belly
+            z = center_z + math.copysign(abs(sine) ** exponent, sine) * vertical_radius
+            vertices.append((x, y, z))
+
+    for ring in range(len(sections) - 1):
+        for index in range(ring_segments):
+            nxt = (index + 1) % ring_segments
+            current = ring * ring_segments + index
+            following = (ring + 1) * ring_segments + index
+            faces.append((current, following, (ring + 1) * ring_segments + nxt, ring * ring_segments + nxt))
+
+    faces.append(tuple(range(ring_segments - 1, -1, -1)))
+    last = (len(sections) - 1) * ring_segments
+    faces.append(tuple(last + index for index in range(ring_segments)))
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    bevel(obj, 0.015, 2)
+    smooth(obj)
+    mark_export(obj)
+    return obj
+
+
+def radial_store_fin(
+    name: str,
+    center_y: float,
+    center_z: float,
+    angle: float,
+    profile: list[tuple[float, float]],
+    thickness: float,
+    mat: bpy.types.Material,
+    parent: bpy.types.Object,
+) -> bpy.types.Object:
+    """Create a presentation-only aerodynamic fin around an X-axis store."""
+    radial_y, radial_z = math.sin(angle), math.cos(angle)
+    tangent_y, tangent_z = math.cos(angle), -math.sin(angle)
+    vertices: list[tuple[float, float, float]] = []
+    for tangent in (-thickness, thickness):
+        for x, radius in profile:
+            vertices.append(
+                (
+                    x,
+                    center_y + radial_y * radius + tangent_y * tangent,
+                    center_z + radial_z * radius + tangent_z * tangent,
+                )
+            )
+    count = len(profile)
+    faces = [tuple(range(count - 1, -1, -1)), tuple(range(count, count * 2))]
+    for index in range(count):
+        nxt = (index + 1) % count
+        faces.append((index, nxt, count + nxt, count + index))
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    bevel(obj, 0.010, 2)
+    smooth(obj)
+    mark_export(obj)
+    obj.parent = parent
     return obj
 
 
@@ -830,10 +961,10 @@ def add_airframe_surface_details(root: bpy.types.Object) -> None:
     """Add restrained scale cues found on a composite production airframe."""
     # Cowling, equipment-bay and avionics-cover joints.  These are deliberately
     # narrow: they should catch highlights without reading as decorative bands.
-    elliptical_ring("Engine cowling joint", -3.52, 0.342, 0.342, 0.00, 0.0055, SEAM, root)
+    elliptical_ring("Engine cowling joint", -3.62, 0.307, 0.264, 0.02, 0.0055, SEAM, root)
     elliptical_ring("Avionics cover joint", -1.55, 0.432, 0.322, 0.59, 0.0050, SEAM, root)
-    elliptical_ring("Mission bay shell joint", 0.30, 0.402, 0.392, 0.07, 0.0045, SEAM, root)
-    elliptical_ring("Aft shell joint", 2.35, 0.222, 0.212, -0.03, 0.0040, SEAM, root)
+    elliptical_ring("Mission bay shell joint", 0.18, 0.307, 0.238, 0.027, 0.0045, SEAM, root)
+    elliptical_ring("Aft shell joint", 2.18, 0.172, 0.144, -0.01, 0.0040, SEAM, root)
 
     # Fine canopy-to-fuselage seals keep the glazed avionics fairing from
     # reading as a single toy-like blob while preserving its smooth profile.
@@ -925,7 +1056,7 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
     root["landing_gear_layout"] = "two retractable main gears and coupled tail wheel"
-    root["external_store_visualization"] = "two symmetric empty underwing pylons and launch rails"
+    root["external_store_visualization"] = "two symmetric nonfunctional underwing aerodynamic mockups"
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
     # attitude while keeping all three tires on the same apron plane.
@@ -933,20 +1064,28 @@ def create_aircraft() -> bpy.types.Object:
     root.rotation_euler[1] = math.radians(4.7)
     mark_export(root)
 
-    fuselage = create_loft(
+    fuselage = create_asymmetric_fuselage(
         "Ximango-derived composite fuselage",
         [
-            (-3.84, 0.20, 0.20, 0.00),
-            (-3.52, 0.34, 0.34, 0.00),
-            (-3.05, 0.42, 0.41, 0.03),
-            (-2.45, 0.48, 0.47, 0.07),
-            (-1.55, 0.51, 0.52, 0.10),
-            (-0.55, 0.48, 0.47, 0.10),
-            (0.30, 0.40, 0.39, 0.07),
-            (1.25, 0.31, 0.30, 0.02),
-            (2.35, 0.22, 0.21, -0.03),
-            (3.25, 0.13, 0.14, -0.08),
-            (3.90, 0.055, 0.065, -0.12),
+            # x, half-width, crown, belly, center z, section exponent
+            (-3.84, 0.195, 0.185, 0.165, 0.000, 0.98),
+            (-3.62, 0.305, 0.275, 0.245, 0.005, 0.92),
+            (-3.30, 0.380, 0.330, 0.330, 0.015, 0.86),
+            (-2.92, 0.425, 0.350, 0.385, 0.025, 0.82),
+            (-2.50, 0.455, 0.355, 0.425, 0.035, 0.79),
+            (-2.08, 0.480, 0.340, 0.450, 0.045, 0.77),
+            (-1.62, 0.488, 0.315, 0.455, 0.050, 0.77),
+            (-1.18, 0.455, 0.290, 0.420, 0.055, 0.80),
+            (-0.76, 0.410, 0.270, 0.370, 0.060, 0.82),
+            (-0.34, 0.355, 0.235, 0.315, 0.065, 0.84),
+            (0.18, 0.305, 0.205, 0.270, 0.060, 0.86),
+            (0.78, 0.260, 0.180, 0.225, 0.045, 0.88),
+            (1.48, 0.215, 0.160, 0.180, 0.020, 0.90),
+            (2.18, 0.170, 0.145, 0.140, -0.010, 0.92),
+            (2.82, 0.125, 0.118, 0.108, -0.045, 0.94),
+            (3.36, 0.090, 0.092, 0.080, -0.078, 0.96),
+            (3.72, 0.062, 0.068, 0.060, -0.104, 0.98),
+            (3.90, 0.042, 0.050, 0.047, -0.120, 1.00),
         ],
         IAF_GRAY,
     )
@@ -987,45 +1126,98 @@ def create_aircraft() -> bpy.types.Object:
         tip = canted_winglet(f"{label} winglet", side)
         tip.parent = root
 
-    # Symmetric empty external-store stations.  The shallow composite pylons
-    # follow the lower wing surface; only the launch rails are shown, with no
-    # munition installed, so the configuration remains a presentation concept.
+    # Two presentation-only external-store mockups.  Each unit has a continuous
+    # wing pylon, rounded cylindrical shell, suspension lugs and four tail fins;
+    # no internal, guidance or functional weapon geometry is represented.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         station_y = 2.68 * side
         pylon = fin_mesh(
-            f"{label} underwing payload pylon",
+            f"{label} integrated external-store pylon",
             [
                 (-1.92, -0.22),
-                (-0.92, -0.18),
-                (-0.84, -0.35),
-                (-1.02, -0.53),
-                (-1.68, -0.53),
-                (-1.92, -0.39),
+                (-0.90, -0.18),
+                (-0.76, -0.32),
+                (-0.90, -0.43),
+                (-1.72, -0.43),
+                (-1.96, -0.34),
             ],
-            0.060,
+            0.068,
             IAF_GRAY,
             y_offset=station_y,
         )
         pylon.parent = root
 
-        rail = cube(
-            f"{label} empty launch rail",
-            (-1.39, station_y, -0.585),
-            (0.66, 0.082, 0.040),
-            RAIL,
-            0.028,
+        store = create_loft(
+            f"{label} external-store aerodynamic mockup",
+            [
+                (-2.38, 0.018, 0.018, -0.545),
+                (-2.30, 0.075, 0.075, -0.545),
+                (-2.17, 0.132, 0.132, -0.545),
+                (-1.98, 0.150, 0.150, -0.545),
+                (-1.30, 0.150, 0.150, -0.545),
+                (-0.78, 0.137, 0.137, -0.545),
+                (-0.48, 0.096, 0.096, -0.545),
+                (-0.34, 0.052, 0.052, -0.545),
+            ],
+            IAF_GRAY,
+            ring_segments=36,
+            y_offset=station_y,
         )
-        rail.parent = root
-        for x, suffix in ((-1.82, "forward"), (-1.08, "aft")):
+        store.parent = root
+
+        for x, suffix in ((-1.82, "forward"), (-1.06, "aft")):
             clevis = cylinder_between(
-                f"{label} rail {suffix} attachment",
-                (x, station_y - 0.095, -0.50),
-                (x, station_y + 0.095, -0.50),
-                0.026,
+                f"{label} store {suffix} suspension lug",
+                (x, station_y - 0.082, -0.405),
+                (x, station_y + 0.082, -0.405),
+                0.022,
                 STEEL,
                 vertices=20,
             )
             clevis.parent = root
+
+        for x, radius in ((-2.00, 0.151), (-1.32, 0.151), (-0.79, 0.138)):
+            elliptical_ring(
+                f"{label} external-store shell joint",
+                x,
+                radius,
+                radius,
+                -0.545,
+                0.0036,
+                SEAM,
+                root,
+                segments=48,
+                tube_segments=6,
+                y_offset=station_y,
+            )
+
+        fin_profile = [(-0.92, 0.12), (-0.43, 0.07), (-0.56, 0.31), (-0.86, 0.30)]
+        for angle, fin_name in (
+            (0.0, "upper"),
+            (math.pi, "lower"),
+            (math.pi * 0.5, "outboard"),
+            (-math.pi * 0.5, "inboard"),
+        ):
+            radial_store_fin(
+                f"{label} external-store {fin_name} fin",
+                station_y,
+                -0.545,
+                angle,
+                fin_profile,
+                0.020,
+                IAF_GRAY_DARK,
+                root,
+            )
+
+        nozzle = cylinder_between(
+            f"{label} external-store aft cap",
+            (-0.35, station_y, -0.545),
+            (-0.26, station_y, -0.545),
+            0.050,
+            GRAPHITE,
+            vertices=28,
+        )
+        nozzle.parent = root
 
     # Vertical fin and high-mounted stabilizer.
     vertical = fin_mesh(
@@ -1278,6 +1470,9 @@ def generate_uv_maps() -> None:
         )
         bpy.ops.object.mode_set(mode="OBJECT")
         obj.select_set(False)
+        triangulate = obj.modifiers.new("Portable tangent-space triangulation", "TRIANGULATE")
+        triangulate.quad_method = "BEAUTY"
+        triangulate.ngon_method = "BEAUTY"
 
 
 def setup_scene() -> None:
@@ -1369,6 +1564,7 @@ def export_glb() -> None:
         export_apply=True,
         export_yup=True,
         export_materials="EXPORT",
+        export_tangents=True,
     )
 
 

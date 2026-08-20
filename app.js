@@ -97,9 +97,12 @@ const translations = {
     modelStatus: "Interactive 3D model",
     modelInstruction: "Drag for a full 360° view · Scroll to zoom",
     modelLighting: "Lighting",
-    lightingApron: "Apron",
+    lightingAirport: "Airport",
     lightingHangar: "Hangar",
     lightingInspection: "Inspection",
+    lightingStudio: "Studio",
+    lightingDaylight: "Daylight",
+    lightingSky: "Sky",
     lightingExposure: "Exposure",
     heroCaption: "Parametric concept model · Ximango-derived proportions · Configuration subject to change",
     targetsHeading: "Program targets",
@@ -235,9 +238,12 @@ const translations = {
     modelStatus: "מודל תלת־ממד אינטראקטיבי",
     modelInstruction: "גררו לצפייה מלאה ב־360° · גלגלו לקירוב",
     modelLighting: "תאורה",
-    lightingApron: "רחבה",
+    lightingAirport: "שדה תעופה",
     lightingHangar: "האנגר",
     lightingInspection: "בדיקה",
+    lightingStudio: "סטודיו",
+    lightingDaylight: "אור יום",
+    lightingSky: "שמים",
     lightingExposure: "חשיפה",
     heroCaption: "מודל קונספט פרמטרי · פרופורציות המבוססות על Ximango · התצורה עשויה להשתנות",
     targetsHeading: "יעדי תוכנית",
@@ -554,7 +560,7 @@ const modelStage = model?.closest(".hero-model");
 const exposureControl = document.getElementById("modelExposure");
 const lightingButtons = Array.from(document.querySelectorAll("[data-lighting-preset]"));
 const lightingPresets = {
-  apron: {
+  airport: {
     environment: "environments/apron-cloudy-1k.hdr",
     exposure: 1.08,
     shadowIntensity: 1.35,
@@ -571,6 +577,24 @@ const lightingPresets = {
     exposure: 1.18,
     shadowIntensity: 1.15,
     shadowSoftness: 0.58
+  },
+  studio: {
+    environment: "environments/studio-softbox-1k.hdr",
+    exposure: 1.04,
+    shadowIntensity: 1.08,
+    shadowSoftness: 0.82
+  },
+  daylight: {
+    environment: "environments/daylight-noon-1k.hdr",
+    exposure: 0.96,
+    shadowIntensity: 1.62,
+    shadowSoftness: 0.34
+  },
+  sky: {
+    environment: "environments/sky-partly-cloudy-1k.hdr",
+    exposure: 1.02,
+    shadowIntensity: 1.30,
+    shadowSoftness: 0.60
   }
 };
 
