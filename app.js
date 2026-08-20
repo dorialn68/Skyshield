@@ -529,6 +529,8 @@ const languageToggle = document.getElementById("languageToggle");
 const menuToggle = document.getElementById("menuToggle");
 const mobileNav = document.getElementById("mobileNav");
 const systemTabs = Array.from(document.querySelectorAll(".architecture-tab"));
+const architecturePanel = document.querySelector(".architecture-panel");
+const siteHeader = document.querySelector(".site-header");
 
 function applyLanguage(nextLanguage) {
   language = nextLanguage;
@@ -587,7 +589,17 @@ function renderSystem(systemName) {
     tab.setAttribute("aria-selected", String(selected));
     tab.tabIndex = selected ? 0 : -1;
   });
+
+  if (architecturePanel) {
+    architecturePanel.classList.remove("is-refreshing");
+    void architecturePanel.offsetWidth;
+    architecturePanel.classList.add("is-refreshing");
+  }
 }
+
+architecturePanel?.addEventListener("animationend", () => {
+  architecturePanel.classList.remove("is-refreshing");
+});
 
 function closeMenu() {
   menuToggle.setAttribute("aria-expanded", "false");
@@ -607,6 +619,33 @@ menuToggle.addEventListener("click", () => {
 });
 
 mobileNav.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMenu));
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("menu-open")) {
+    closeMenu();
+    menuToggle.focus();
+  }
+});
+
+let scrollInterfaceFrame = 0;
+
+function updateScrollInterface() {
+  scrollInterfaceFrame = 0;
+  if (!siteHeader) return;
+  const scrollRange = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
+  siteHeader.style.setProperty("--scroll-progress", `${progress * 100}%`);
+  siteHeader.classList.toggle("is-scrolled", window.scrollY > 18);
+}
+
+function scheduleScrollInterfaceUpdate() {
+  if (scrollInterfaceFrame) return;
+  scrollInterfaceFrame = window.requestAnimationFrame(updateScrollInterface);
+}
+
+window.addEventListener("scroll", scheduleScrollInterfaceUpdate, { passive: true });
+window.addEventListener("resize", scheduleScrollInterfaceUpdate, { passive: true });
+updateScrollInterface();
 
 systemTabs.forEach((tab, index) => {
   tab.addEventListener("click", () => renderSystem(tab.dataset.system));
