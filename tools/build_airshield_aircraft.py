@@ -1031,23 +1031,6 @@ def canted_winglet(name: str, side: float) -> bpy.types.Object:
 
 def add_airframe_surface_details(root: bpy.types.Object) -> None:
     """Add restrained scale cues found on a composite production airframe."""
-    # Fine service seams define the flush, opaque avionics fairing. It is a
-    # continuation of the skin rather than a crew-cockpit or canopy outline.
-    for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
-        surface_detail_line(
-            f"{label} flush avionics fairing service seam",
-            [
-                (-2.48, 0.10 * side, 0.310),
-                (-2.18, 0.21 * side, 0.315),
-                (-1.68, 0.25 * side, 0.308),
-                (-1.18, 0.20 * side, 0.286),
-                (-0.82, 0.08 * side, 0.252),
-            ],
-            0.0045,
-            SEAM,
-            root,
-        )
-
     # Flap and aileron hinge lines sit just above the lifting-surface skin.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         surface_detail_line(
@@ -1159,25 +1142,8 @@ def create_aircraft() -> bpy.types.Object:
     )
     fuselage.parent = root
 
-    # The crew cockpit is deleted. A shallow conformal avionics fairing follows
-    # the fuselage crown without reproducing the height or silhouette of a
-    # canopy, and uses exactly the same military coating as the surrounding skin.
-    fairing = create_loft(
-        "Flush aerodynamic avionics fairing",
-        [
-            (-2.60, 0.025, 0.008, 0.300),
-            (-2.42, 0.115, 0.020, 0.315),
-            (-2.14, 0.215, 0.037, 0.332),
-            (-1.78, 0.255, 0.046, 0.337),
-            (-1.42, 0.245, 0.042, 0.326),
-            (-1.08, 0.190, 0.030, 0.298),
-            (-0.82, 0.085, 0.015, 0.258),
-            (-0.70, 0.020, 0.006, 0.236),
-        ],
-        IAF_GRAY,
-        ring_segments=56,
-    )
-    fairing.parent = root
+    # There is no cockpit, canopy or separate dorsal avionics cover. The
+    # original fuselage loft is the uninterrupted closed upper surface.
 
     # Long wing with a restrained 2.5 degree dihedral.
     wing_left = wing_half("Port wing", 1.0)
