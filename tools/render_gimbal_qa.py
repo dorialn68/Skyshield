@@ -10,8 +10,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL = ROOT / "airshield-ximango-integrated-eoir-gimbal-v25.glb"
-OUTPUT_DIR = ROOT / "qa-gimbal-v25"
+MODEL = ROOT / "airshield-ximango-integration-corrections-v26.glb"
+OUTPUT_DIR = ROOT / "qa-gimbal-v26"
 
 
 def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
@@ -57,7 +57,7 @@ for location, energy, size, color in (
     light.data.shape = "DISK"
     light.data.size = size
     light.data.color = color
-    look_at(light, (-0.98, -0.12, -0.61))
+    look_at(light, (-1.32, -0.12, -0.61))
 
 bpy.ops.object.camera_add()
 camera = bpy.context.object
@@ -67,13 +67,13 @@ scene.camera = camera
 
 OUTPUT_DIR.mkdir(exist_ok=True)
 views = {
-    "front-three-quarter": (-3.05, -1.78, -0.12),
-    "front": (-3.35, -0.12, -0.25),
-    "starboard": (-0.72, 2.65, -0.20),
+    "front-three-quarter": (-3.39, -1.78, -0.12),
+    "front": (-3.69, -0.12, -0.25),
+    "starboard": (-1.06, 2.65, -0.20),
 }
 for label, location in views.items():
     camera.location = location
-    look_at(camera, (-1.02, -0.12, -0.61))
+    look_at(camera, (-1.36, -0.12, -0.61))
     scene.render.filepath = str(OUTPUT_DIR / f"{label}.png")
     bpy.ops.render.render(write_still=True)
 
