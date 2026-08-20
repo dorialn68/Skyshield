@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_GLB = ROOT / "airshield-ximango.glb"
 OUTPUT_RENDER = ROOT / "airshield-xmango-hero.jpg"
 TEXTURE_DIR = ROOT / "textures"
-SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v1.png"
+SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v1.png"
 
 EXPORT_OBJECTS: list[bpy.types.Object] = []
@@ -62,6 +62,7 @@ IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0
 HARDWARE_GRAY = material("Dark gray external hardware", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
 CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.30)
+PROP_WHITE = material("White propeller polyurethane", (0.72, 0.74, 0.75, 1.0), 0.02, 0.34)
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
 LENS = material("Sensor glass", (0.015, 0.055, 0.075, 1.0), 0.38, 0.08)
 STEEL = material("Mechanism steel", (0.18, 0.20, 0.21, 1.0), 0.72, 0.24)
@@ -228,21 +229,20 @@ def build_pbr_materials() -> None:
         + skin_source[..., 1] * 0.7152
         + skin_source[..., 2] * 0.0722
     )
-    skin_low = wrapped_low_pass(skin_luma, (1, 2, 4, 8, 16, 32))
-    skin_micro = normalized_field(skin_luma - wrapped_low_pass(skin_luma, (1, 2, 4)))
-    skin_macro = normalized_field(skin_low)
-    skin_chroma = skin_source - skin_luma[..., None]
+    # Remove broad image-generation tone before deriving maps. Only the
+    # coating-scale high-frequency grain is allowed onto the aircraft; broad
+    # clouds or streaks become implausible bands once repeated along a fuselage.
+    skin_blur = wrapped_low_pass(skin_luma, (1, 1, 2, 2, 4, 4, 8, 8, 16, 32))
+    skin_micro = normalized_field(skin_luma - skin_blur, limit=2.5)
     skin_rgb = np.clip(
-        np.array([0.495, 0.512, 0.525], dtype=np.float32)[None, None, :]
-        + skin_macro[..., None] * 0.004
-        + skin_micro[..., None] * 0.003
-        + skin_chroma * 0.035,
+        np.array([0.335, 0.355, 0.370], dtype=np.float32)[None, None, :]
+        + skin_micro[..., None] * 0.0025,
         0.0,
         1.0,
     )
-    skin_roughness = np.clip(0.47 + skin_macro * 0.008 + skin_micro * 0.018, 0.40, 0.56)
-    skin_height = skin_macro * 0.002 + skin_micro * 0.018
-    skin_occlusion = np.clip(0.992 - np.maximum(-skin_micro, 0.0) * 0.008, 0.96, 1.0)
+    skin_roughness = np.clip(0.53 + skin_micro * 0.018, 0.47, 0.59)
+    skin_height = skin_micro * 0.016
+    skin_occlusion = np.clip(0.996 - np.maximum(-skin_micro, 0.0) * 0.004, 0.98, 1.0)
 
     skin_base = write_texture("airshield_skin_basecolor", rgba_from_rgb(skin_rgb), "sRGB")
     skin_rough = write_texture("airshield_skin_roughness", rgba_from_gray(skin_roughness), "Non-Color")
@@ -262,9 +262,9 @@ def build_pbr_materials() -> None:
         skin_rough,
         skin_normal,
         metallic=0.015,
-        normal_strength=0.24,
-        coat_weight=0.28,
-        coat_roughness=0.27,
+        normal_strength=0.28,
+        coat_weight=0.12,
+        coat_roughness=0.40,
     )
     attach_gltf_occlusion(IAF_GRAY, skin_ao)
 
@@ -700,7 +700,7 @@ def propeller_blade(
     mesh.update()
     blade = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(blade)
-    assign(blade, CARBON)
+    assign(blade, PROP_WHITE)
     bevel(blade, 0.018, 3)
     smooth(blade)
     mark_export(blade)
@@ -914,15 +914,15 @@ def airfoil_half(
 
 
 def wing_half(name: str, side: float) -> bpy.types.Object:
-    """AMT-200S planform calibrated to 18.70 m² and 2.5° dihedral."""
+    """AMT-200S planform without an artificially swollen center section."""
     dihedral = math.tan(math.radians(2.5))
     root_z = -0.25
     stations = [
         # span, leading x, chord, z, NACA thickness ratio, incidence
-        (0.00, -2.22, 1.48, root_z, 0.18, 2.0),
-        (1.40, -2.18, 1.38, root_z + 1.40 * dihedral, 0.18, 1.7),
-        (4.80, -1.98, 1.04, root_z + 4.80 * dihedral, 0.18, 0.8),
-        (8.735, -1.73, 0.58, root_z + 8.735 * dihedral, 0.18, 0.0),
+        (0.00, -2.22, 1.48, root_z, 0.16, 2.0),
+        (1.40, -2.18, 1.38, root_z + 1.40 * dihedral, 0.16, 1.7),
+        (4.80, -1.98, 1.04, root_z + 4.80 * dihedral, 0.15, 0.8),
+        (8.735, -1.73, 0.58, root_z + 8.735 * dihedral, 0.13, 0.0),
     ]
     return airfoil_half(name, side, stations, IAF_GRAY, chord_points=52)
 
@@ -1031,26 +1031,19 @@ def canted_winglet(name: str, side: float) -> bpy.types.Object:
 
 def add_airframe_surface_details(root: bpy.types.Object) -> None:
     """Add restrained scale cues found on a composite production airframe."""
-    # Cowling, equipment-bay and avionics-cover joints.  These are deliberately
-    # narrow: they should catch highlights without reading as decorative bands.
-    elliptical_ring("Engine cowling joint", -3.62, 0.307, 0.205, 0.02, 0.0055, SEAM, root)
-    elliptical_ring("Avionics cover joint", -1.62, 0.412, 0.148, 0.335, 0.0042, SEAM, root)
-    elliptical_ring("Mission bay shell joint", 0.18, 0.307, 0.170, 0.035, 0.0045, SEAM, root)
-    elliptical_ring("Aft shell joint", 2.18, 0.162, 0.118, -0.025, 0.0040, SEAM, root)
-
-    # Fine cover-to-fuselage seals define the low, opaque avionics cover.  The
-    # cover uses the exact same composite skin material as the fuselage.
+    # Fine service seams define the flush, opaque avionics fairing. It is a
+    # continuation of the skin rather than a crew-cockpit or canopy outline.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         surface_detail_line(
-            f"{label} canopy perimeter seal",
+            f"{label} flush avionics fairing service seam",
             [
-                (-2.56, 0.17 * side, 0.300),
-                (-2.30, 0.31 * side, 0.286),
-                (-1.76, 0.41 * side, 0.272),
-                (-1.22, 0.36 * side, 0.255),
-                (-0.76, 0.16 * side, 0.238),
+                (-2.48, 0.10 * side, 0.310),
+                (-2.18, 0.21 * side, 0.315),
+                (-1.68, 0.25 * side, 0.308),
+                (-1.18, 0.20 * side, 0.286),
+                (-0.82, 0.08 * side, 0.252),
             ],
-            0.0060,
+            0.0045,
             SEAM,
             root,
         )
@@ -1127,7 +1120,7 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_airfoil"] = "NACA 64(3)-618"
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
-    root["landing_gear_layout"] = "two swept wing-mounted main gears and compact tail wheel; no nose wheel"
+    root["landing_gear_layout"] = "two perpendicular retractable wing-mounted main gears with attached closure doors and compact tail wheel; no nose wheel"
     root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations"
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
@@ -1166,24 +1159,23 @@ def create_aircraft() -> bpy.types.Object:
     )
     fuselage.parent = root
 
-    # The UAV avionics cover follows the Ximango canopy footprint but is much
-    # lower than the crewed glazing.  It is an opaque continuation of the same
-    # IAF composite skin — no glass material and no contrasting canopy color.
+    # The crew cockpit is deleted. A shallow conformal avionics fairing follows
+    # the fuselage crown without reproducing the height or silhouette of a
+    # canopy, and uses exactly the same military coating as the surrounding skin.
     fairing = create_loft(
-        "Low Ximango-profile opaque avionics cover",
+        "Flush aerodynamic avionics fairing",
         [
-            (-2.70, 0.045, 0.018, 0.272),
-            (-2.56, 0.165, 0.052, 0.292),
-            (-2.30, 0.305, 0.102, 0.330),
-            (-1.98, 0.390, 0.142, 0.355),
-            (-1.62, 0.412, 0.150, 0.362),
-            (-1.30, 0.368, 0.128, 0.348),
-            (-1.02, 0.282, 0.088, 0.315),
-            (-0.78, 0.155, 0.043, 0.272),
-            (-0.66, 0.040, 0.016, 0.238),
+            (-2.60, 0.025, 0.008, 0.300),
+            (-2.42, 0.115, 0.020, 0.315),
+            (-2.14, 0.215, 0.037, 0.332),
+            (-1.78, 0.255, 0.046, 0.337),
+            (-1.42, 0.245, 0.042, 0.326),
+            (-1.08, 0.190, 0.030, 0.298),
+            (-0.82, 0.085, 0.015, 0.258),
+            (-0.70, 0.020, 0.006, 0.236),
         ],
         IAF_GRAY,
-        ring_segments=64,
+        ring_segments=56,
     )
     fairing.parent = root
 
@@ -1192,10 +1184,8 @@ def create_aircraft() -> bpy.types.Object:
     wing_right = wing_half("Starboard wing", -1.0)
     wing_left.parent = root
     wing_right.parent = root
-    port_fillet = wing_root_fillet("Port wing root blended fairing", 1.0)
-    starboard_fillet = wing_root_fillet("Starboard wing root blended fairing", -1.0)
-    port_fillet.parent = root
-    starboard_fillet.parent = root
+    # The airfoil halves already penetrate the lower fuselage. Avoiding an
+    # additional saddle removes the false thickened center-wing hump.
 
     # Compact upturned tips consistent with later Super Ximango examples.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
@@ -1316,28 +1306,34 @@ def create_aircraft() -> bpy.types.Object:
     for angle, suffix in ((math.radians(14), "A"), (math.radians(194), "B")):
         propeller_blade(f"Propeller blade {suffix}", angle, root)
 
-    # Ximango/glider-style tail-dragger gear. There is deliberately no nose
-    # wheel: the two independent main wheels sit below the wing roots and the
-    # small aft wheel supports the tail.
+    # Retractable tail-dragger gear. Each main leg drops perpendicular to the
+    # wing plane. A slim external composite door remains attached to the leg;
+    # in the retracted state it closes the wheel-well opening flush with the wing.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
-        mount_x = -1.63
-        mount_y = 1.18 * side
-        wheel_y = 1.40 * side
-        # The axle is forward and outboard of the upper attachment. This short
-        # swept leaf is the characteristic Ximango stance visible in the hangar
-        # reference, and avoids the toy-like vertical post of the earlier model.
-        wheel_location = (-1.89, wheel_y, -0.78)
+        mount_x = -1.62
+        mount_y = 1.40 * side
+        wheel_y = mount_y
+        wheel_location = (mount_x, wheel_y, -0.80)
 
-        # Compact under-wing mounting blister that visibly intersects the wing
-        # skin and closes the assembly at its upper end.
+        # A dark wheel-well throat makes the retraction path explicit without
+        # cutting away the complete wing structure in this exterior model.
+        wheel_well = cube(
+            f"{label} main gear recessed wheel-well throat",
+            (mount_x, mount_y, -0.337),
+            (0.175, 0.125, 0.018),
+            SEAM,
+            0.035,
+        )
+        wheel_well.parent = root
+
         bpy.ops.mesh.primitive_uv_sphere_add(
             segments=36,
             ring_count=18,
-            location=(mount_x, mount_y, -0.315),
+            location=(mount_x, mount_y, -0.350),
         )
         blister = bpy.context.object
-        blister.name = f"{label} main gear wing-root fairing"
-        blister.scale = (0.30, 0.22, 0.095)
+        blister.name = f"{label} main gear flush hinge fairing"
+        blister.scale = (0.205, 0.165, 0.052)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         assign(blister, IAF_GRAY)
         smooth(blister)
@@ -1346,29 +1342,46 @@ def create_aircraft() -> bpy.types.Object:
 
         attachment_pin = cylinder_between(
             f"{label} main gear upper attachment pin",
-            (mount_x, mount_y - 0.16, -0.35),
-            (mount_x, mount_y + 0.16, -0.35),
-            0.036,
+            (mount_x, mount_y - 0.12, -0.37),
+            (mount_x, mount_y + 0.12, -0.37),
+            0.030,
             STEEL,
             vertices=32,
         )
         attachment_pin.parent = root
 
-        landing_gear_fairing(
-            f"{label} swept composite main gear leg",
-            (mount_x, mount_y, -0.34),
-            (-1.83, wheel_y, wheel_location[2] + 0.115),
-            root,
+        vertical_strut = cylinder_between(
+            f"{label} perpendicular main gear oleo",
+            (mount_x, mount_y, -0.37),
+            (mount_x, wheel_y, wheel_location[2] + 0.11),
+            0.034,
+            STEEL,
+            vertices=28,
         )
+        vertical_strut.parent = root
 
-        # Twin lower fork arms terminate at the spanwise axle. Their overlap
-        # with both the faired leaf and hub makes the load path unambiguous.
+        door = fin_mesh(
+            f"{label} retractable main gear aerodynamic closure door",
+            [
+                (mount_x - 0.145, -0.37),
+                (mount_x + 0.145, -0.37),
+                (mount_x + 0.105, -0.68),
+                (mount_x + 0.035, -0.77),
+                (mount_x - 0.105, -0.68),
+            ],
+            0.025,
+            IAF_GRAY,
+            y_offset=wheel_y + side * 0.070,
+        )
+        door.parent = root
+
+        # Twin lower fork arms terminate at the spanwise axle.
         for fork_offset, suffix in ((-0.062, "inboard"), (0.062, "outboard")):
             fork = cylinder_between(
                 f"{label} main gear {suffix} axle fork",
-                (-1.82, wheel_y + fork_offset, -0.64),
+                (mount_x, wheel_y + fork_offset, -0.64),
                 (wheel_location[0], wheel_y + fork_offset, wheel_location[2]),
-                0.027,
+                0.024,
                 STEEL,
                 vertices=28,
             )
@@ -1405,163 +1418,98 @@ def create_aircraft() -> bpy.types.Object:
     tail_fairing.parent = root
     landing_wheel("Tail", tail_wheel_location, 0.105, 0.065, root)
 
-    # EO/IR assembly aft of the turret. A blended belly pad, yaw ring and
-    # two-sided yoke now form one continuous mechanical chain from airframe to
-    # sensor ball; none of the visible pieces are suspended in space.
-    gimbal_y = 0.15
-    gimbal_x = -0.38
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(gimbal_x, gimbal_y, -0.30))
-    gimbal_pad = bpy.context.object
-    gimbal_pad.name = "EO IR blended belly attachment fairing"
-    gimbal_pad.scale = (0.30, 0.23, 0.095)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    assign(gimbal_pad, IAF_GRAY)
-    smooth(gimbal_pad)
-    mark_export(gimbal_pad)
-    gimbal_pad.parent = root
-
-    gimbal_shaft = cylinder_between(
-        "EO IR yaw shaft",
-        (gimbal_x, gimbal_y, -0.30),
-        (gimbal_x, gimbal_y, -0.45),
-        0.092,
-        STEEL,
-        vertices=32,
-    )
-    gimbal_shaft.parent = root
-    bpy.ops.mesh.primitive_cylinder_add(
-        vertices=48,
-        radius=0.17,
-        depth=0.10,
-        location=(gimbal_x, gimbal_y, -0.46),
-    )
-    gimbal_yaw_ring = bpy.context.object
-    gimbal_yaw_ring.name = "EO IR azimuth bearing ring"
-    assign(gimbal_yaw_ring, HARDWARE_GRAY)
-    smooth(gimbal_yaw_ring)
-    mark_export(gimbal_yaw_ring)
-    gimbal_yaw_ring.parent = root
-
-    yoke_bridge = cylinder_between(
-        "EO IR yoke bridge",
-        (gimbal_x, gimbal_y - 0.17, -0.49),
-        (gimbal_x, gimbal_y + 0.17, -0.49),
-        0.036,
-        STEEL,
-        vertices=28,
-    )
-    yoke_bridge.parent = root
-    for y, suffix in ((gimbal_y - 0.15, "port"), (gimbal_y + 0.15, "starboard")):
-        arm = cylinder_between(
-            f"EO IR {suffix} yoke arm",
-            (gimbal_x, y, -0.48),
-            (gimbal_x, y, -0.62),
-            0.030,
-            STEEL,
-            vertices=24,
-        )
-        arm.parent = root
-
-    gimbal_location = (gimbal_x, gimbal_y, -0.635)
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=28, radius=0.20, location=gimbal_location)
-    gimbal = bpy.context.object
-    gimbal.name = "EO IR stabilized gimbal"
-    gimbal.scale = (0.95, 1.0, 0.98)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    assign(gimbal, GRAPHITE)
-    smooth(gimbal)
-    mark_export(gimbal)
-    gimbal.parent = root
-
-    # Side trunnions terminate the yoke at the roll axis rather than letting
-    # its arms disappear into a generic sphere.
-    for y, suffix in ((gimbal_y - 0.205, "port"), (gimbal_y + 0.205, "starboard")):
-        bracket = cube(
-            f"EO IR {suffix} trunnion bracket",
-            (gimbal_x, y, -0.565),
-            (0.070, 0.032, 0.090),
-            HARDWARE_GRAY,
-            0.025,
-        )
-        bracket.parent = root
-        trunnion_cap = cylinder_between(
-            f"EO IR {suffix} roll-axis cap",
-            (gimbal_x, y - 0.025, -0.635),
-            (gimbal_x, y + 0.025, -0.635),
-            0.050,
-            ALLOY,
-            vertices=36,
-        )
-        trunnion_cap.parent = root
-
-    elliptical_ring(
-        "EO IR roll-axis housing joint",
-        gimbal_x,
-        0.198,
-        0.194,
-        -0.635,
-        0.006,
+    # Open aft mission bay behind the wing. The dark recess and downward-opening
+    # composite doors make the available volume understandable in 360° view.
+    # The three internal shapes are neutral interchangeable mission cartridges,
+    # not functional weapon models.
+    bay_x = 0.72
+    bay_opening = cube(
+        "Open aft mission-bay recess",
+        (bay_x, 0.0, -0.160),
+        (0.48, 0.205, 0.030),
         SEAM,
-        root,
-        segments=56,
-        tube_segments=6,
-        y_offset=gimbal_y,
+        0.030,
     )
-
-    # A shallow machined face plate creates the flat optical datum used on a
-    # professional multi-sensor turret. Each aperture includes a metal bezel,
-    # recessed glass and visible fasteners instead of lenses pasted to a ball.
-    face_plate = cube(
-        "EO IR machined optical face plate",
-        (gimbal_x - 0.160, gimbal_y, -0.635),
-        (0.025, 0.120, 0.110),
-        HARDWARE_GRAY,
-        0.028,
-    )
-    face_plate.parent = root
-    aperture_layout = (
-        (gimbal_y - 0.045, -0.605, 0.058, "daylight EO"),
-        (gimbal_y + 0.050, -0.675, 0.043, "cooled IR"),
-        (gimbal_y + 0.060, -0.585, 0.022, "range channel"),
-    )
-    for y, z, radius, label in aperture_layout:
-        bezel = cylinder_between(
-            f"EO IR {label} aperture bezel",
-            (gimbal_x - 0.170, y, z),
-            (gimbal_x - 0.205, y, z),
-            radius * 1.24,
-            ALLOY,
-            vertices=40,
+    bay_opening.parent = root
+    for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
+        sill = cube(
+            f"{label} aft mission-bay structural sill",
+            (bay_x, 0.215 * side, -0.145),
+            (0.48, 0.025, 0.035),
+            HARDWARE_GRAY,
+            0.015,
         )
-        bezel.parent = root
-        lens = cylinder_between(
-            f"EO IR {label} optical glass",
-            (gimbal_x - 0.202, y, z),
-            (gimbal_x - 0.222, y, z),
-            radius,
-            LENS,
-            vertices=40,
-        )
-        lens.parent = root
-    for y_offset, z_offset in ((-0.102, -0.090), (-0.102, 0.090), (0.102, -0.090), (0.102, 0.090)):
-        fastener = cylinder_between(
-            "EO IR face-plate captive fastener",
-            (gimbal_x - 0.184, gimbal_y + y_offset, -0.635 + z_offset),
-            (gimbal_x - 0.200, gimbal_y + y_offset, -0.635 + z_offset),
+        sill.parent = root
+        door = cube(
+            f"{label} downward-opening mission-bay door",
+            (bay_x, 0.295 * side, -0.260),
+            (0.44, 0.140, 0.008),
+            IAF_GRAY,
             0.008,
+        )
+        door.rotation_euler[0] = -math.radians(55.0) * side
+        door.parent = root
+        hinge = cylinder_between(
+            f"{label} mission-bay door hinge barrel",
+            (0.27, 0.215 * side, -0.145),
+            (1.17, 0.215 * side, -0.145),
+            0.012,
             STEEL,
             vertices=20,
         )
-        fastener.parent = root
+        hinge.parent = root
+    for index, module_y in enumerate((-0.105, 0.0, 0.105), start=1):
+        module = cylinder_between(
+            f"Aft bay interchangeable mission cartridge {index}",
+            (0.34, module_y, -0.145),
+            (1.08, module_y, -0.145),
+            0.034,
+            HARDWARE_GRAY,
+            vertices=24,
+        )
+        module.parent = root
 
-    # Enlarged stabilized turret visualization.  These are presentation-only
-    # exterior proportions, intentionally omitting functional weapon detail.
-    turret_y = -0.20
-    turret_x = -1.00
+    # The former aft EO/IR ball is removed. A much smaller conformal VR/visual
+    # navigation camera is integrated into the forward belly fairing.
+    camera_x = -3.30
+    camera_y = 0.0
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(camera_x, camera_y, -0.245))
+    camera_fairing = bpy.context.object
+    camera_fairing.name = "Forward VR camera aerodynamic fairing"
+    camera_fairing.scale = (0.170, 0.135, 0.070)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    assign(camera_fairing, IAF_GRAY)
+    smooth(camera_fairing)
+    mark_export(camera_fairing)
+    camera_fairing.parent = root
+    camera_face = cube(
+        "Forward VR camera recessed face plate",
+        (camera_x - 0.145, camera_y, -0.265),
+        (0.018, 0.085, 0.052),
+        HARDWARE_GRAY,
+        0.018,
+    )
+    camera_face.parent = root
+    for offset, label in ((-0.035, "port"), (0.035, "starboard")):
+        camera_lens = cylinder_between(
+            f"Forward VR camera {label} aperture",
+            (camera_x - 0.158, camera_y + offset, -0.265),
+            (camera_x - 0.183, camera_y + offset, -0.265),
+            0.020,
+            LENS,
+            vertices=32,
+        )
+        camera_lens.parent = root
+
+    # Compact, aerodynamically faired remote station. The outer shell is much
+    # smaller than the former exposed assembly; only enough of the bearing and
+    # trunnion remains visible to communicate gimballed movement.
+    turret_y = -0.12
+    turret_x = -0.92
     bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(turret_x, turret_y, -0.31))
     turret_pad = bpy.context.object
-    turret_pad.name = "Weapon station blended belly hardpoint"
-    turret_pad.scale = (0.40, 0.31, 0.115)
+    turret_pad.name = "Compact weapon station aerodynamic upper shroud"
+    turret_pad.scale = (0.28, 0.205, 0.075)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     assign(turret_pad, IAF_GRAY)
     smooth(turret_pad)
@@ -1571,26 +1519,26 @@ def create_aircraft() -> bpy.types.Object:
     turret_shaft = cylinder_between(
         "Weapon station azimuth shaft",
         (turret_x, turret_y, -0.32),
-        (turret_x, turret_y, -0.48),
-        0.16,
+        (turret_x, turret_y, -0.415),
+        0.082,
         HARDWARE_GRAY,
-        vertices=36,
+        vertices=32,
     )
     turret_shaft.parent = root
 
-    bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.27, depth=0.14, location=(turret_x, turret_y, -0.51))
+    bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.16, depth=0.07, location=(turret_x, turret_y, -0.435))
     yaw_base = bpy.context.object
-    yaw_base.name = "Stabilized weapon yaw base"
+    yaw_base.name = "Compact stabilized weapon yaw bearing"
     assign(yaw_base, GRAPHITE)
     smooth(yaw_base)
     mark_export(yaw_base)
     yaw_base.parent = root
     bpy.ops.mesh.primitive_torus_add(
-        major_radius=0.248,
-        minor_radius=0.008,
-        major_segments=48,
+        major_radius=0.148,
+        minor_radius=0.005,
+        major_segments=40,
         minor_segments=8,
-        location=(turret_x, turret_y, -0.445),
+        location=(turret_x, turret_y, -0.398),
     )
     yaw_joint = bpy.context.object
     yaw_joint.name = "Weapon station yaw-bearing joint"
@@ -1598,118 +1546,108 @@ def create_aircraft() -> bpy.types.Object:
     smooth(yaw_joint)
     mark_export(yaw_joint)
     yaw_joint.parent = root
-    for index in range(6):
-        angle = 2.0 * math.pi * index / 6.0
-        bolt_x = turret_x + math.cos(angle) * 0.19
-        bolt_y = turret_y + math.sin(angle) * 0.19
+    for index in range(4):
+        angle = 2.0 * math.pi * index / 4.0
+        bolt_x = turret_x + math.cos(angle) * 0.112
+        bolt_y = turret_y + math.sin(angle) * 0.112
         bolt = cylinder_between(
             "Weapon station captive mounting bolt",
-            (bolt_x, bolt_y, -0.430),
-            (bolt_x, bolt_y, -0.455),
-            0.011,
+            (bolt_x, bolt_y, -0.394),
+            (bolt_x, bolt_y, -0.408),
+            0.007,
             STEEL,
-            vertices=20,
+            vertices=16,
         )
         bolt.parent = root
     upper_yoke = cylinder_between(
-        "Weapon upper yoke bridge",
-        (turret_x, turret_y - 0.22, -0.55),
-        (turret_x, turret_y + 0.22, -0.55),
-        0.046,
+        "Compact weapon upper yoke bridge",
+        (turret_x, turret_y - 0.125, -0.47),
+        (turret_x, turret_y + 0.125, -0.47),
+        0.027,
         STEEL,
-        vertices=32,
+        vertices=24,
     )
     upper_yoke.parent = root
-    receiver = cube(
-        "Gimballed cannon receiver",
-        (-1.19, turret_y, -0.67),
-        (0.38, 0.15, 0.145),
-        GRAPHITE,
-        0.052,
+    receiver = create_loft(
+        "Aerodynamic gimballed cannon receiver shell",
+        [
+            (-1.42, 0.035, 0.030, -0.545),
+            (-1.34, 0.082, 0.068, -0.545),
+            (-1.10, 0.112, 0.088, -0.545),
+            (-0.88, 0.102, 0.082, -0.535),
+            (-0.76, 0.038, 0.032, -0.515),
+        ],
+        IAF_GRAY,
+        ring_segments=40,
+        y_offset=turret_y,
     )
     receiver.parent = root
     trunnion = cylinder_between(
-        "Weapon elevation trunnion",
-        (-1.04, turret_y - 0.23, -0.65),
-        (-1.04, turret_y + 0.23, -0.65),
-        0.095,
+        "Compact weapon elevation trunnion",
+        (-1.02, turret_y - 0.145, -0.535),
+        (-1.02, turret_y + 0.145, -0.535),
+        0.055,
         STEEL,
-        vertices=32,
+        vertices=28,
     )
     trunnion.parent = root
-    for y, suffix in ((turret_y - 0.245, "port"), (turret_y + 0.245, "starboard")):
+    for y, suffix in ((turret_y - 0.155, "port"), (turret_y + 0.155, "starboard")):
         trunnion_cap = cylinder_between(
             f"Weapon {suffix} trunnion end cap",
-            (-1.04, y - 0.025, -0.65),
-            (-1.04, y + 0.025, -0.65),
-            0.104,
+            (-1.02, y - 0.015, -0.535),
+            (-1.02, y + 0.015, -0.535),
+            0.061,
             ALLOY,
-            vertices=40,
+            vertices=32,
         )
         trunnion_cap.parent = root
-    for y, suffix in ((turret_y - 0.19, "port"), (turret_y + 0.19, "starboard")):
+    for y, suffix in ((turret_y - 0.115, "port"), (turret_y + 0.115, "starboard")):
         yoke = cylinder_between(
             f"Weapon mount {suffix} yoke",
-            (-1.04, y, -0.52),
-            (-1.04, y, -0.65),
-            0.034,
+            (-0.98, y, -0.445),
+            (-1.02, y, -0.535),
+            0.022,
             STEEL,
-            vertices=24,
+            vertices=20,
         )
         yoke.parent = root
     sleeve = cylinder_between(
-        "Cannon barrel thermal sleeve",
-        (-1.48, turret_y, -0.66),
-        (-1.88, turret_y, -0.66),
-        0.050,
+        "Compact cannon barrel aerodynamic sleeve",
+        (-1.36, turret_y, -0.545),
+        (-1.64, turret_y, -0.545),
+        0.032,
         RAIL,
-        vertices=28,
+        vertices=24,
     )
     sleeve.parent = root
     barrel = cylinder_between(
-        "Cannon barrel",
-        (-1.48, turret_y, -0.66),
-        (-2.58, turret_y, -0.66),
-        0.026,
+        "Compact cannon barrel presentation envelope",
+        (-1.36, turret_y, -0.545),
+        (-2.04, turret_y, -0.545),
+        0.018,
         GRAPHITE,
-        vertices=24,
+        vertices=20,
     )
     barrel.parent = root
     muzzle = cylinder_between(
-        "Cannon muzzle device",
-        (-2.52, turret_y, -0.66),
-        (-2.72, turret_y, -0.66),
-        0.043,
+        "Compact cannon muzzle fairing",
+        (-2.00, turret_y, -0.545),
+        (-2.12, turret_y, -0.545),
+        0.026,
         GRAPHITE,
-        vertices=24,
+        vertices=20,
     )
     muzzle.parent = root
-    optic = cube(
-        "Weapon boresight optic",
-        (-1.22, turret_y - 0.20, -0.55),
-        (0.115, 0.068, 0.070),
-        GRAPHITE,
-        0.025,
-    )
-    optic.parent = root
-    optic_lens = cylinder_between(
-        "Weapon optic aperture",
-        (-1.330, turret_y - 0.20, -0.55),
-        (-1.360, turret_y - 0.20, -0.55),
-        0.036,
-        LENS,
-        vertices=30,
-    )
-    optic_lens.parent = root
 
-    # A restrained swept dorsal data-link fairing.
-    mast = fin_mesh(
-        "Datalink fairing",
-        [(1.34, 0.34), (1.76, 0.34), (1.66, 0.62), (1.47, 0.60)],
-        0.055,
+    # Replace the dorsal hump with a flush conformal communications panel.
+    datalink_panel = cube(
+        "Conformal datalink antenna panel",
+        (1.52, 0.0, 0.120),
+        (0.23, 0.095, 0.008),
         HARDWARE_GRAY,
+        0.028,
     )
-    mast.parent = root
+    datalink_panel.parent = root
 
     add_airframe_surface_details(root)
 
