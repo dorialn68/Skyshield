@@ -23,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_GLB = ROOT / "airshield-ximango.glb"
 OUTPUT_RENDER = ROOT / "airshield-xmango-hero.jpg"
 TEXTURE_DIR = ROOT / "textures"
+SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v1.png"
+GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v1.png"
 
 EXPORT_OBJECTS: list[bpy.types.Object] = []
 
@@ -109,6 +111,43 @@ def normal_map_from_height(height: np.ndarray, strength: float) -> np.ndarray:
     return rgba_from_rgb(encoded)
 
 
+def seamless_imagegen_source(path: Path, size: int) -> np.ndarray:
+    """Load an image-generated material scan and make its repeat mathematically exact.
+
+    Image generation supplies the natural micro-variation. A mirrored 2x2
+    construction guarantees identical opposite edges without blurring away the
+    useful paint grain, so WebGL repeat sampling cannot expose a UV seam.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"Missing image-generated material source: {path}")
+    half = size // 2
+    source = bpy.data.images.load(str(path), check_existing=True)
+    source.colorspace_settings.name = "sRGB"
+    source.scale(half, half)
+    pixels = np.array(source.pixels[:], dtype=np.float32).reshape((half, half, 4))[..., :3]
+    top = np.concatenate((pixels, np.flip(pixels, axis=1)), axis=1)
+    return np.concatenate((top, np.flip(top, axis=0)), axis=0)
+
+
+def wrapped_low_pass(field: np.ndarray, steps: tuple[int, ...]) -> np.ndarray:
+    """Small periodic blur used to separate material grain from broad tone."""
+    result = field.astype(np.float32, copy=True)
+    for step in steps:
+        result = (
+            result
+            + np.roll(result, step, axis=0)
+            + np.roll(result, -step, axis=0)
+            + np.roll(result, step, axis=1)
+            + np.roll(result, -step, axis=1)
+        ) / 5.0
+    return result
+
+
+def normalized_field(field: np.ndarray, limit: float = 3.0) -> np.ndarray:
+    centered = field - float(field.mean())
+    return np.clip(centered / max(float(centered.std()), 1e-6), -limit, limit)
+
+
 def textured_principled_material(
     mat: bpy.types.Material,
     base_image: bpy.types.Image,
@@ -177,42 +216,39 @@ def attach_gltf_occlusion(mat: bpy.types.Material, image: bpy.types.Image) -> No
 
 
 def build_pbr_materials() -> None:
-    """Generate portable PBR maps used by both the hero render and model-viewer."""
-    rng = np.random.default_rng(1968)
+    """Build portable PBR maps from image-generated, lighting-neutral sources."""
 
     # A 2K authored surface holds up during investor-presentation close-ups.
     # The HDR environments remain 1K because model-viewer clamps lighting
     # environments internally; geometric and material detail belong here.
     size = 2048
-    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32) / float(size)
-    broad = (
-        0.50 * np.sin(2.0 * math.pi * (2.0 * xx + 1.0 * yy))
-        + 0.28 * np.sin(2.0 * math.pi * (5.0 * xx - 3.0 * yy + 0.17))
-        + 0.15 * np.cos(2.0 * math.pi * (11.0 * xx + 7.0 * yy))
+    skin_source = seamless_imagegen_source(SKIN_IMAGEGEN_SOURCE, size)
+    skin_luma = (
+        skin_source[..., 0] * 0.2126
+        + skin_source[..., 1] * 0.7152
+        + skin_source[..., 2] * 0.0722
     )
-    grain = rng.normal(0.0, 1.0, (size, size)).astype(np.float32)
-    grain = (
-        grain
-        + np.roll(grain, 1, axis=0)
-        + np.roll(grain, -1, axis=0)
-        + np.roll(grain, 1, axis=1)
-        + np.roll(grain, -1, axis=1)
-    ) / 5.0
-    skin_variation = broad * 0.013 + grain * 0.011
+    skin_low = wrapped_low_pass(skin_luma, (1, 2, 4, 8, 16, 32))
+    skin_micro = normalized_field(skin_luma - wrapped_low_pass(skin_luma, (1, 2, 4)))
+    skin_macro = normalized_field(skin_low)
+    skin_chroma = skin_source - skin_luma[..., None]
     skin_rgb = np.clip(
-        np.array([0.505, 0.522, 0.535], dtype=np.float32)[None, None, :] + skin_variation[..., None],
+        np.array([0.495, 0.512, 0.525], dtype=np.float32)[None, None, :]
+        + skin_macro[..., None] * 0.004
+        + skin_micro[..., None] * 0.003
+        + skin_chroma * 0.035,
         0.0,
         1.0,
     )
-    skin_roughness = np.clip(0.49 + broad * 0.045 + grain * 0.036, 0.36, 0.66)
-    skin_height = broad * 0.075 + grain * 0.052
-    skin_occlusion = np.clip(0.975 - np.maximum(broad, 0.0) * 0.030 - np.abs(grain) * 0.020, 0.90, 1.0)
+    skin_roughness = np.clip(0.47 + skin_macro * 0.008 + skin_micro * 0.018, 0.40, 0.56)
+    skin_height = skin_macro * 0.002 + skin_micro * 0.018
+    skin_occlusion = np.clip(0.992 - np.maximum(-skin_micro, 0.0) * 0.008, 0.96, 1.0)
 
     skin_base = write_texture("airshield_skin_basecolor", rgba_from_rgb(skin_rgb), "sRGB")
     skin_rough = write_texture("airshield_skin_roughness", rgba_from_gray(skin_roughness), "Non-Color")
     skin_normal = write_texture(
         "airshield_skin_normal",
-        normal_map_from_height(skin_height, 4.0),
+        normal_map_from_height(skin_height, 2.8),
         "Non-Color",
     )
     skin_ao = write_texture(
@@ -226,11 +262,63 @@ def build_pbr_materials() -> None:
         skin_rough,
         skin_normal,
         metallic=0.015,
-        normal_strength=0.38,
-        coat_weight=0.22,
-        coat_roughness=0.31,
+        normal_strength=0.24,
+        coat_weight=0.28,
+        coat_roughness=0.27,
     )
     attach_gltf_occlusion(IAF_GRAY, skin_ao)
+
+    # The EO/IR ball, stabilized weapon housing and axle caps share a dark,
+    # fine-grain aerospace coating derived from a second image-generated scan.
+    gimbal_size = 1024
+    gimbal_source = seamless_imagegen_source(GIMBAL_IMAGEGEN_SOURCE, gimbal_size)
+    gimbal_luma = (
+        gimbal_source[..., 0] * 0.2126
+        + gimbal_source[..., 1] * 0.7152
+        + gimbal_source[..., 2] * 0.0722
+    )
+    gimbal_low = wrapped_low_pass(gimbal_luma, (1, 2, 4, 8, 16))
+    gimbal_micro = normalized_field(gimbal_luma - wrapped_low_pass(gimbal_luma, (1, 2)))
+    gimbal_macro = normalized_field(gimbal_low)
+    gimbal_chroma = gimbal_source - gimbal_luma[..., None]
+    gimbal_rgb = np.clip(
+        np.array([0.032, 0.038, 0.042], dtype=np.float32)[None, None, :]
+        + gimbal_macro[..., None] * 0.008
+        + gimbal_micro[..., None] * 0.004
+        + gimbal_chroma * 0.040,
+        0.0,
+        1.0,
+    )
+    gimbal_roughness = np.clip(0.31 + gimbal_macro * 0.018 + gimbal_micro * 0.035, 0.22, 0.45)
+    gimbal_height = gimbal_macro * 0.006 + gimbal_micro * 0.026
+    gimbal_occlusion = np.clip(0.985 - np.maximum(-gimbal_micro, 0.0) * 0.016, 0.93, 1.0)
+    gimbal_base = write_texture("airshield_gimbal_basecolor", rgba_from_rgb(gimbal_rgb), "sRGB")
+    gimbal_rough = write_texture(
+        "airshield_gimbal_roughness",
+        rgba_from_gray(gimbal_roughness),
+        "Non-Color",
+    )
+    gimbal_normal = write_texture(
+        "airshield_gimbal_normal",
+        normal_map_from_height(gimbal_height, 3.8),
+        "Non-Color",
+    )
+    gimbal_ao = write_texture(
+        "airshield_gimbal_occlusion",
+        rgba_from_gray(gimbal_occlusion),
+        "Non-Color",
+    )
+    textured_principled_material(
+        GRAPHITE,
+        gimbal_base,
+        gimbal_rough,
+        gimbal_normal,
+        metallic=0.30,
+        normal_strength=0.26,
+        coat_weight=0.18,
+        coat_roughness=0.24,
+    )
+    attach_gltf_occlusion(GRAPHITE, gimbal_ao)
 
     carbon_size = 1024
     cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
@@ -273,11 +361,6 @@ def build_pbr_materials() -> None:
     set_bsdf_input(hardware_bsdf, "Coat Roughness", 0.28)
     set_bsdf_input(hardware_bsdf, "Specular IOR Level", 0.32)
     set_bsdf_input(hardware_bsdf, "IOR", 1.47)
-
-    graphite_bsdf = GRAPHITE.node_tree.nodes.get("Principled BSDF")
-    set_bsdf_input(graphite_bsdf, "Metallic", 0.34)
-    set_bsdf_input(graphite_bsdf, "Roughness", 0.30)
-    set_bsdf_input(graphite_bsdf, "Coat Weight", 0.16)
 
     steel_bsdf = STEEL.node_tree.nodes.get("Principled BSDF")
     set_bsdf_input(steel_bsdf, "Metallic", 0.88)
@@ -1383,20 +1466,93 @@ def create_aircraft() -> bpy.types.Object:
     bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=28, radius=0.20, location=gimbal_location)
     gimbal = bpy.context.object
     gimbal.name = "EO IR stabilized gimbal"
+    gimbal.scale = (0.95, 1.0, 0.98)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     assign(gimbal, GRAPHITE)
     smooth(gimbal)
     mark_export(gimbal)
     gimbal.parent = root
-    for y, z, radius in ((gimbal_y - 0.064, -0.61, 0.052), (gimbal_y + 0.064, -0.68, 0.038)):
-        lens = cylinder_between(
-            "EO IR sensor aperture",
-            (gimbal_x - 0.185, y, z),
-            (gimbal_x - 0.220, y, z),
-            radius,
-            LENS,
+
+    # Side trunnions terminate the yoke at the roll axis rather than letting
+    # its arms disappear into a generic sphere.
+    for y, suffix in ((gimbal_y - 0.205, "port"), (gimbal_y + 0.205, "starboard")):
+        bracket = cube(
+            f"EO IR {suffix} trunnion bracket",
+            (gimbal_x, y, -0.565),
+            (0.070, 0.032, 0.090),
+            HARDWARE_GRAY,
+            0.025,
+        )
+        bracket.parent = root
+        trunnion_cap = cylinder_between(
+            f"EO IR {suffix} roll-axis cap",
+            (gimbal_x, y - 0.025, -0.635),
+            (gimbal_x, y + 0.025, -0.635),
+            0.050,
+            ALLOY,
             vertices=36,
         )
+        trunnion_cap.parent = root
+
+    elliptical_ring(
+        "EO IR roll-axis housing joint",
+        gimbal_x,
+        0.198,
+        0.194,
+        -0.635,
+        0.006,
+        SEAM,
+        root,
+        segments=56,
+        tube_segments=6,
+        y_offset=gimbal_y,
+    )
+
+    # A shallow machined face plate creates the flat optical datum used on a
+    # professional multi-sensor turret. Each aperture includes a metal bezel,
+    # recessed glass and visible fasteners instead of lenses pasted to a ball.
+    face_plate = cube(
+        "EO IR machined optical face plate",
+        (gimbal_x - 0.160, gimbal_y, -0.635),
+        (0.025, 0.120, 0.110),
+        HARDWARE_GRAY,
+        0.028,
+    )
+    face_plate.parent = root
+    aperture_layout = (
+        (gimbal_y - 0.045, -0.605, 0.058, "daylight EO"),
+        (gimbal_y + 0.050, -0.675, 0.043, "cooled IR"),
+        (gimbal_y + 0.060, -0.585, 0.022, "range channel"),
+    )
+    for y, z, radius, label in aperture_layout:
+        bezel = cylinder_between(
+            f"EO IR {label} aperture bezel",
+            (gimbal_x - 0.170, y, z),
+            (gimbal_x - 0.205, y, z),
+            radius * 1.24,
+            ALLOY,
+            vertices=40,
+        )
+        bezel.parent = root
+        lens = cylinder_between(
+            f"EO IR {label} optical glass",
+            (gimbal_x - 0.202, y, z),
+            (gimbal_x - 0.222, y, z),
+            radius,
+            LENS,
+            vertices=40,
+        )
         lens.parent = root
+    for y_offset, z_offset in ((-0.102, -0.090), (-0.102, 0.090), (0.102, -0.090), (0.102, 0.090)):
+        fastener = cylinder_between(
+            "EO IR face-plate captive fastener",
+            (gimbal_x - 0.184, gimbal_y + y_offset, -0.635 + z_offset),
+            (gimbal_x - 0.200, gimbal_y + y_offset, -0.635 + z_offset),
+            0.008,
+            STEEL,
+            vertices=20,
+        )
+        fastener.parent = root
 
     # Enlarged stabilized turret visualization.  These are presentation-only
     # exterior proportions, intentionally omitting functional weapon detail.
@@ -1429,6 +1585,32 @@ def create_aircraft() -> bpy.types.Object:
     smooth(yaw_base)
     mark_export(yaw_base)
     yaw_base.parent = root
+    bpy.ops.mesh.primitive_torus_add(
+        major_radius=0.248,
+        minor_radius=0.008,
+        major_segments=48,
+        minor_segments=8,
+        location=(turret_x, turret_y, -0.445),
+    )
+    yaw_joint = bpy.context.object
+    yaw_joint.name = "Weapon station yaw-bearing joint"
+    assign(yaw_joint, SEAM)
+    smooth(yaw_joint)
+    mark_export(yaw_joint)
+    yaw_joint.parent = root
+    for index in range(6):
+        angle = 2.0 * math.pi * index / 6.0
+        bolt_x = turret_x + math.cos(angle) * 0.19
+        bolt_y = turret_y + math.sin(angle) * 0.19
+        bolt = cylinder_between(
+            "Weapon station captive mounting bolt",
+            (bolt_x, bolt_y, -0.430),
+            (bolt_x, bolt_y, -0.455),
+            0.011,
+            STEEL,
+            vertices=20,
+        )
+        bolt.parent = root
     upper_yoke = cylinder_between(
         "Weapon upper yoke bridge",
         (turret_x, turret_y - 0.22, -0.55),
@@ -1455,6 +1637,16 @@ def create_aircraft() -> bpy.types.Object:
         vertices=32,
     )
     trunnion.parent = root
+    for y, suffix in ((turret_y - 0.245, "port"), (turret_y + 0.245, "starboard")):
+        trunnion_cap = cylinder_between(
+            f"Weapon {suffix} trunnion end cap",
+            (-1.04, y - 0.025, -0.65),
+            (-1.04, y + 0.025, -0.65),
+            0.104,
+            ALLOY,
+            vertices=40,
+        )
+        trunnion_cap.parent = root
     for y, suffix in ((turret_y - 0.19, "port"), (turret_y + 0.19, "starboard")):
         yoke = cylinder_between(
             f"Weapon mount {suffix} yoke",
@@ -1530,7 +1722,7 @@ def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
 
 
 def generate_uv_maps() -> None:
-    """Create portable UVs so authored maps survive the GLB export."""
+    """Create repeatable real-scale UVs so authored maps survive GLB export."""
     bpy.ops.object.select_all(action="DESELECT")
     for obj in EXPORT_OBJECTS:
         if obj.type != "MESH" or len(obj.data.polygons) == 0:
@@ -1543,13 +1735,39 @@ def generate_uv_maps() -> None:
         # Merge only exact duplicates before UV projection so the exporter does
         # not create zero-length tangent vectors at those closures.
         bpy.ops.mesh.remove_doubles(threshold=0.000001)
-        bpy.ops.uv.smart_project(
-            angle_limit=math.radians(66.0),
-            island_margin=0.025,
-            area_weight=0.15,
-            correct_aspect=True,
-            scale_to_bounds=False,
-        )
+        materials = {slot.material for slot in obj.material_slots if slot.material is not None}
+        # Seamless cube projection keeps texel scale consistent across the long
+        # wing, changing fuselage sections and small stabilized housings. The
+        # source maps repeat outside 0-1, so every projection seam is neutral.
+        if IAF_GRAY in materials:
+            bpy.ops.uv.cube_project(
+                cube_size=1.8,
+                correct_aspect=True,
+                clip_to_bounds=False,
+                scale_to_bounds=False,
+            )
+        elif GRAPHITE in materials:
+            bpy.ops.uv.cube_project(
+                cube_size=0.55,
+                correct_aspect=True,
+                clip_to_bounds=False,
+                scale_to_bounds=False,
+            )
+        elif CARBON in materials:
+            bpy.ops.uv.cube_project(
+                cube_size=0.45,
+                correct_aspect=True,
+                clip_to_bounds=False,
+                scale_to_bounds=False,
+            )
+        else:
+            bpy.ops.uv.smart_project(
+                angle_limit=math.radians(66.0),
+                island_margin=0.025,
+                area_weight=0.15,
+                correct_aspect=True,
+                scale_to_bounds=False,
+            )
         bpy.ops.object.mode_set(mode="OBJECT")
         obj.select_set(False)
         triangulate = obj.modifiers.new("Portable tangent-space triangulation", "TRIANGULATE")
