@@ -15,12 +15,14 @@ import os
 from pathlib import Path
 
 import bpy
+import numpy as np
 from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_GLB = ROOT / "airshield-ximango.glb"
 OUTPUT_RENDER = ROOT / "airshield-xmango-hero.jpg"
+TEXTURE_DIR = ROOT / "textures"
 
 EXPORT_OBJECTS: list[bpy.types.Object] = []
 
@@ -57,11 +59,233 @@ def material(
 IAF_GRAY = material("IAF matte light gray", (0.39, 0.405, 0.40, 1.0), 0.02, 0.48)
 IAF_GRAY_DARK = material("Avionics fairing gray", (0.055, 0.085, 0.10, 1.0), 0.10, 0.24)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
+CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.30)
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
 LENS = material("Sensor glass", (0.015, 0.055, 0.075, 1.0), 0.38, 0.08)
 STEEL = material("Mechanism steel", (0.18, 0.20, 0.21, 1.0), 0.72, 0.24)
+SEAM = material("Composite panel seam", (0.055, 0.062, 0.064, 1.0), 0.04, 0.58)
+NAV_RED = material("Port navigation lens", (0.34, 0.008, 0.006, 1.0), 0.0, 0.16)
+NAV_GREEN = material("Starboard navigation lens", (0.006, 0.28, 0.09, 1.0), 0.0, 0.16)
 CONCRETE = material("Concrete", (0.24, 0.26, 0.27, 1.0), 0.0, 0.84)
 HANGAR = material("Hangar", (0.075, 0.09, 0.10, 1.0), 0.15, 0.58)
+
+
+def set_bsdf_input(bsdf: bpy.types.Node, name: str, value: float | tuple[float, ...]) -> None:
+    socket = bsdf.inputs.get(name)
+    if socket is not None:
+        socket.default_value = value
+
+
+def write_texture(name: str, pixels: np.ndarray, colorspace: str) -> bpy.types.Image:
+    """Persist a generated texture so Blender and the exported GLB share it."""
+    TEXTURE_DIR.mkdir(parents=True, exist_ok=True)
+    height, width = pixels.shape[:2]
+    image = bpy.data.images.new(name, width=width, height=height, alpha=True, float_buffer=False)
+    image.colorspace_settings.name = colorspace
+    image.filepath_raw = str(TEXTURE_DIR / f"{name}.png")
+    image.file_format = "PNG"
+    image.pixels.foreach_set(np.ascontiguousarray(pixels, dtype=np.float32).ravel())
+    image.save()
+    return image
+
+
+def rgba_from_rgb(rgb: np.ndarray) -> np.ndarray:
+    alpha = np.ones((*rgb.shape[:2], 1), dtype=np.float32)
+    return np.concatenate((rgb.astype(np.float32), alpha), axis=2)
+
+
+def rgba_from_gray(gray: np.ndarray) -> np.ndarray:
+    rgb = np.repeat(gray[..., None], 3, axis=2)
+    return rgba_from_rgb(rgb)
+
+
+def normal_map_from_height(height: np.ndarray, strength: float) -> np.ndarray:
+    gradient_y, gradient_x = np.gradient(height)
+    normal = np.dstack((-gradient_x * strength, -gradient_y * strength, np.ones_like(height)))
+    normal /= np.linalg.norm(normal, axis=2, keepdims=True)
+    encoded = normal * 0.5 + 0.5
+    return rgba_from_rgb(encoded)
+
+
+def textured_principled_material(
+    mat: bpy.types.Material,
+    base_image: bpy.types.Image,
+    roughness_image: bpy.types.Image,
+    normal_image: bpy.types.Image,
+    *,
+    metallic: float,
+    normal_strength: float,
+    coat_weight: float,
+    coat_roughness: float,
+) -> None:
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    bsdf = nodes.get("Principled BSDF")
+    set_bsdf_input(bsdf, "Metallic", metallic)
+    set_bsdf_input(bsdf, "Coat Weight", coat_weight)
+    set_bsdf_input(bsdf, "Coat Roughness", coat_roughness)
+    set_bsdf_input(bsdf, "IOR", 1.46)
+    set_bsdf_input(bsdf, "Specular IOR Level", 0.34)
+
+    base = nodes.new("ShaderNodeTexImage")
+    base.name = f"{mat.name} base color"
+    base.image = base_image
+    base.interpolation = "Linear"
+    base.extension = "REPEAT"
+    links.new(base.outputs["Color"], bsdf.inputs["Base Color"])
+
+    roughness = nodes.new("ShaderNodeTexImage")
+    roughness.name = f"{mat.name} roughness"
+    roughness.image = roughness_image
+    roughness.interpolation = "Linear"
+    roughness.extension = "REPEAT"
+    links.new(roughness.outputs["Color"], bsdf.inputs["Roughness"])
+
+    normal_texture = nodes.new("ShaderNodeTexImage")
+    normal_texture.name = f"{mat.name} normal"
+    normal_texture.image = normal_image
+    normal_texture.interpolation = "Linear"
+    normal_texture.extension = "REPEAT"
+    normal = nodes.new("ShaderNodeNormalMap")
+    normal.name = f"{mat.name} normal conversion"
+    normal.inputs["Strength"].default_value = normal_strength
+    links.new(normal_texture.outputs["Color"], normal.inputs["Color"])
+    links.new(normal.outputs["Normal"], bsdf.inputs["Normal"])
+
+
+def build_pbr_materials() -> None:
+    """Generate portable PBR maps used by both the hero render and model-viewer."""
+    rng = np.random.default_rng(1968)
+
+    size = 1024
+    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32) / float(size)
+    broad = (
+        0.50 * np.sin(2.0 * math.pi * (2.0 * xx + 1.0 * yy))
+        + 0.28 * np.sin(2.0 * math.pi * (5.0 * xx - 3.0 * yy + 0.17))
+        + 0.15 * np.cos(2.0 * math.pi * (11.0 * xx + 7.0 * yy))
+    )
+    grain = rng.normal(0.0, 1.0, (size, size)).astype(np.float32)
+    grain = (
+        grain
+        + np.roll(grain, 1, axis=0)
+        + np.roll(grain, -1, axis=0)
+        + np.roll(grain, 1, axis=1)
+        + np.roll(grain, -1, axis=1)
+    ) / 5.0
+    skin_variation = broad * 0.012 + grain * 0.010
+    skin_rgb = np.clip(
+        np.array([0.645, 0.655, 0.648], dtype=np.float32)[None, None, :] + skin_variation[..., None],
+        0.0,
+        1.0,
+    )
+    skin_roughness = np.clip(0.50 + broad * 0.035 + grain * 0.028, 0.39, 0.64)
+    skin_height = broad * 0.06 + grain * 0.035
+
+    skin_base = write_texture("airshield_skin_basecolor", rgba_from_rgb(skin_rgb), "sRGB")
+    skin_rough = write_texture("airshield_skin_roughness", rgba_from_gray(skin_roughness), "Non-Color")
+    skin_normal = write_texture(
+        "airshield_skin_normal",
+        normal_map_from_height(skin_height, 3.2),
+        "Non-Color",
+    )
+    textured_principled_material(
+        IAF_GRAY,
+        skin_base,
+        skin_rough,
+        skin_normal,
+        metallic=0.015,
+        normal_strength=0.24,
+        coat_weight=0.18,
+        coat_roughness=0.34,
+    )
+
+    carbon_size = 512
+    cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
+    warp = np.sin(2.0 * math.pi * (cx + cy) * 52.0)
+    weft = np.sin(2.0 * math.pi * (cx - cy) * 52.0)
+    weave = 0.5 + 0.5 * warp * weft
+    carbon_rgb = np.repeat((0.040 + weave * 0.045)[..., None], 3, axis=2)
+    carbon_rgb[..., 2] *= 1.08
+    carbon_roughness = np.clip(0.24 + (1.0 - weave) * 0.12, 0.20, 0.40)
+    carbon_height = (warp * weft) * 0.06
+    carbon_base = write_texture("airshield_carbon_basecolor", rgba_from_rgb(carbon_rgb), "sRGB")
+    carbon_rough = write_texture("airshield_carbon_roughness", rgba_from_gray(carbon_roughness), "Non-Color")
+    carbon_normal = write_texture(
+        "airshield_carbon_normal",
+        normal_map_from_height(carbon_height, 4.5),
+        "Non-Color",
+    )
+    textured_principled_material(
+        CARBON,
+        carbon_base,
+        carbon_rough,
+        carbon_normal,
+        metallic=0.16,
+        normal_strength=0.32,
+        coat_weight=0.46,
+        coat_roughness=0.18,
+    )
+
+    fairing_bsdf = IAF_GRAY_DARK.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(fairing_bsdf, "Metallic", 0.04)
+    set_bsdf_input(fairing_bsdf, "Roughness", 0.17)
+    set_bsdf_input(fairing_bsdf, "Coat Weight", 0.72)
+    set_bsdf_input(fairing_bsdf, "Coat Roughness", 0.10)
+    set_bsdf_input(fairing_bsdf, "IOR", 1.47)
+
+    graphite_bsdf = GRAPHITE.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(graphite_bsdf, "Metallic", 0.34)
+    set_bsdf_input(graphite_bsdf, "Roughness", 0.30)
+    set_bsdf_input(graphite_bsdf, "Coat Weight", 0.16)
+
+    steel_bsdf = STEEL.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(steel_bsdf, "Metallic", 0.88)
+    set_bsdf_input(steel_bsdf, "Roughness", 0.20)
+    set_bsdf_input(steel_bsdf, "Anisotropic", 0.22)
+
+    rubber_bsdf = RUBBER.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(rubber_bsdf, "Roughness", 0.76)
+    set_bsdf_input(rubber_bsdf, "Specular IOR Level", 0.22)
+
+    lens_bsdf = LENS.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(lens_bsdf, "Metallic", 0.06)
+    set_bsdf_input(lens_bsdf, "Roughness", 0.055)
+    set_bsdf_input(lens_bsdf, "Transmission Weight", 0.28)
+    set_bsdf_input(lens_bsdf, "Coat Weight", 1.0)
+    set_bsdf_input(lens_bsdf, "Coat Roughness", 0.04)
+    set_bsdf_input(lens_bsdf, "IOR", 1.48)
+
+    for nav_material, color in (
+        (NAV_RED, (0.62, 0.01, 0.006, 1.0)),
+        (NAV_GREEN, (0.006, 0.55, 0.08, 1.0)),
+    ):
+        nav_bsdf = nav_material.node_tree.nodes.get("Principled BSDF")
+        set_bsdf_input(nav_bsdf, "Coat Weight", 1.0)
+        set_bsdf_input(nav_bsdf, "Coat Roughness", 0.035)
+        set_bsdf_input(nav_bsdf, "Emission Color", color)
+        set_bsdf_input(nav_bsdf, "Emission Strength", 1.8)
+
+    # Render-only concrete variation gives the aircraft a believable scale and
+    # prevents the apron from reading as an infinite studio cyclorama.
+    concrete_nodes = CONCRETE.node_tree.nodes
+    concrete_links = CONCRETE.node_tree.links
+    concrete_bsdf = concrete_nodes.get("Principled BSDF")
+    noise = concrete_nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 3.2
+    noise.inputs["Detail"].default_value = 7.0
+    noise.inputs["Roughness"].default_value = 0.72
+    ramp = concrete_nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.24
+    ramp.color_ramp.elements[0].color = (0.16, 0.18, 0.19, 1.0)
+    ramp.color_ramp.elements[1].position = 0.78
+    ramp.color_ramp.elements[1].color = (0.34, 0.36, 0.36, 1.0)
+    bump = concrete_nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.18
+    bump.inputs["Distance"].default_value = 0.055
+    concrete_links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+    concrete_links.new(ramp.outputs["Color"], concrete_bsdf.inputs["Base Color"])
+    concrete_links.new(noise.outputs["Fac"], bump.inputs["Height"])
+    concrete_links.new(bump.outputs["Normal"], concrete_bsdf.inputs["Normal"])
 
 
 def assign(obj: bpy.types.Object, mat: bpy.types.Material) -> bpy.types.Object:
@@ -134,6 +358,75 @@ def cylinder_between(
     return obj
 
 
+def elliptical_ring(
+    name: str,
+    x: float,
+    radius_y: float,
+    radius_z: float,
+    center_z: float,
+    tube_radius: float,
+    mat: bpy.types.Material,
+    parent: bpy.types.Object,
+    segments: int = 72,
+    tube_segments: int = 8,
+) -> bpy.types.Object:
+    """A fine manufacturing joint wrapped around an elliptical shell section."""
+    vertices: list[tuple[float, float, float]] = []
+    faces: list[tuple[int, int, int, int]] = []
+    for ring in range(segments):
+        angle = 2.0 * math.pi * ring / segments
+        cosine, sine = math.cos(angle), math.sin(angle)
+        for tube in range(tube_segments):
+            tube_angle = 2.0 * math.pi * tube / tube_segments
+            radial = tube_radius * math.sin(tube_angle)
+            vertices.append(
+                (
+                    x + tube_radius * math.cos(tube_angle),
+                    (radius_y + radial) * cosine,
+                    center_z + (radius_z + radial) * sine,
+                )
+            )
+    for ring in range(segments):
+        next_ring = (ring + 1) % segments
+        for tube in range(tube_segments):
+            next_tube = (tube + 1) % tube_segments
+            a = ring * tube_segments + tube
+            b = next_ring * tube_segments + tube
+            c = next_ring * tube_segments + next_tube
+            d = ring * tube_segments + next_tube
+            faces.append((a, b, c, d))
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    smooth(obj)
+    mark_export(obj)
+    obj.parent = parent
+    return obj
+
+
+def surface_detail_line(
+    name: str,
+    points: list[tuple[float, float, float]],
+    radius: float,
+    mat: bpy.types.Material,
+    parent: bpy.types.Object,
+) -> None:
+    """Build a subtle raised hinge or panel line from connected round segments."""
+    for index, (start, end) in enumerate(zip(points, points[1:]), start=1):
+        detail = cylinder_between(
+            f"{name} {index:02d}",
+            start,
+            end,
+            radius,
+            mat,
+            vertices=10,
+        )
+        detail.parent = parent
+
+
 def landing_wheel(
     name: str,
     location: tuple[float, float, float],
@@ -169,6 +462,16 @@ def landing_wheel(
         vertices=32,
     )
     hub.parent = parent
+
+    axle_cap = cylinder_between(
+        f"{name} axle cap",
+        (x, y - width * 0.63, z),
+        (x, y + width * 0.63, z),
+        outer_radius * 0.16,
+        GRAPHITE,
+        vertices=28,
+    )
+    axle_cap.parent = parent
     return wheel
 
 
@@ -252,7 +555,7 @@ def propeller_blade(
     mesh.update()
     blade = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(blade)
-    assign(blade, GRAPHITE)
+    assign(blade, CARBON)
     bevel(blade, 0.018, 3)
     smooth(blade)
     mark_export(blade)
@@ -477,6 +780,77 @@ def canted_winglet(name: str, side: float) -> bpy.types.Object:
     smooth(obj)
     mark_export(obj)
     return obj
+
+
+def add_airframe_surface_details(root: bpy.types.Object) -> None:
+    """Add restrained scale cues found on a composite production airframe."""
+    # Cowling, equipment-bay and avionics-cover joints.  These are deliberately
+    # narrow: they should catch highlights without reading as decorative bands.
+    elliptical_ring("Engine cowling joint", -3.52, 0.342, 0.342, 0.00, 0.0055, SEAM, root)
+    elliptical_ring("Avionics cover joint", -1.55, 0.432, 0.322, 0.59, 0.0050, SEAM, root)
+    elliptical_ring("Mission bay shell joint", 0.30, 0.402, 0.392, 0.07, 0.0045, SEAM, root)
+    elliptical_ring("Aft shell joint", 2.35, 0.222, 0.212, -0.03, 0.0040, SEAM, root)
+
+    # Flap and aileron hinge lines sit just above the lifting-surface skin.
+    for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
+        surface_detail_line(
+            f"{label} flap hinge",
+            [
+                (-1.09, 1.48 * side, -0.120),
+                (-1.10, 3.18 * side, -0.055),
+                (-1.13, 4.70 * side, 0.010),
+            ],
+            0.0055,
+            SEAM,
+            root,
+        )
+        surface_detail_line(
+            f"{label} aileron hinge",
+            [
+                (-1.14, 4.84 * side, 0.018),
+                (-1.20, 6.62 * side, 0.095),
+                (-1.28, 8.46 * side, 0.170),
+            ],
+            0.0050,
+            SEAM,
+            root,
+        )
+        surface_detail_line(
+            f"{label} elevator hinge",
+            [
+                (3.51, 0.12 * side, 1.312),
+                (3.51, 1.74 * side, 1.325),
+            ],
+            0.0045,
+            SEAM,
+            root,
+        )
+
+        # Scale-appropriate navigation lenses and a short static wick.
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            segments=24,
+            ring_count=12,
+            radius=0.035,
+            location=(-1.43, 8.72 * side, 0.155),
+        )
+        navigation_light = bpy.context.object
+        navigation_light.name = f"{label} navigation lens"
+        navigation_light.scale = (1.25, 0.66, 0.62)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        assign(navigation_light, NAV_RED if side > 0 else NAV_GREEN)
+        smooth(navigation_light)
+        mark_export(navigation_light)
+        navigation_light.parent = root
+
+        wick = cylinder_between(
+            f"{label} static discharge wick",
+            (-1.15, 8.68 * side, 0.145),
+            (-0.96, 8.75 * side, 0.135),
+            0.0038,
+            GRAPHITE,
+            vertices=10,
+        )
+        wick.parent = root
 
 
 def create_aircraft() -> bpy.types.Object:
@@ -742,12 +1116,35 @@ def create_aircraft() -> bpy.types.Object:
     )
     mast.parent = root
 
+    add_airframe_surface_details(root)
+
     return root
 
 
 def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
     direction = Vector(target) - obj.location
     obj.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+
+
+def generate_uv_maps() -> None:
+    """Create portable UVs so authored maps survive the GLB export."""
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in EXPORT_OBJECTS:
+        if obj.type != "MESH" or len(obj.data.polygons) == 0:
+            continue
+        bpy.context.view_layer.objects.active = obj
+        obj.select_set(True)
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project(
+            angle_limit=math.radians(66.0),
+            island_margin=0.025,
+            area_weight=0.15,
+            correct_aspect=True,
+            scale_to_bounds=False,
+        )
+        bpy.ops.object.mode_set(mode="OBJECT")
+        obj.select_set(False)
 
 
 def setup_scene() -> None:
@@ -763,6 +1160,9 @@ def setup_scene() -> None:
     scene.render.image_settings.color_mode = "RGB"
     scene.view_settings.look = "AgX - Medium High Contrast"
     scene.render.use_file_extension = True
+    scene.eevee.taa_render_samples = 128
+    scene.eevee.use_shadows = True
+    scene.eevee.shadow_ray_count = 4
 
     world = scene.world
     world.use_nodes = True
@@ -786,6 +1186,7 @@ def setup_scene() -> None:
     sun = bpy.context.object
     sun.name = "Late morning sun"
     sun.data.energy = 1.35
+    sun.data.angle = math.radians(3.5)
     sun.rotation_euler = (math.radians(24), math.radians(-18), math.radians(-28))
 
     bpy.ops.object.light_add(type="AREA", location=(-5, -8, 8))
@@ -802,6 +1203,15 @@ def setup_scene() -> None:
     rim.data.energy = 460
     rim.data.size = 7
     look_at(rim, (0, 0, 0))
+
+    bpy.ops.object.light_add(type="AREA", location=(2.5, -7.5, 3.4))
+    fill = bpy.context.object
+    fill.name = "Low forward fill"
+    fill.data.energy = 280
+    fill.data.shape = "RECTANGLE"
+    fill.data.size = 5.0
+    fill.data.size_y = 2.5
+    look_at(fill, (-1.0, 0.0, -0.15))
 
     bpy.ops.object.camera_add(location=(-14.2, -21.0, 3.15))
     camera = bpy.context.object
@@ -829,7 +1239,9 @@ def export_glb() -> None:
 
 def main() -> None:
     reset_scene()
+    build_pbr_materials()
     create_aircraft()
+    generate_uv_maps()
     setup_scene()
     export_glb()
     bpy.context.scene.render.filepath = str(OUTPUT_RENDER)
