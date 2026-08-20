@@ -1281,12 +1281,14 @@ def create_aircraft() -> bpy.types.Object:
         wheel_y = mount_y
         wheel_location = (mount_x, wheel_y, -0.80)
 
-        # A dark wheel-well throat makes the retraction path explicit without
-        # cutting away the complete wing structure in this exterior model.
+        # The wheel-well throat and trunnion housing deliberately penetrate the
+        # wing skin.  This overlap is the load-bearing visual interface: no
+        # landing-gear component may read as a separate object floating below
+        # the wing.
         wheel_well = cube(
             f"{label} main gear recessed wheel-well throat",
-            (mount_x, mount_y, -0.337),
-            (0.175, 0.125, 0.018),
+            (mount_x, mount_y, -0.282),
+            (0.185, 0.135, 0.025),
             SEAM,
             0.035,
         )
@@ -1295,21 +1297,31 @@ def create_aircraft() -> bpy.types.Object:
         bpy.ops.mesh.primitive_uv_sphere_add(
             segments=36,
             ring_count=18,
-            location=(mount_x, mount_y, -0.350),
+            location=(mount_x, mount_y, -0.315),
         )
         blister = bpy.context.object
-        blister.name = f"{label} main gear flush hinge fairing"
-        blister.scale = (0.205, 0.165, 0.052)
+        blister.name = f"{label} main gear wing-integrated trunnion fairing"
+        blister.scale = (0.220, 0.185, 0.080)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         assign(blister, IAF_GRAY)
         smooth(blister)
         mark_export(blister)
         blister.parent = root
 
+        trunnion_socket = cylinder_between(
+            f"{label} main gear structural trunnion socket",
+            (mount_x, mount_y, -0.265),
+            (mount_x, mount_y, -0.415),
+            0.068,
+            HARDWARE_GRAY,
+            vertices=36,
+        )
+        trunnion_socket.parent = root
+
         attachment_pin = cylinder_between(
             f"{label} main gear upper attachment pin",
-            (mount_x, mount_y - 0.12, -0.37),
-            (mount_x, mount_y + 0.12, -0.37),
+            (mount_x, mount_y - 0.13, -0.345),
+            (mount_x, mount_y + 0.13, -0.345),
             0.030,
             STEEL,
             vertices=32,
@@ -1318,7 +1330,7 @@ def create_aircraft() -> bpy.types.Object:
 
         vertical_strut = cylinder_between(
             f"{label} perpendicular main gear oleo",
-            (mount_x, mount_y, -0.37),
+            (mount_x, mount_y, -0.335),
             (mount_x, wheel_y, wheel_location[2] + 0.11),
             0.034,
             STEEL,
@@ -1329,8 +1341,8 @@ def create_aircraft() -> bpy.types.Object:
         door = fin_mesh(
             f"{label} retractable main gear aerodynamic closure door",
             [
-                (mount_x - 0.145, -0.37),
-                (mount_x + 0.145, -0.37),
+                (mount_x - 0.145, -0.345),
+                (mount_x + 0.145, -0.345),
                 (mount_x + 0.105, -0.68),
                 (mount_x + 0.035, -0.77),
                 (mount_x - 0.105, -0.68),
@@ -1364,24 +1376,50 @@ def create_aircraft() -> bpy.types.Object:
         landing_wheel(label, wheel_location, 0.165, 0.13, root)
 
     tail_wheel_location = (3.48, 0.0, -0.40)
+
+    # A closed composite shoe grows directly out of the tapered aft belly and
+    # encloses the upper tail-wheel pivot.  The first section is buried in the
+    # fuselage loft, eliminating the former visible air gap.
+    tail_mount = create_loft(
+        "Fuselage-integrated tail wheel mounting shoe",
+        [
+            (3.10, 0.038, 0.022, -0.138),
+            (3.20, 0.060, 0.045, -0.158),
+            (3.30, 0.072, 0.070, -0.198),
+            (3.37, 0.062, 0.055, -0.245),
+        ],
+        IAF_GRAY,
+        ring_segments=36,
+    )
+    tail_mount.parent = root
+
+    tail_pivot = cylinder_between(
+        "Tail wheel mounting pivot",
+        (3.27, -0.078, -0.195),
+        (3.27, 0.078, -0.195),
+        0.024,
+        STEEL,
+        vertices=28,
+    )
+    tail_pivot.parent = root
+
     for y in (-0.045, 0.045):
         tail_fork = cylinder_between(
             "Tail wheel spring fork",
-            (3.31, y, -0.22),
+            (3.25, y, -0.182),
             (tail_wheel_location[0], y, tail_wheel_location[2]),
-            0.022,
-            IAF_GRAY,
+            0.020,
+            STEEL,
+            vertices=24,
         )
         tail_fork.parent = root
-    tail_fairing = cube(
-        "Streamlined tail wheel fairing",
-        (3.395, 0.0, -0.31),
-        (0.14, 0.050, 0.035),
-        IAF_GRAY,
-        0.045,
+
+    tail_fairing = landing_gear_fairing(
+        "Streamlined tail wheel spring fairing",
+        (3.22, 0.0, -0.165),
+        (3.39, 0.0, -0.325),
+        root,
     )
-    tail_fairing.rotation_euler[1] = math.radians(46.6)
-    tail_fairing.parent = root
     landing_wheel("Tail", tail_wheel_location, 0.105, 0.065, root)
 
     # Open aft mission bay behind the wing. The dark recess and downward-opening
