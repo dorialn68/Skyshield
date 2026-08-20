@@ -644,18 +644,20 @@ button {
 .hero-inner {
   position: relative;
   width: min(calc(100% - 64px), var(--max));
-  min-height: clamp(720px, calc(100vh - 104px), 920px);
+  min-height: auto;
   margin-inline: auto;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.78fr) minmax(0, 1.22fr);
+  align-items: start;
   padding: 0;
 }
 
 .hero-copy {
-  position: absolute;
+  position: relative;
   z-index: 12;
-  inset-block: 0 101px;
-  inset-inline-start: 0;
-  width: min(650px, 48%);
+  grid-column: 1;
+  min-height: clamp(620px, calc(100vh - 176px), 790px);
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -757,6 +759,7 @@ button {
 
 .hero-model {
   position: relative;
+  grid-column: 2;
   width: 100%;
   padding: 0;
   background: #080a0b;
@@ -1978,6 +1981,10 @@ html[dir="rtl"] .hero h1 {
   font-size: clamp(46px, 4vw, 66px);
 }
 
+html[dir="rtl"] .hero-copy {
+  background: linear-gradient(-90deg, rgba(3, 5, 7, 0.96) 0%, rgba(3, 5, 7, 0.82) 72%, rgba(3, 5, 7, 0.18) 100%);
+}
+
 html[dir="rtl"] .desktop-nav,
 html[dir="rtl"] .header-actions,
 html[dir="rtl"] .model-toolbar,
@@ -2021,6 +2028,7 @@ html[dir="rtl"] .person-card h3 {
     position: relative;
     inset: auto;
     order: 0;
+    min-height: auto;
     width: 100%;
     padding: 0;
     background: transparent;

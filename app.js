@@ -110,12 +110,13 @@ const translations = {
     hotspotEngine: "Engine",
     hotspotFlightComputer: "Flight computer",
     hotspotDatalink: "Datalink mast",
+    hotspotLandingGear: "Main landing gear",
     hotspotWing: "Laminar wing",
     hotspotTail: "Tail group",
     hotspotRemoteWeapon: "Gimballed weapon station",
     hotspotEoir: "EO / IR gimbal",
     hotspotFuselageBay: "Fuselage bay",
-    hotspotExternalInterface: "External interface",
+    hotspotExternalInterface: "External fuel tanks",
     focusPropellerTitle: "Propeller and spinner",
     focusPropellerText: "Two-blade variable-pitch propeller envelope and spinner transition at the forward end of the Ximango-derived cowling.",
     focusEngineTitle: "Powerplant installation",
@@ -124,6 +125,8 @@ const translations = {
     focusFlightComputerText: "Reserved avionics volume beneath the opaque upper cover for flight-control and mission-compute integration.",
     focusDatalinkTitle: "Datalink mast",
     focusDatalinkText: "Low-profile dorsal communications fairing for the command, telemetry and mission-data link architecture.",
+    focusLandingGearTitle: "Ximango-style main landing gear",
+    focusLandingGearText: "Two short swept composite legs attach directly beneath the low wing. Each assembly includes a faired leaf, twin axle fork, machined rim, brake disc and tire; there is no nose wheel.",
     focusWingTitle: "Laminar-flow wing",
     focusWingText: "Low-mounted, high-aspect-ratio wing with blended root fairings, restrained dihedral and upturned tips.",
     focusTailTitle: "Tail group",
@@ -134,8 +137,8 @@ const translations = {
     focusEoirText: "Gyro-stabilized multi-aperture sensor presentation with electro-optical and infrared viewing channels.",
     focusFuselageBayTitle: "Fuselage mission bay",
     focusFuselageBayText: "Reserved aft-fuselage mission volume carried forward from the original station map; detailed doors and internal racks remain conceptual.",
-    focusExternalInterfaceTitle: "External mission interface",
-    focusExternalInterfaceText: "Symmetric underwing pylon and aerodynamic store mockup; configuration remains subject to engineering review.",
+    focusExternalInterfaceTitle: "External fuel tanks",
+    focusExternalInterfaceText: "Two teardrop external fuel-tank visualizations are mechanically joined to continuous underwing pylons; internal fuel-system detail is not shown.",
     heroCaption: "Parametric concept model · Ximango-derived proportions · Configuration subject to change",
     targetsHeading: "Program targets",
     metricEnduranceValue: "50+ hr",
@@ -283,12 +286,13 @@ const translations = {
     hotspotEngine: "מנוע",
     hotspotFlightComputer: "מחשב טיסה",
     hotspotDatalink: "תורן קישור נתונים",
+    hotspotLandingGear: "כני נסע ראשיים",
     hotspotWing: "כנף למינרית",
     hotspotTail: "מכלול זנב",
     hotspotRemoteWeapon: "עמדת נשק מגומבלת",
     hotspotEoir: "גימבל EO / IR",
     hotspotFuselageBay: "תא משימה בגוף",
-    hotspotExternalInterface: "ממשק חיצוני",
+    hotspotExternalInterface: "בידוני דלק חיצוניים",
     focusPropellerTitle: "מדחף וכיפה קדמית",
     focusPropellerText: "מעטפת של מדחף דו־להבי בעל פסיעה משתנה והמעבר אל בית המנוע המבוסס על פרופורציות Ximango.",
     focusEngineTitle: "התקנת מערכת ההנעה",
@@ -297,18 +301,20 @@ const translations = {
     focusFlightComputerText: "נפח אוויוניקה שמור מתחת לכיסוי העליון האטום, לשילוב בקרת טיסה ומחשוב משימה.",
     focusDatalinkTitle: "תורן קישור נתונים",
     focusDatalinkText: "חיפוי תקשורת גבי נמוך עבור ארכיטקטורת פיקוד, טלמטריה ונתוני משימה.",
+    focusLandingGearTitle: "כני נסע ראשיים בתצורת Ximango",
+    focusLandingGearText: "שני כני נסע קצרים ומוטים מחוברים ישירות לחלק התחתון של הכנף הנמוכה. כל מכלול כולל רגל מרוכבת מחופה, מזלג כפול, סרן, חישוק, דיסק בלם וצמיג; אין כן נסע קדמי.",
     focusWingTitle: "כנף בזרימה למינרית",
     focusWingText: "כנף נמוכה בעלת מנת־ממדים גבוהה, חיבורי שורש משולבים, דיהדרל מתון וקצות כנף מורמים.",
     focusTailTitle: "מכלול הזנב",
-    focusTailText: "מכלול זנב בתצורת T, קווי משטחי היגוי וכן נסע זנבי קומפקטי הקובע את זווית העמידה.",
+    focusTailText: "מכלול זנב בתצורת T, קווי משטחי היגוי וכן הנסע הזנבי הקצר הקובע את זווית העמידה.",
     focusRemoteWeaponTitle: "עמדת נשק מרחוק מגומבלת",
     focusRemoteWeaponText: "גאומטריה חיצונית להמחשה בלבד של המתלה המיוצב, בית המכלול, ציר ההטיה, הכוונת ומעטפת הקנה.",
     focusEoirTitle: "גימבל EO / IR — Eagle Eye",
     focusEoirText: "המחשה של חיישן רב־מפתחים מיוצב גירוסקופית, עם ערוצי תצפית אלקטרו־אופטיים ואינפרה־אדומים.",
     focusFuselageBayTitle: "תא משימה בגוף המטוס",
     focusFuselageBayText: "נפח משימה שמור בגוף האחורי בהתאם למפת התחנות המקורית; הדלתות והמסילות הפנימיות עדיין קונספטואליות.",
-    focusExternalInterfaceTitle: "ממשק משימה חיצוני",
-    focusExternalInterfaceText: "מתלה כנף סימטרי ומדמה מטען אווירודינמי; התצורה כפופה להמשך בחינה הנדסית.",
+    focusExternalInterfaceTitle: "בידוני דלק חיצוניים",
+    focusExternalInterfaceText: "שני בידוני דלק חיצוניים בעלי מעטפת טיפתית מחוברים באופן רציף למתלים שמתחת לכנפיים; פרטי מערכת הדלק הפנימית אינם מוצגים.",
     heroCaption: "מודל קונספט פרמטרי · פרופורציות המבוססות על Ximango · התצורה עשויה להשתנות",
     targetsHeading: "יעדי תוכנית",
     metricEnduranceValue: "50+ שעות",
@@ -676,6 +682,7 @@ const modelFocusContent = {
   engine: { station: "STA 02", title: "focusEngineTitle", text: "focusEngineText" },
   flightComputer: { station: "STA 03", title: "focusFlightComputerTitle", text: "focusFlightComputerText" },
   datalink: { station: "STA 04", title: "focusDatalinkTitle", text: "focusDatalinkText" },
+  landingGear: { station: "STA 05", title: "focusLandingGearTitle", text: "focusLandingGearText" },
   wing: { station: "STA 06", title: "focusWingTitle", text: "focusWingText" },
   tail: { station: "STA 07", title: "focusTailTitle", text: "focusTailText" },
   remoteWeapon: { station: "STA 08", title: "focusRemoteWeaponTitle", text: "focusRemoteWeaponText" },
@@ -802,14 +809,17 @@ function resetModelOverview() {
   if (!model) return;
   activeModelComponent = null;
   model.cameraTarget = "auto auto auto";
-  model.cameraOrbit = "30deg 78deg 72%";
-  model.fieldOfView = "28deg";
+  model.cameraOrbit = "30deg 78deg 108%";
+  model.fieldOfView = "32deg";
   model.setAttribute("auto-rotate", "");
   modelHotspots.forEach((button) => {
     button.classList.remove("active");
     button.setAttribute("aria-pressed", "false");
   });
   if (modelFocusCard) modelFocusCard.hidden = true;
+  window.requestAnimationFrame(() => {
+    if (typeof model.jumpCameraToGoal === "function") model.jumpCameraToGoal();
+  });
   scheduleHotspotDensityUpdate();
 }
 
@@ -829,7 +839,7 @@ if (model) {
   model.addEventListener("load", () => {
     const progress = model.querySelector(".model-progress");
     if (progress) progress.hidden = true;
-    updateHotspotDensity();
+    resetModelOverview();
   });
 }
 

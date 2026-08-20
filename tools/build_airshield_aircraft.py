@@ -63,6 +63,7 @@ CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
 LENS = material("Sensor glass", (0.015, 0.055, 0.075, 1.0), 0.38, 0.08)
 STEEL = material("Mechanism steel", (0.18, 0.20, 0.21, 1.0), 0.72, 0.24)
+ALLOY = material("Machined wheel alloy", (0.34, 0.355, 0.36, 1.0), 0.78, 0.20)
 RAIL = material("Empty launch rail anodized alloy", (0.075, 0.083, 0.086, 1.0), 0.62, 0.30)
 SEAM = material("Composite panel seam", (0.055, 0.062, 0.064, 1.0), 0.04, 0.58)
 NAV_RED = material("Port navigation lens", (0.34, 0.008, 0.006, 1.0), 0.0, 0.16)
@@ -199,7 +200,7 @@ def build_pbr_materials() -> None:
     ) / 5.0
     skin_variation = broad * 0.013 + grain * 0.011
     skin_rgb = np.clip(
-        np.array([0.600, 0.617, 0.627], dtype=np.float32)[None, None, :] + skin_variation[..., None],
+        np.array([0.505, 0.522, 0.535], dtype=np.float32)[None, None, :] + skin_variation[..., None],
         0.0,
         1.0,
     )
@@ -500,25 +501,39 @@ def landing_wheel(
     wheel.parent = parent
 
     x, y, z = location
+    # The real sailplane wheel reads as a small aircraft wheel, not a black
+    # bead. Layered rim faces, a recessed brake disc and axle caps keep that
+    # mechanical construction legible in close model-viewer inspection.
     hub = cylinder_between(
-        f"{name} hub",
-        (x, y - width * 0.58, z),
-        (x, y + width * 0.58, z),
-        outer_radius * 0.34,
-        STEEL,
-        vertices=32,
+        f"{name} wheel rim",
+        (x, y - width * 0.48, z),
+        (x, y + width * 0.48, z),
+        outer_radius * 0.40,
+        ALLOY,
+        vertices=40,
     )
     hub.parent = parent
 
-    axle_cap = cylinder_between(
-        f"{name} axle cap",
-        (x, y - width * 0.63, z),
-        (x, y + width * 0.63, z),
-        outer_radius * 0.16,
-        GRAPHITE,
-        vertices=28,
+    brake = cylinder_between(
+        f"{name} recessed brake disc",
+        (x, y - width * 0.51, z),
+        (x, y - width * 0.40, z),
+        outer_radius * 0.29,
+        HARDWARE_GRAY,
+        vertices=36,
     )
-    axle_cap.parent = parent
+    brake.parent = parent
+
+    for side, suffix in ((-1.0, "inboard"), (1.0, "outboard")):
+        axle_cap = cylinder_between(
+            f"{name} {suffix} axle cap",
+            (x, y + side * width * 0.50, z),
+            (x, y + side * width * 0.66, z),
+            outer_radius * 0.17,
+            GRAPHITE,
+            vertices=28,
+        )
+        axle_cap.parent = parent
     return wheel
 
 
@@ -1029,8 +1044,8 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_airfoil"] = "NACA 64(3)-618"
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
-    root["landing_gear_layout"] = "two retractable main gears and coupled tail wheel"
-    root["external_store_visualization"] = "two symmetric nonfunctional underwing aerodynamic mockups"
+    root["landing_gear_layout"] = "two swept wing-mounted main gears and compact tail wheel; no nose wheel"
+    root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations"
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
     # attitude while keeping all three tires on the same apron plane.
@@ -1104,98 +1119,82 @@ def create_aircraft() -> bpy.types.Object:
         tip = canted_winglet(f"{label} winglet", side)
         tip.parent = root
 
-    # Two presentation-only external-store mockups.  Each unit has a continuous
-    # wing pylon, rounded cylindrical shell, suspension lugs and four tail fins;
-    # no internal, guidance or functional weapon geometry is represented.
+    # Two presentation-only external fuel tanks. Their uninterrupted teardrop
+    # shells, rounded ends and paired suspension points deliberately distinguish
+    # them from missile geometry; no internal fuel-system detail is represented.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         station_y = 2.68 * side
         pylon = fin_mesh(
-            f"{label} integrated external-store pylon",
+            f"{label} external fuel-tank pylon",
             [
-                (-1.92, -0.22),
-                (-0.90, -0.18),
-                (-0.76, -0.32),
-                (-0.90, -0.43),
-                (-1.72, -0.43),
-                (-1.96, -0.34),
+                (-2.18, -0.19),
+                (-0.72, -0.13),
+                (-0.57, -0.27),
+                (-0.72, -0.42),
+                (-2.02, -0.42),
+                (-2.23, -0.31),
             ],
-            0.068,
+            0.075,
             IAF_GRAY,
             y_offset=station_y,
         )
         pylon.parent = root
 
-        store = create_loft(
-            f"{label} external-store aerodynamic mockup",
+        tank = create_loft(
+            f"{label} external fuel tank",
             [
-                (-2.38, 0.018, 0.018, -0.545),
-                (-2.30, 0.075, 0.075, -0.545),
-                (-2.17, 0.132, 0.132, -0.545),
-                (-1.98, 0.150, 0.150, -0.545),
-                (-1.30, 0.150, 0.150, -0.545),
-                (-0.78, 0.137, 0.137, -0.545),
-                (-0.48, 0.096, 0.096, -0.545),
-                (-0.34, 0.052, 0.052, -0.545),
+                (-2.48, 0.020, 0.018, -0.565),
+                (-2.39, 0.085, 0.078, -0.565),
+                (-2.20, 0.158, 0.145, -0.565),
+                (-1.92, 0.202, 0.184, -0.565),
+                (-1.28, 0.212, 0.192, -0.565),
+                (-0.82, 0.188, 0.170, -0.565),
+                (-0.48, 0.116, 0.102, -0.565),
+                (-0.28, 0.028, 0.024, -0.565),
             ],
             IAF_GRAY,
-            ring_segments=48,
+            ring_segments=56,
             y_offset=station_y,
         )
-        store.parent = root
+        tank.parent = root
 
-        for x, suffix in ((-1.82, "forward"), (-1.06, "aft")):
+        for x, suffix in ((-1.88, "forward"), (-0.94, "aft")):
             clevis = cylinder_between(
-                f"{label} store {suffix} suspension lug",
-                (x, station_y - 0.082, -0.405),
-                (x, station_y + 0.082, -0.405),
-                0.022,
+                f"{label} fuel-tank {suffix} suspension pin",
+                (x, station_y - 0.092, -0.405),
+                (x, station_y + 0.092, -0.405),
+                0.024,
                 STEEL,
                 vertices=20,
             )
             clevis.parent = root
+            lug = cube(
+                f"{label} fuel-tank {suffix} mounting lug",
+                (x, station_y, -0.455),
+                (0.075, 0.105, 0.070),
+                HARDWARE_GRAY,
+                0.018,
+            )
+            lug.parent = root
 
-        for x, radius in ((-2.00, 0.151), (-1.32, 0.151), (-0.79, 0.138)):
+        for x, radius_y, radius_z in (
+            (-2.18, 0.164, 0.150),
+            (-1.28, 0.212, 0.192),
+            (-0.66, 0.154, 0.139),
+        ):
             elliptical_ring(
-                f"{label} external-store shell joint",
+                f"{label} fuel-tank shell joint",
                 x,
-                radius,
-                radius,
-                -0.545,
+                radius_y,
+                radius_z,
+                -0.565,
                 0.0036,
                 SEAM,
                 root,
-                segments=48,
+                segments=56,
                 tube_segments=6,
                 y_offset=station_y,
             )
-
-        fin_profile = [(-0.92, 0.12), (-0.43, 0.07), (-0.56, 0.31), (-0.86, 0.30)]
-        for angle, fin_name in (
-            (0.0, "upper"),
-            (math.pi, "lower"),
-            (math.pi * 0.5, "outboard"),
-            (-math.pi * 0.5, "inboard"),
-        ):
-            radial_store_fin(
-                f"{label} external-store {fin_name} fin",
-                station_y,
-                -0.545,
-                angle,
-                fin_profile,
-                0.020,
-                HARDWARE_GRAY,
-                root,
-            )
-
-        nozzle = cylinder_between(
-            f"{label} external-store aft cap",
-            (-0.35, station_y, -0.545),
-            (-0.26, station_y, -0.545),
-            0.050,
-            GRAPHITE,
-            vertices=28,
-        )
-        nozzle.parent = root
 
     # Vertical fin and high-mounted stabilizer.
     vertical = fin_mesh(
@@ -1238,41 +1237,68 @@ def create_aircraft() -> bpy.types.Object:
     # wheel: the two independent main wheels sit below the wing roots and the
     # small aft wheel supports the tail.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
+        mount_x = -1.63
         mount_y = 1.18 * side
         wheel_y = 1.40 * side
-        # Short, broad gear geometry follows the close-coupled Super Ximango
-        # installation: the tire sits just below the under-wing fairing.
-        wheel_location = (-1.87, wheel_y, -0.78)
+        # The axle is forward and outboard of the upper attachment. This short
+        # swept leaf is the characteristic Ximango stance visible in the hangar
+        # reference, and avoids the toy-like vertical post of the earlier model.
+        wheel_location = (-1.89, wheel_y, -0.78)
 
-        # Compact under-wing mounting blister, visible in the 360-degree view.
+        # Compact under-wing mounting blister that visibly intersects the wing
+        # skin and closes the assembly at its upper end.
         bpy.ops.mesh.primitive_uv_sphere_add(
-            segments=28,
-            ring_count=14,
-            location=(-1.87, mount_y, -0.33),
+            segments=36,
+            ring_count=18,
+            location=(mount_x, mount_y, -0.315),
         )
         blister = bpy.context.object
         blister.name = f"{label} main gear wing-root fairing"
-        blister.scale = (0.30, 0.21, 0.10)
+        blister.scale = (0.30, 0.22, 0.095)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        assign(blister, HARDWARE_GRAY)
+        assign(blister, IAF_GRAY)
         smooth(blister)
         mark_export(blister)
         blister.parent = root
 
-        main_strut = cylinder_between(
-            f"{label} main gear strut",
-            (-1.87, mount_y, -0.35),
-            wheel_location,
-            0.020,
+        attachment_pin = cylinder_between(
+            f"{label} main gear upper attachment pin",
+            (mount_x, mount_y - 0.16, -0.35),
+            (mount_x, mount_y + 0.16, -0.35),
+            0.036,
             STEEL,
+            vertices=32,
         )
-        main_strut.parent = root
+        attachment_pin.parent = root
+
         landing_gear_fairing(
-            f"{label} retractable main gear fairing",
-            (-1.87, mount_y, -0.37),
-            (-1.87, wheel_y, wheel_location[2] + 0.12),
+            f"{label} swept composite main gear leg",
+            (mount_x, mount_y, -0.34),
+            (-1.83, wheel_y, wheel_location[2] + 0.115),
             root,
         )
+
+        # Twin lower fork arms terminate at the spanwise axle. Their overlap
+        # with both the faired leaf and hub makes the load path unambiguous.
+        for fork_offset, suffix in ((-0.062, "inboard"), (0.062, "outboard")):
+            fork = cylinder_between(
+                f"{label} main gear {suffix} axle fork",
+                (-1.82, wheel_y + fork_offset, -0.64),
+                (wheel_location[0], wheel_y + fork_offset, wheel_location[2]),
+                0.027,
+                STEEL,
+                vertices=28,
+            )
+            fork.parent = root
+        axle = cylinder_between(
+            f"{label} main wheel axle",
+            (wheel_location[0], wheel_y - 0.105, wheel_location[2]),
+            (wheel_location[0], wheel_y + 0.105, wheel_location[2]),
+            0.028,
+            STEEL,
+            vertices=32,
+        )
+        axle.parent = root
         landing_wheel(label, wheel_location, 0.165, 0.13, root)
 
     tail_wheel_location = (3.48, 0.0, -0.40)
@@ -1296,32 +1322,76 @@ def create_aircraft() -> bpy.types.Object:
     tail_fairing.parent = root
     landing_wheel("Tail", tail_wheel_location, 0.105, 0.065, root)
 
-    # EO/IR gimbal moved aft of the turret so the sensor is no longer visually
-    # ahead of the weapon station.  The offset also preserves an unobstructed
-    # presentation view from the port-forward camera angle.
-    gimbal_y = 0.12
-    gimbal_location = (-0.40, gimbal_y, -0.55)
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=24, radius=0.20, location=gimbal_location)
+    # EO/IR assembly aft of the turret. A blended belly pad, yaw ring and
+    # two-sided yoke now form one continuous mechanical chain from airframe to
+    # sensor ball; none of the visible pieces are suspended in space.
+    gimbal_y = 0.15
+    gimbal_x = -0.38
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(gimbal_x, gimbal_y, -0.30))
+    gimbal_pad = bpy.context.object
+    gimbal_pad.name = "EO IR blended belly attachment fairing"
+    gimbal_pad.scale = (0.30, 0.23, 0.095)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    assign(gimbal_pad, IAF_GRAY)
+    smooth(gimbal_pad)
+    mark_export(gimbal_pad)
+    gimbal_pad.parent = root
+
+    gimbal_shaft = cylinder_between(
+        "EO IR yaw shaft",
+        (gimbal_x, gimbal_y, -0.30),
+        (gimbal_x, gimbal_y, -0.45),
+        0.092,
+        STEEL,
+        vertices=32,
+    )
+    gimbal_shaft.parent = root
+    bpy.ops.mesh.primitive_cylinder_add(
+        vertices=48,
+        radius=0.17,
+        depth=0.10,
+        location=(gimbal_x, gimbal_y, -0.46),
+    )
+    gimbal_yaw_ring = bpy.context.object
+    gimbal_yaw_ring.name = "EO IR azimuth bearing ring"
+    assign(gimbal_yaw_ring, HARDWARE_GRAY)
+    smooth(gimbal_yaw_ring)
+    mark_export(gimbal_yaw_ring)
+    gimbal_yaw_ring.parent = root
+
+    yoke_bridge = cylinder_between(
+        "EO IR yoke bridge",
+        (gimbal_x, gimbal_y - 0.17, -0.49),
+        (gimbal_x, gimbal_y + 0.17, -0.49),
+        0.036,
+        STEEL,
+        vertices=28,
+    )
+    yoke_bridge.parent = root
+    for y, suffix in ((gimbal_y - 0.15, "port"), (gimbal_y + 0.15, "starboard")):
+        arm = cylinder_between(
+            f"EO IR {suffix} yoke arm",
+            (gimbal_x, y, -0.48),
+            (gimbal_x, y, -0.62),
+            0.030,
+            STEEL,
+            vertices=24,
+        )
+        arm.parent = root
+
+    gimbal_location = (gimbal_x, gimbal_y, -0.635)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=28, radius=0.20, location=gimbal_location)
     gimbal = bpy.context.object
     gimbal.name = "EO IR stabilized gimbal"
     assign(gimbal, GRAPHITE)
     smooth(gimbal)
     mark_export(gimbal)
     gimbal.parent = root
-    pylon = cylinder_between(
-        "EO IR gimbal pylon",
-        (-0.40, gimbal_y, -0.30),
-        (-0.40, gimbal_y, -0.46),
-        0.082,
-        STEEL,
-        vertices=28,
-    )
-    pylon.parent = root
-    for y, z, radius in ((gimbal_y - 0.064, -0.53, 0.052), (gimbal_y + 0.064, -0.60, 0.038)):
+    for y, z, radius in ((gimbal_y - 0.064, -0.61, 0.052), (gimbal_y + 0.064, -0.68, 0.038)):
         lens = cylinder_between(
             "EO IR sensor aperture",
-            (-0.585, y, z),
-            (-0.620, y, z),
+            (gimbal_x - 0.185, y, z),
+            (gimbal_x - 0.220, y, z),
             radius,
             LENS,
             vertices=36,
@@ -1331,13 +1401,43 @@ def create_aircraft() -> bpy.types.Object:
     # Enlarged stabilized turret visualization.  These are presentation-only
     # exterior proportions, intentionally omitting functional weapon detail.
     turret_y = -0.20
-    bpy.ops.mesh.primitive_cylinder_add(vertices=40, radius=0.27, depth=0.14, location=(-1.00, turret_y, -0.50))
+    turret_x = -1.00
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(turret_x, turret_y, -0.31))
+    turret_pad = bpy.context.object
+    turret_pad.name = "Weapon station blended belly hardpoint"
+    turret_pad.scale = (0.40, 0.31, 0.115)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    assign(turret_pad, IAF_GRAY)
+    smooth(turret_pad)
+    mark_export(turret_pad)
+    turret_pad.parent = root
+
+    turret_shaft = cylinder_between(
+        "Weapon station azimuth shaft",
+        (turret_x, turret_y, -0.32),
+        (turret_x, turret_y, -0.48),
+        0.16,
+        HARDWARE_GRAY,
+        vertices=36,
+    )
+    turret_shaft.parent = root
+
+    bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.27, depth=0.14, location=(turret_x, turret_y, -0.51))
     yaw_base = bpy.context.object
     yaw_base.name = "Stabilized weapon yaw base"
     assign(yaw_base, GRAPHITE)
     smooth(yaw_base)
     mark_export(yaw_base)
     yaw_base.parent = root
+    upper_yoke = cylinder_between(
+        "Weapon upper yoke bridge",
+        (turret_x, turret_y - 0.22, -0.55),
+        (turret_x, turret_y + 0.22, -0.55),
+        0.046,
+        STEEL,
+        vertices=32,
+    )
+    upper_yoke.parent = root
     receiver = cube(
         "Gimballed cannon receiver",
         (-1.19, turret_y, -0.67),

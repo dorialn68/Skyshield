@@ -24,9 +24,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=13" defer></script>
+  <script src="app.js?v=14" defer></script>
 </head>
 <body>
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -115,8 +115,8 @@
         <figure class="hero-visual hero-model" data-lighting="studio" data-hotspot-density="overview" data-reveal>
           <model-viewer
             id="aircraftModel"
-            src="airshield-ximango.glb?v=12"
-            poster="airshield-xmango-hero.jpg?v=12"
+            src="airshield-ximango.glb?v=14"
+            poster="airshield-xmango-hero.jpg?v=14"
             alt="Interactive 3D concept model of the AI.onSuper Ximango-derived unmanned aircraft"
             data-i18n-alt="heroAlt"
             camera-controls
@@ -130,9 +130,9 @@
             exposure="1.04"
             tone-mapping="agx"
             environment-image="environments/studio-softbox-1k.hdr"
-            camera-orbit="30deg 78deg 72%"
+            camera-orbit="30deg 78deg 108%"
             interpolation-decay="160"
-            field-of-view="28deg"
+            field-of-view="32deg"
             min-field-of-view="12deg"
             max-field-of-view="45deg"
             min-camera-orbit="auto 12deg 1.5m"
@@ -163,6 +163,12 @@
               data-component="datalink" data-detail-level="2" data-visibility-attribute="visible">
               <span class="hotspot-index">04</span><span class="hotspot-label" data-i18n="hotspotDatalink">Datalink mast</span>
             </button>
+            <button class="model-hotspot" type="button" slot="hotspot-landing-gear"
+              data-position="-1.89m -0.73m 1.40m" data-normal="0m -1m 0m"
+              data-target="-1.84m -0.58m 1.36m" data-orbit="-25deg 80deg 2.45m"
+              data-component="landingGear" data-detail-level="2" data-visibility-attribute="visible">
+              <span class="hotspot-index">05</span><span class="hotspot-label" data-i18n="hotspotLandingGear">Main landing gear</span>
+            </button>
             <button class="model-hotspot" type="button" slot="hotspot-wing"
               data-position="-1.40m 0.11m 4.25m" data-normal="0m 1m 0m"
               data-target="-1.40m 0.04m 4.25m" data-orbit="25deg 54deg 3.2m"
@@ -176,14 +182,14 @@
               <span class="hotspot-index">07</span><span class="hotspot-label" data-i18n="hotspotTail">Tail group</span>
             </button>
             <button class="model-hotspot" type="button" slot="hotspot-remote-weapon"
-              data-position="-1.24m -0.57m 0.20m" data-normal="-1m -0.10m 0m"
-              data-target="-1.24m -0.57m 0.20m" data-orbit="-35deg 86deg 2.7m"
+              data-position="-1.24m -0.68m 0.20m" data-normal="-1m -0.10m 0m"
+              data-target="-1.24m -0.63m 0.20m" data-orbit="-35deg 86deg 2.7m"
               data-component="remoteWeapon" data-detail-level="2" data-visibility-attribute="visible">
               <span class="hotspot-index">08</span><span class="hotspot-label" data-i18n="hotspotRemoteWeapon">Gimballed weapon station</span>
             </button>
             <button class="model-hotspot" type="button" slot="hotspot-eoir"
-              data-position="-0.44m -0.52m -0.12m" data-normal="-1m -0.15m 0m"
-              data-target="-0.44m -0.52m -0.12m" data-orbit="-58deg 82deg 2.5m"
+              data-position="-0.40m -0.62m -0.15m" data-normal="-1m -0.15m 0m"
+              data-target="-0.40m -0.58m -0.15m" data-orbit="-58deg 82deg 2.5m"
               data-component="eoir" data-detail-level="1" data-visibility-attribute="visible">
               <span class="hotspot-index">09</span><span class="hotspot-label" data-i18n="hotspotEoir">EO / IR gimbal</span>
             </button>
@@ -194,10 +200,10 @@
               <span class="hotspot-index">10</span><span class="hotspot-label" data-i18n="hotspotFuselageBay">Fuselage bay</span>
             </button>
             <button class="model-hotspot model-hotspot-aux" type="button" slot="hotspot-external-interface"
-              data-position="-1.39m -0.43m -2.68m" data-normal="0m -1m -0.25m"
-              data-target="-1.39m -0.43m -2.68m" data-orbit="15deg 84deg 3.1m"
+              data-position="-1.39m -0.55m -2.68m" data-normal="0m -1m -0.25m"
+              data-target="-1.39m -0.48m -2.68m" data-orbit="15deg 84deg 3.1m"
               data-component="externalInterface" data-detail-level="2" data-visibility-attribute="visible">
-              <span class="hotspot-index">A1</span><span class="hotspot-label" data-i18n="hotspotExternalInterface">External interface</span>
+              <span class="hotspot-index">A1</span><span class="hotspot-label" data-i18n="hotspotExternalInterface">External fuel tanks</span>
             </button>
 
             <aside class="model-focus-card" id="modelFocusCard" aria-live="polite" hidden>
