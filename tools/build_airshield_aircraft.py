@@ -20,8 +20,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-gear-camera-gimbal-v27.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v27.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-triangle-gear-v28.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v28.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v2.png"
@@ -1165,6 +1165,33 @@ def fin_mesh(
     return obj
 
 
+def canted_fin_mesh(
+    name: str,
+    points: list[tuple[float, float, float]],
+    thickness: float,
+    mat: bpy.types.Material,
+) -> bpy.types.Object:
+    """Extrude an already canted side profile across its local spanwise depth."""
+    verts = [(x, y - thickness, z) for x, y, z in points] + [
+        (x, y + thickness, z) for x, y, z in points
+    ]
+    n = len(points)
+    faces = [tuple(range(n - 1, -1, -1)), tuple(range(n, 2 * n))]
+    for index in range(n):
+        following = (index + 1) % n
+        faces.append((index, following, n + following, n + index))
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    bevel(obj, 0.014, 3)
+    smooth(obj)
+    mark_export(obj)
+    return obj
+
+
 def canted_winglet(name: str, side: float) -> bpy.types.Object:
     """Tapered winglet with the Ximango fore/aft profile and outboard cant."""
     base_y = 8.71 * side
@@ -1271,13 +1298,13 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_airfoil"] = "NACA 64(3)-618"
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
-    root["landing_gear_layout"] = "two perpendicular wing-mounted main gears with tapered outboard composite covers and exposed tire contact sections, plus compact tail wheel; no nose wheel"
+    root["landing_gear_layout"] = "two wing-mounted main gears with extended aft-and-outboard-canted legs, asymmetric right-angle wedge covers and exposed tire contact sections, plus compact tail wheel; no nose wheel"
     root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations on clean continuous pylons"
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
     # attitude while keeping all three tires on the same apron plane.
-    root["ground_attitude_deg"] = 4.7
-    root.rotation_euler[1] = math.radians(4.7)
+    root["ground_attitude_deg"] = 6.9
+    root.rotation_euler[1] = math.radians(6.9)
     mark_export(root)
 
     fuselage = create_asymmetric_fuselage(
@@ -1431,15 +1458,21 @@ def create_aircraft() -> bpy.types.Object:
     for angle, suffix in ((math.radians(14), "A"), (math.radians(194), "B")):
         propeller_blade(f"Propeller blade {suffix}", angle, root)
 
-    # Retractable tail-dragger gear. Each main leg drops perpendicular to the
-    # wing plane. A tapered outboard composite cover masks the wheel structure
-    # from the exterior while leaving the tire contact patch visible below and
-    # the wheel/fork legible from the inboard side, as in the Ximango photos.
+    # Retractable tail-dragger gear.  The Ximango three-view and ground photos
+    # show a nearly perpendicular deployment from the low wing, with a subtle
+    # aft rake in profile and outboard cant in front view.  The distinctive
+    # outboard door is an asymmetric right-angle wedge rather than a rectangular
+    # spat: its upper forward corner is approximately square, its aft edge fans
+    # rearward, and only the tire contact patch remains visible from outside.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         mount_x = -1.62
-        mount_y = 1.40 * side
-        wheel_y = mount_y
-        wheel_location = (mount_x, wheel_y, -0.80)
+        # Keep the wheel-centre track at the referenced 2.80 m.  The trunnion
+        # sits inboard of the axle so the 110 mm spanwise change produces the
+        # photographed cant without artificially widening the undercarriage.
+        mount_y = 1.29 * side
+        wheel_x = mount_x + 0.11
+        wheel_y = mount_y + 0.11 * side
+        wheel_location = (wheel_x, wheel_y, -0.94)
 
         # The wheel-well throat and trunnion housing deliberately penetrate the
         # wing skin.  This overlap is the load-bearing visual interface: no
@@ -1495,9 +1528,9 @@ def create_aircraft() -> bpy.types.Object:
         attachment_pin.parent = root
 
         vertical_strut = cylinder_between(
-            f"{label} perpendicular main gear oleo",
+            f"{label} subtly canted main gear oleo",
             (mount_x, mount_y, -0.335),
-            (mount_x, wheel_y, wheel_location[2] + 0.11),
+            (wheel_x, wheel_y, wheel_location[2] + 0.11),
             0.034,
             STEEL,
             vertices=28,
@@ -1506,7 +1539,7 @@ def create_aircraft() -> bpy.types.Object:
         leg_cover = landing_gear_fairing(
             f"{label} full-depth aerodynamic main-gear leg fairing",
             (mount_x, mount_y, -0.315),
-            (mount_x + 0.015, wheel_y, -0.705),
+            (wheel_x - 0.025, wheel_y, -0.825),
             root,
         )
         leg_cover.parent = root
@@ -1515,8 +1548,8 @@ def create_aircraft() -> bpy.types.Object:
         for fork_offset, suffix in ((-0.062, "inboard"), (0.062, "outboard")):
             fork = cylinder_between(
                 f"{label} main gear {suffix} axle fork",
-                (mount_x, wheel_y + fork_offset, -0.64),
-                (wheel_location[0], wheel_y + fork_offset, wheel_location[2]),
+                (wheel_x - 0.025, wheel_y + fork_offset, -0.785),
+                (wheel_x, wheel_y + fork_offset, wheel_location[2]),
                 0.024,
                 STEEL,
                 vertices=28,
@@ -1533,34 +1566,37 @@ def create_aircraft() -> bpy.types.Object:
         axle.parent = root
         landing_wheel(label, wheel_location, 0.165, 0.13, root)
 
-        # This is deliberately an outboard cover rather than a closed pod. Its
-        # unequal tapered sides create the photographed non-equilateral shield
-        # silhouette, while the lower 25 mm of tire remains below the cover.
-        cover_y = wheel_y + side * 0.100
-        wheel_cover = fin_mesh(
-            f"{label} tapered outboard main-wheel aerodynamic cover",
+        # One-sided outboard door, canted outboard from top to bottom.  Its
+        # five-point profile preserves the photographed square upper-forward
+        # corner and the triangular sweep toward the wheel. The door extends
+        # 30 mm above the tire contact plane, so rubber remains visibly real.
+        cover_top_y = mount_y + side * 0.085
+        # Stand the cover just outside the tire shoulder. This maintains the
+        # one-sided shield construction without surface intersections.
+        cover_bottom_y = wheel_y + side * 0.140
+        wheel_cover = canted_fin_mesh(
+            f"{label} asymmetric right-angle main-wheel aerodynamic cover",
             [
-                (mount_x - 0.145, -0.330),
-                (mount_x + 0.150, -0.330),
-                (mount_x + 0.205, -0.690),
-                (mount_x + 0.155, -0.940),
-                (mount_x - 0.150, -0.940),
-                (mount_x - 0.195, -0.650),
+                (mount_x - 0.160, cover_top_y, -0.315),
+                (mount_x + 0.030, cover_top_y + side * 0.010, -0.315),
+                (wheel_x + 0.180, cover_bottom_y, -1.075),
+                (wheel_x - 0.195, cover_bottom_y, -1.075),
+                (mount_x - 0.165, cover_top_y + side * 0.035, -0.520),
             ],
-            0.032,
+            0.028,
             IAF_GRAY,
-            y_offset=cover_y,
         )
         wheel_cover.parent = root
-        for seam_z, half_width in ((-0.505, 0.142), (-0.845, 0.135)):
-            cover_seam = cube(
-                f"{label} wheel-cover horizontal maintenance seam",
-                (mount_x, cover_y + side * 0.034, seam_z),
-                (half_width, 0.0025, 0.0025),
+        seam_y = mount_y + side * 0.165
+        cover_seam = cylinder_between(
+                f"{label} wheel-cover upper maintenance seam",
+                (mount_x - 0.125, seam_y, -0.555),
+                (mount_x + 0.145, seam_y + side * 0.012, -0.555),
+                0.0035,
                 SEAM,
-                0.0015,
+                vertices=10,
             )
-            cover_seam.parent = root
+        cover_seam.parent = root
 
     tail_wheel_location = (3.48, 0.0, -0.40)
 
@@ -2326,7 +2362,7 @@ def setup_scene() -> None:
     bg.inputs["Strength"].default_value = 0.62
 
     # Concrete apron.
-    bpy.ops.mesh.primitive_plane_add(size=70, location=(0, 0, -0.79))
+    bpy.ops.mesh.primitive_plane_add(size=70, location=(0, 0, -0.92))
     ground = bpy.context.object
     ground.name = "Concrete apron"
     assign(ground, CONCRETE)
