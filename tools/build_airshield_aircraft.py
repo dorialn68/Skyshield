@@ -20,8 +20,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-corrected-v20.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v20.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-winglets-v21.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v21.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v1.png"
@@ -1033,10 +1033,10 @@ def canted_winglet(name: str, side: float) -> bpy.types.Object:
     profile = [
         (-1.73, base_y, 0.12),
         (-1.15, base_y, 0.12),
-        # The previous cap was reversed fore/aft.  The higher corner belongs
-        # aft and the lower corner forward when the nose is toward negative X.
-        (-1.27, top_y, 0.83),
-        (-1.59, top_y, 0.73),
+        # Complete fore/aft reversal: the leading edge is now vertical and the
+        # trailing edge carries the sweep. Nose direction is negative X.
+        (-1.43, top_y, 0.73),
+        (-1.73, top_y, 0.83),
     ]
     verts = [(x, y - half_thickness, z) for x, y, z in profile] + [
         (x, y + half_thickness, z) for x, y, z in profile
