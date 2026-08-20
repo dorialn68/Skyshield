@@ -26,7 +26,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=22">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=22" defer></script>
+  <script src="app.js?v=23" defer></script>
 </head>
 <body>
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -115,22 +115,19 @@
         <figure class="hero-visual hero-model" data-lighting="studio" data-hotspot-density="overview" data-reveal>
           <model-viewer
             id="aircraftModel"
-            src="airshield-ximango-winglets-v22.glb"
-            poster="airshield-xmango-hero-v22.jpg"
+            src="airshield-ximango-winglets-v22.glb?v=23"
+            poster="airshield-xmango-hero-v22.jpg?v=23"
             alt="Interactive 3D concept model of the AI.onSuper Ximango-derived unmanned aircraft"
             data-i18n-alt="heroAlt"
             camera-controls
             touch-action="pan-y"
             interaction-prompt="auto"
-            auto-rotate
-            auto-rotate-delay="2500"
-            rotation-per-second="6deg"
             shadow-intensity="1.08"
             shadow-softness="0.82"
             exposure="1.04"
             tone-mapping="agx"
             environment-image="environments/studio-softbox-1k.hdr"
-            camera-orbit="30deg 78deg 108%"
+            camera-orbit="-34deg 83deg 108%"
             interpolation-decay="160"
             field-of-view="32deg"
             min-field-of-view="12deg"

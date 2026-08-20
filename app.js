@@ -808,10 +808,14 @@ function focusModelComponent(hotspot) {
 function resetModelOverview() {
   if (!model) return;
   activeModelComponent = null;
+  // Keep the verified aircraft orientation stable after the GLB replaces its
+  // poster. Manual drag still provides the full 360-degree inspection.
+  model.removeAttribute("auto-rotate");
   model.cameraTarget = "auto auto auto";
-  model.cameraOrbit = "30deg 78deg 108%";
+  // Match the Blender poster camera so loading the GLB does not visually jump
+  // to the opposite side of the winglets.
+  model.cameraOrbit = "-34deg 83deg 108%";
   model.fieldOfView = "32deg";
-  model.setAttribute("auto-rotate", "");
   modelHotspots.forEach((button) => {
     button.classList.remove("active");
     button.setAttribute("aria-pressed", "false");
