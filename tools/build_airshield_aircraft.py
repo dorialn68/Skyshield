@@ -20,11 +20,11 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-winglets-v22.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v22.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-kinetic-gimbal-v24.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v24.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
-GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v1.png"
+GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v2.png"
 
 EXPORT_OBJECTS: list[bpy.types.Object] = []
 
@@ -61,6 +61,7 @@ def material(
 IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
 HARDWARE_GRAY = material("Dark gray external hardware", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
+GIMBAL_ALLOY = material("Bead-blasted kinetic gimbal alloy", (0.31, 0.33, 0.34, 1.0), 0.68, 0.32)
 CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.30)
 PROP_WHITE = material("White propeller polyurethane", (0.72, 0.74, 0.75, 1.0), 0.02, 0.34)
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
@@ -314,11 +315,45 @@ def build_pbr_materials() -> None:
         gimbal_rough,
         gimbal_normal,
         metallic=0.30,
-        normal_strength=0.26,
+        normal_strength=0.18,
         coat_weight=0.18,
         coat_roughness=0.24,
     )
     attach_gltf_occlusion(GRAPHITE, gimbal_ao)
+
+    # A separate calibrated alloy response uses the same authored microfinish
+    # while preserving the lighter bead-blasted receiver and yoke seen in the
+    # kinetic-gimbal reference. This avoids a flat single-material assembly.
+    gimbal_alloy_rgb = np.clip(
+        np.array([0.385, 0.400, 0.410], dtype=np.float32)[None, None, :]
+        + gimbal_macro[..., None] * 0.014
+        + gimbal_micro[..., None] * 0.0025
+        + gimbal_chroma * 0.025,
+        0.0,
+        1.0,
+    )
+    gimbal_alloy_roughness = np.clip(0.34 + gimbal_macro * 0.022 + gimbal_micro * 0.028, 0.26, 0.44)
+    gimbal_alloy_base = write_texture(
+        "airshield_gimbal_alloy_basecolor",
+        rgba_from_rgb(gimbal_alloy_rgb),
+        "sRGB",
+    )
+    gimbal_alloy_rough = write_texture(
+        "airshield_gimbal_alloy_roughness",
+        rgba_from_gray(gimbal_alloy_roughness),
+        "Non-Color",
+    )
+    textured_principled_material(
+        GIMBAL_ALLOY,
+        gimbal_alloy_base,
+        gimbal_alloy_rough,
+        gimbal_normal,
+        metallic=0.48,
+        normal_strength=0.15,
+        coat_weight=0.10,
+        coat_roughness=0.30,
+    )
+    attach_gltf_occlusion(GIMBAL_ALLOY, gimbal_ao)
 
     carbon_size = 1024
     cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
@@ -511,6 +546,30 @@ def cylinder_between(
     smooth(obj)
     if export:
         mark_export(obj)
+    return obj
+
+
+def beam_between(
+    name: str,
+    start: tuple[float, float, float],
+    end: tuple[float, float, float],
+    width: float,
+    depth: float,
+    mat: bpy.types.Material,
+    edge: float = 0.0,
+) -> bpy.types.Object:
+    """Create a radiused rectangular structural member between two points."""
+    a, b = Vector(start), Vector(end)
+    delta = b - a
+    obj = cube(
+        name,
+        tuple((a + b) * 0.5),
+        (width * 0.5, depth * 0.5, delta.length * 0.5),
+        mat,
+        edge,
+    )
+    obj.rotation_mode = "QUATERNION"
+    obj.rotation_quaternion = delta.to_track_quat("Z", "Y")
     return obj
 
 
@@ -1551,143 +1610,343 @@ def create_aircraft() -> bpy.types.Object:
         )
         camera_lens.parent = root
 
-    # Compact, aerodynamically faired remote station. The outer shell is much
-    # smaller than the former exposed assembly; only enough of the bearing and
-    # trunnion remains visible to communicate gimballed movement.
+    # Detailed exterior kinetic-gimbal demonstrator reconstructed from the
+    # supplied AirShield reference. It is deliberately presentation geometry:
+    # visible interfaces, bearings, access covers, yoke members and service
+    # fasteners are represented without encoding internal or manufacturing data.
     turret_y = -0.12
-    turret_x = -0.92
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(turret_x, turret_y, -0.31))
-    turret_pad = bpy.context.object
-    turret_pad.name = "Compact weapon station aerodynamic upper shroud"
-    turret_pad.scale = (0.28, 0.205, 0.075)
+    turret_x = -0.82
+    receiver_z = -0.675
+
+    # Flush aircraft interface and four elastomeric vibration isolators.
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, location=(turret_x, turret_y, -0.305))
+    interface_fairing = bpy.context.object
+    interface_fairing.name = "Kinetic gimbal conformal aircraft interface fairing"
+    interface_fairing.scale = (0.39, 0.31, 0.065)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    assign(turret_pad, IAF_GRAY)
-    smooth(turret_pad)
-    mark_export(turret_pad)
-    turret_pad.parent = root
+    assign(interface_fairing, IAF_GRAY)
+    smooth(interface_fairing)
+    mark_export(interface_fairing)
+    interface_fairing.parent = root
 
-    turret_shaft = cylinder_between(
-        "Weapon station azimuth shaft",
-        (turret_x, turret_y, -0.32),
-        (turret_x, turret_y, -0.415),
-        0.082,
-        HARDWARE_GRAY,
-        vertices=32,
+    mounting_plate = cube(
+        "Kinetic gimbal machined aircraft mounting plate",
+        (turret_x, turret_y, -0.365),
+        (0.34, 0.265, 0.024),
+        GIMBAL_ALLOY,
+        0.028,
     )
-    turret_shaft.parent = root
+    mounting_plate.parent = root
+    for x_offset in (-0.245, 0.245):
+        for y_offset in (-0.185, 0.185):
+            isolator = cylinder_between(
+                "Kinetic gimbal elastomeric vibration isolator",
+                (turret_x + x_offset, turret_y + y_offset, -0.382),
+                (turret_x + x_offset, turret_y + y_offset, -0.438),
+                0.036,
+                GRAPHITE,
+                vertices=32,
+            )
+            isolator.parent = root
+            stud = cylinder_between(
+                "Kinetic gimbal captive isolator stud",
+                (turret_x + x_offset, turret_y + y_offset, -0.374),
+                (turret_x + x_offset, turret_y + y_offset, -0.395),
+                0.011,
+                STEEL,
+                vertices=16,
+            )
+            stud.parent = root
 
-    bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.16, depth=0.07, location=(turret_x, turret_y, -0.435))
-    yaw_base = bpy.context.object
-    yaw_base.name = "Compact stabilized weapon yaw bearing"
-    assign(yaw_base, GRAPHITE)
-    smooth(yaw_base)
-    mark_export(yaw_base)
-    yaw_base.parent = root
-    bpy.ops.mesh.primitive_torus_add(
-        major_radius=0.148,
-        minor_radius=0.005,
-        major_segments=40,
-        minor_segments=8,
-        location=(turret_x, turret_y, -0.398),
+    # Layered azimuth drive, split bearing and indexed service fasteners.
+    yaw_upper = cylinder_between(
+        "Kinetic gimbal azimuth drive upper housing",
+        (turret_x, turret_y, -0.402),
+        (turret_x, turret_y, -0.472),
+        0.155,
+        GIMBAL_ALLOY,
+        vertices=48,
     )
-    yaw_joint = bpy.context.object
-    yaw_joint.name = "Weapon station yaw-bearing joint"
-    assign(yaw_joint, SEAM)
-    smooth(yaw_joint)
-    mark_export(yaw_joint)
-    yaw_joint.parent = root
-    for index in range(4):
-        angle = 2.0 * math.pi * index / 4.0
-        bolt_x = turret_x + math.cos(angle) * 0.112
-        bolt_y = turret_y + math.sin(angle) * 0.112
+    yaw_upper.parent = root
+    yaw_lower = cylinder_between(
+        "Kinetic gimbal azimuth drive lower rotor",
+        (turret_x, turret_y, -0.462),
+        (turret_x, turret_y, -0.522),
+        0.132,
+        GRAPHITE,
+        vertices=48,
+    )
+    yaw_lower.parent = root
+    for z, radius, label in ((-0.434, 0.153, "upper"), (-0.486, 0.132, "lower")):
+        bpy.ops.mesh.primitive_torus_add(
+            major_radius=radius,
+            minor_radius=0.006,
+            major_segments=48,
+            minor_segments=10,
+            location=(turret_x, turret_y, z),
+        )
+        bearing_seam = bpy.context.object
+        bearing_seam.name = f"Kinetic gimbal {label} azimuth bearing seam"
+        assign(bearing_seam, SEAM)
+        smooth(bearing_seam)
+        mark_export(bearing_seam)
+        bearing_seam.parent = root
+    for index in range(8):
+        angle = 2.0 * math.pi * index / 8.0
+        bolt_x = turret_x + math.cos(angle) * 0.116
+        bolt_y = turret_y + math.sin(angle) * 0.116
         bolt = cylinder_between(
-            "Weapon station captive mounting bolt",
+            "Kinetic gimbal indexed azimuth fastener",
             (bolt_x, bolt_y, -0.394),
-            (bolt_x, bolt_y, -0.408),
+            (bolt_x, bolt_y, -0.410),
             0.007,
             STEEL,
             vertices=16,
         )
         bolt.parent = root
-    upper_yoke = cylinder_between(
-        "Compact weapon upper yoke bridge",
-        (turret_x, turret_y - 0.125, -0.47),
-        (turret_x, turret_y + 0.125, -0.47),
-        0.027,
-        STEEL,
-        vertices=24,
+
+    # Twin-sided machined yoke with a rigid top bridge and triangulated braces.
+    top_bridge = beam_between(
+        "Kinetic gimbal machined upper yoke bridge",
+        (turret_x, turret_y - 0.225, -0.505),
+        (turret_x, turret_y + 0.225, -0.505),
+        0.066,
+        0.052,
+        GIMBAL_ALLOY,
+        0.012,
     )
-    upper_yoke.parent = root
-    receiver = create_loft(
-        "Aerodynamic gimballed cannon receiver shell",
-        [
-            (-1.42, 0.035, 0.030, -0.545),
-            (-1.34, 0.082, 0.068, -0.545),
-            (-1.10, 0.112, 0.088, -0.545),
-            (-0.88, 0.102, 0.082, -0.535),
-            (-0.76, 0.038, 0.032, -0.515),
-        ],
-        IAF_GRAY,
-        ring_segments=40,
-        y_offset=turret_y,
-    )
-    receiver.parent = root
+    top_bridge.parent = root
+    for side, label in ((-1.0, "port"), (1.0, "starboard")):
+        yoke_y = turret_y + side * 0.205
+        forward_arm = beam_between(
+            f"Kinetic gimbal {label} forward yoke arm",
+            (turret_x - 0.105, yoke_y, -0.505),
+            (turret_x - 0.105, yoke_y, receiver_z),
+            0.060,
+            0.046,
+            GIMBAL_ALLOY,
+            0.012,
+        )
+        forward_arm.parent = root
+        aft_brace = beam_between(
+            f"Kinetic gimbal {label} triangulated yoke brace",
+            (turret_x + 0.105, yoke_y, -0.510),
+            (turret_x - 0.050, yoke_y, receiver_z + 0.005),
+            0.052,
+            0.042,
+            GIMBAL_ALLOY,
+            0.010,
+        )
+        aft_brace.parent = root
+
     trunnion = cylinder_between(
-        "Compact weapon elevation trunnion",
-        (-1.02, turret_y - 0.145, -0.535),
-        (-1.02, turret_y + 0.145, -0.535),
-        0.055,
+        "Kinetic gimbal full-span elevation trunnion",
+        (turret_x - 0.095, turret_y - 0.260, receiver_z),
+        (turret_x - 0.095, turret_y + 0.260, receiver_z),
+        0.073,
         STEEL,
-        vertices=28,
+        vertices=40,
     )
     trunnion.parent = root
-    for y, suffix in ((turret_y - 0.155, "port"), (turret_y + 0.155, "starboard")):
+    for side, label in ((-1.0, "port"), (1.0, "starboard")):
+        cap_y = turret_y + side * 0.248
         trunnion_cap = cylinder_between(
-            f"Weapon {suffix} trunnion end cap",
-            (-1.02, y - 0.015, -0.535),
-            (-1.02, y + 0.015, -0.535),
-            0.061,
-            ALLOY,
-            vertices=32,
+            f"Kinetic gimbal {label} elevation bearing cap",
+            (turret_x - 0.095, cap_y - side * 0.024, receiver_z),
+            (turret_x - 0.095, cap_y + side * 0.045, receiver_z),
+            0.098,
+            GIMBAL_ALLOY,
+            vertices=40,
         )
         trunnion_cap.parent = root
-    for y, suffix in ((turret_y - 0.115, "port"), (turret_y + 0.115, "starboard")):
-        yoke = cylinder_between(
-            f"Weapon mount {suffix} yoke",
-            (-0.98, y, -0.445),
-            (-1.02, y, -0.535),
-            0.022,
+
+    pitch_drive = cylinder_between(
+        "Kinetic gimbal starboard elevation servo housing",
+        (turret_x - 0.095, turret_y + 0.258, receiver_z),
+        (turret_x - 0.095, turret_y + 0.372, receiver_z),
+        0.132,
+        GIMBAL_ALLOY,
+        vertices=48,
+    )
+    pitch_drive.parent = root
+    pitch_cover = cylinder_between(
+        "Kinetic gimbal elevation servo circular access cover",
+        (turret_x - 0.095, turret_y + 0.368, receiver_z),
+        (turret_x - 0.095, turret_y + 0.389, receiver_z),
+        0.106,
+        HARDWARE_GRAY,
+        vertices=48,
+    )
+    pitch_cover.parent = root
+
+    # Faceted serviceable receiver with layered lower enclosure and side covers.
+    receiver = cube(
+        "Kinetic gimbal precision receiver housing",
+        (-0.92, turret_y, receiver_z),
+        (0.355, 0.178, 0.126),
+        GIMBAL_ALLOY,
+        0.052,
+    )
+    receiver.parent = root
+    receiver_front = create_loft(
+        "Kinetic gimbal faceted forward receiver adapter",
+        [
+            (-1.42, 0.070, 0.070, receiver_z),
+            (-1.34, 0.110, 0.100, receiver_z),
+            (-1.275, 0.160, 0.120, receiver_z),
+        ],
+        GIMBAL_ALLOY,
+        ring_segments=24,
+        y_offset=turret_y,
+    )
+    receiver_front.parent = root
+    lower_receiver = cube(
+        "Kinetic gimbal lower service enclosure",
+        (-0.99, turret_y, receiver_z - 0.112),
+        (0.270, 0.168, 0.052),
+        GIMBAL_ALLOY,
+        0.040,
+    )
+    lower_receiver.parent = root
+    upper_spine = cube(
+        "Kinetic gimbal receiver upper structural spine",
+        (-0.91, turret_y, receiver_z + 0.138),
+        (0.245, 0.142, 0.030),
+        HARDWARE_GRAY,
+        0.025,
+    )
+    upper_spine.parent = root
+
+    # Starboard circular drive cover and a restrained fastener pattern provide
+    # the same maintenance-readable hierarchy as the supplied product image.
+    side_cover = cylinder_between(
+        "Kinetic gimbal starboard receiver access cover",
+        (-0.66, turret_y + 0.190, receiver_z),
+        (-0.66, turret_y + 0.235, receiver_z),
+        0.137,
+        GIMBAL_ALLOY,
+        vertices=48,
+    )
+    side_cover.parent = root
+    side_cover_inset = cylinder_between(
+        "Kinetic gimbal starboard access-cover inset",
+        (-0.66, turret_y + 0.232, receiver_z),
+        (-0.66, turret_y + 0.246, receiver_z),
+        0.112,
+        HARDWARE_GRAY,
+        vertices=48,
+    )
+    side_cover_inset.parent = root
+    for index in range(8):
+        angle = 2.0 * math.pi * index / 8.0
+        fastener_x = -0.66 + math.cos(angle) * 0.101
+        fastener_z = receiver_z + math.sin(angle) * 0.101
+        fastener = cylinder_between(
+            "Kinetic gimbal receiver-cover captive fastener",
+            (fastener_x, turret_y + 0.242, fastener_z),
+            (fastener_x, turret_y + 0.254, fastener_z),
+            0.0065,
             STEEL,
-            vertices=20,
+            vertices=14,
         )
-        yoke.parent = root
-    sleeve = cylinder_between(
-        "Compact cannon barrel aerodynamic sleeve",
-        (-1.36, turret_y, -0.545),
-        (-1.64, turret_y, -0.545),
-        0.032,
-        RAIL,
-        vertices=24,
+        fastener.parent = root
+
+    # Flexible protected service loop represented by individual articulated
+    # links rather than a floating unconnected strip.
+    for index in range(10):
+        fraction = index / 9.0
+        link_x = turret_x + 0.10 - 0.24 * fraction
+        link_z = -0.505 - 0.105 * math.sin(fraction * math.pi)
+        link = cube(
+            "Kinetic gimbal articulated service-loop link",
+            (link_x, turret_y + 0.240, link_z),
+            (0.017, 0.025, 0.010),
+            GRAPHITE,
+            0.006,
+        )
+        link.rotation_euler.y = math.radians(-18.0 + 36.0 * fraction)
+        link.parent = root
+
+    # Multi-stage barrel package with breech collar, support sleeve, restrained
+    # reinforcement rings and a clearly readable recessed muzzle face.
+    breech_collar = cylinder_between(
+        "Kinetic gimbal barrel breech collar",
+        (-1.34, turret_y, receiver_z),
+        (-1.48, turret_y, receiver_z),
+        0.074,
+        GIMBAL_ALLOY,
+        vertices=40,
     )
-    sleeve.parent = root
+    breech_collar.parent = root
+    barrel_sleeve = cylinder_between(
+        "Kinetic gimbal barrel support sleeve",
+        (-1.43, turret_y, receiver_z),
+        (-1.72, turret_y, receiver_z),
+        0.047,
+        HARDWARE_GRAY,
+        vertices=36,
+    )
+    barrel_sleeve.parent = root
     barrel = cylinder_between(
-        "Compact cannon barrel presentation envelope",
-        (-1.36, turret_y, -0.545),
-        (-2.04, turret_y, -0.545),
-        0.018,
-        GRAPHITE,
-        vertices=20,
-    )
-    barrel.parent = root
-    muzzle = cylinder_between(
-        "Compact cannon muzzle fairing",
-        (-2.00, turret_y, -0.545),
-        (-2.12, turret_y, -0.545),
+        "Kinetic gimbal precision barrel exterior",
+        (-1.47, turret_y, receiver_z),
+        (-2.26, turret_y, receiver_z),
         0.026,
         GRAPHITE,
-        vertices=20,
+        vertices=32,
     )
-    muzzle.parent = root
+    barrel.parent = root
+    for x, radius, label in (
+        (-1.49, 0.060, "breech"),
+        (-1.61, 0.051, "forward sleeve"),
+        (-2.08, 0.038, "muzzle support"),
+        (-2.18, 0.045, "muzzle body"),
+    ):
+        collar = cylinder_between(
+            f"Kinetic gimbal {label} reinforcement ring",
+            (x - 0.018, turret_y, receiver_z),
+            (x + 0.018, turret_y, receiver_z),
+            radius,
+            STEEL if x > -2.10 else GRAPHITE,
+            vertices=36,
+        )
+        collar.parent = root
+    muzzle_body = cylinder_between(
+        "Kinetic gimbal compact muzzle enclosure",
+        (-2.15, turret_y, receiver_z),
+        (-2.34, turret_y, receiver_z),
+        0.048,
+        GRAPHITE,
+        vertices=36,
+    )
+    muzzle_body.parent = root
+    muzzle_face = cylinder_between(
+        "Kinetic gimbal recessed muzzle face",
+        (-2.333, turret_y, receiver_z),
+        (-2.350, turret_y, receiver_z),
+        0.031,
+        SEAM,
+        vertices=36,
+    )
+    muzzle_face.parent = root
+    bore = cylinder_between(
+        "Kinetic gimbal dark muzzle aperture",
+        (-2.349, turret_y, receiver_z),
+        (-2.356, turret_y, receiver_z),
+        0.016,
+        GRAPHITE,
+        vertices=32,
+    )
+    bore.parent = root
+    for side in (-1.0, 1.0):
+        muzzle_slot = cube(
+            "Kinetic gimbal muzzle service slot",
+            (-2.255, turret_y + side * 0.046, receiver_z),
+            (0.040, 0.004, 0.012),
+            SEAM,
+            0.004,
+        )
+        muzzle_slot.parent = root
 
     # Replace the dorsal hump with a flush conformal communications panel.
     datalink_panel = cube(
