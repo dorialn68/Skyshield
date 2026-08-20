@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050505">
-  <meta name="description" content="AirShield.AI — תקציר מנהלים להשקעה ומודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper.">
+  <meta name="description" content="AirShield.AI — תקציר מנהלים להשקעה, מערכת רב־משימתית ומודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper.">
   <meta property="og:title" content="AirShield.AI | תקציר מנהלים להשקעה">
-  <meta property="og:description" content="הצעת השקעה אסטרטגית בפלטפורמה אווירית רב־משימתית מבית AirShield.AI.">
+  <meta property="og:description" content="שישה פרקים להצגת הפלטפורמה, המערכת, השותפות, תוכנית העבודה והצוות של AirShield.AI.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="../airshield-xmango-hero-v29.jpg">
   <title>AirShield.AI | תקציר מנהלים להשקעה</title>
@@ -24,9 +24,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css?v=29">
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=1" defer></script>
+  <script src="app.js?v=2" defer></script>
 </head>
 <body class="v2-page">
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -58,6 +58,7 @@
   </section>
 
   <a class="skip-link" href="#main">דילוג לתוכן</a>
+  <div class="nav-scrim" id="navScrim" aria-hidden="true"></div>
 
   <header class="site-header v2-header" id="top">
     <div class="header-inner">
@@ -65,71 +66,48 @@
         <img src="../band-logo.png" alt="" width="46" height="28">
         <span>AIRSHIELD<span>.AI</span></span>
       </a>
-
-      <nav class="desktop-nav" aria-label="ניווט ראשי">
-        <a href="#platform">הפלטפורמה</a>
-        <a href="#investment">ההשקעה</a>
-        <a href="#partnership">השותפות</a>
-        <a href="../">אתר התוכנית</a>
+      <nav class="desktop-nav v2-desktop-nav" aria-label="ניווט ראשי">
+        <a href="#investment" data-menu-key="investment">ההשקעה</a>
+        <a href="#system" data-menu-key="system">המערכת</a>
+        <a href="#experience" data-menu-key="experience">ניסיון</a>
+        <a href="#arit" data-menu-key="arit">ארית</a>
+        <a href="#roadmap" data-menu-key="roadmap">תוכנית</a>
+        <a href="#leadership" data-menu-key="leadership">הצוות</a>
       </nav>
-
       <div class="header-actions">
-        <span class="briefing-index"><b>01</b> / 06</span>
+        <a class="main-site-link" href="../">אתר התוכנית</a>
         <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav">
-          <span class="menu-label">תפריט</span>
-          <span class="menu-icon" aria-hidden="true"></span>
+          <span class="menu-label">תפריט</span><span class="menu-icon" aria-hidden="true"></span>
         </button>
       </div>
     </div>
+    <div class="mega-menu" id="megaMenu" aria-hidden="true">
+      <div class="mega-menu-inner">
+        <div class="mega-summary"><span id="megaKicker"></span><h2 id="megaTitle"></h2></div>
+        <p class="mega-description" id="megaDescription"></p>
+        <div class="mega-links" id="megaLinks"></div>
+      </div>
+    </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="ניווט בנייד" hidden>
-      <a href="#platform">הפלטפורמה</a>
-      <a href="#investment">ההשקעה</a>
-      <a href="#partnership">השותפות</a>
-      <a href="../">אתר התוכנית</a>
+      <a href="#investment">ההשקעה</a><a href="#system">המערכת</a><a href="#experience">ניסיון</a><a href="#arit">ארית</a><a href="#roadmap">תוכנית</a><a href="#leadership">הצוות</a><a href="../">אתר התוכנית</a>
     </nav>
   </header>
 
   <main id="main">
-    <section class="v2-hero" id="platform" aria-labelledby="heroTitle">
+    <section class="v2-hero" id="investment" aria-labelledby="heroTitle">
       <div class="v2-hero-grid">
         <div class="v2-hero-copy" data-reveal>
-          <div class="document-line">
-            <span>תקציר מנהלים להשקעה</span>
-            <span>אוגוסט 2026</span>
-          </div>
-          <p class="eyebrow">AI.ONSUPER / STRATEGIC INVESTMENT</p>
+          <div class="document-line"><span>תקציר מנהלים להשקעה</span><span>אוגוסט 2026</span></div>
+          <p class="section-kicker">הצעת השקעה אסטרטגית</p>
           <h1 id="heroTitle">מערכת אווירית אחת.<br><em>שותפות אסטרטגית אחת.</em></h1>
           <p class="hero-lead">כניסה מוקדמת להשקעה במיזם להגנת גבולות: פלטפורמת כטמ״ם כבדה ורב־משימתית המחברת שהייה ממושכת בגזרה, חימוש משוטט, מטען קינטי אווירי, AI ותחנת שליטה וירטואלית — למערכת נשק אווירית אחת.</p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="#investment">לעיקרי ההשקעה</a>
-            <a class="button button-secondary" href="#modelFrame">לסקירת 360°</a>
-          </div>
+          <div class="hero-actions"><a class="button button-primary" href="#investmentDetails">לעיקרי ההשקעה</a><a class="button button-secondary" href="#modelFrame">לסקירת 360°</a></div>
           <p class="classification">מסווג סודי מסחרי · לעיון ארית בלבד</p>
         </div>
 
         <figure class="hero-visual hero-model v2-model" id="modelFrame" data-lighting="studio" data-hotspot-density="overview" data-reveal>
-          <model-viewer
-            id="aircraftModel"
-            src="../airshield-ximango-direct-tanks-v29.glb"
-            poster="../airshield-xmango-hero-v29.jpg"
-            alt="מודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper המבוססת על Ximango"
-            camera-controls
-            touch-action="pan-y"
-            interaction-prompt="auto"
-            shadow-intensity="1.08"
-            shadow-softness="0.82"
-            exposure="1.04"
-            tone-mapping="agx"
-            environment-image="../environments/studio-softbox-1k.hdr"
-            camera-orbit="-34deg 83deg 118%"
-            interpolation-decay="160"
-            field-of-view="33deg"
-            min-field-of-view="12deg"
-            max-field-of-view="45deg"
-            min-camera-orbit="auto 12deg 1.5m"
-            max-camera-orbit="auto 168deg 30m">
+          <model-viewer id="aircraftModel" src="../airshield-ximango-direct-tanks-v29.glb" poster="../airshield-xmango-hero-v29.jpg" alt="מודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper המבוססת על Ximango" camera-controls touch-action="pan-y" interaction-prompt="auto" shadow-intensity="1.08" shadow-softness="0.82" exposure="1.04" tone-mapping="agx" environment-image="../environments/studio-softbox-1k.hdr" camera-orbit="-34deg 83deg 118%" interpolation-decay="160" field-of-view="33deg" min-field-of-view="12deg" max-field-of-view="45deg" min-camera-orbit="auto 12deg 1.5m" max-camera-orbit="auto 168deg 30m">
             <div class="model-progress" slot="progress-bar"><span></span></div>
-
             <button class="model-hotspot" type="button" slot="hotspot-propeller" data-position="-3.99m 0.33m 0m" data-normal="-1m 0m 0m" data-target="-3.99m 0.33m 0m" data-orbit="-75deg 76deg 2.7m" data-component="propeller" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">01</span><span class="hotspot-label">מדחף</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-engine" data-position="-3.10m 0.52m 0.28m" data-normal="0m 1m 0.25m" data-target="-3.15m 0.22m 0m" data-orbit="-48deg 75deg 2.8m" data-component="engine" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">02</span><span class="hotspot-label">מנוע</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-flight-computer" data-position="-1.57m 0.40m 0m" data-normal="0m 1m 0m" data-target="-1.57m 0.26m 0m" data-orbit="-38deg 70deg 2.4m" data-component="flightComputer" data-detail-level="3" data-visibility-attribute="visible"><span class="hotspot-index">03</span><span class="hotspot-label">מחשב טיסה</span></button>
@@ -141,100 +119,60 @@
             <button class="model-hotspot" type="button" slot="hotspot-forward-camera" data-position="-2.62m -0.39m 0m" data-normal="-1m -0.15m 0m" data-target="-2.58m -0.34m 0m" data-orbit="-58deg 82deg 2.2m" data-component="forwardCamera" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">09</span><span class="hotspot-label">מצלמת VR קדמית</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-fuselage-bay" data-position="0.15m -0.28m 0m" data-normal="0m -1m 0m" data-target="0.15m -0.16m 0m" data-orbit="140deg 86deg 2.6m" data-component="fuselageBay" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">10</span><span class="hotspot-label">תא משימה</span></button>
             <button class="model-hotspot model-hotspot-aux" type="button" slot="hotspot-external-interface" data-position="-1.39m -0.33m -2.68m" data-normal="0m -1m -0.25m" data-target="-1.39m -0.29m -2.68m" data-orbit="15deg 84deg 3.1m" data-component="externalInterface" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">A1</span><span class="hotspot-label">בידוני דלק</span></button>
-
-            <aside class="model-focus-card" id="modelFocusCard" aria-live="polite" hidden>
-              <span class="model-focus-kicker">מיקוד רכיב · <span id="modelFocusStation"></span></span>
-              <strong id="modelFocusTitle"></strong>
-              <p id="modelFocusText"></p>
-              <button type="button" id="modelFocusOverview">חזרה לתצוגת 360°</button>
-            </aside>
+            <aside class="model-focus-card" id="modelFocusCard" aria-live="polite" hidden><span class="model-focus-kicker">מיקוד רכיב · <span id="modelFocusStation"></span></span><strong id="modelFocusTitle"></strong><p id="modelFocusText"></p><button type="button" id="modelFocusOverview">חזרה לתצוגת 360°</button></aside>
           </model-viewer>
           <div class="model-toolbar">
-            <div class="model-toolbar-main">
-              <span class="model-status"><i aria-hidden="true"></i><b>מודל תלת־ממד אינטראקטיבי</b></span>
-              <span class="model-instruction">גררו לצפייה ב־360° · קרבו כדי לחשוף תחנות מערכת</span>
-              <button class="model-overview-control" type="button" id="modelOverviewControl">סקירת 360°</button>
-            </div>
-            <div class="model-lighting" role="group" aria-labelledby="modelLightingLabel">
-              <span class="model-lighting-label" id="modelLightingLabel">תאורה</span>
-              <div class="lighting-presets" role="group" aria-label="סביבת תאורה">
-                <button class="active" type="button" data-lighting-preset="studio" aria-pressed="true">סטודיו</button>
-                <button type="button" data-lighting-preset="daylight" aria-pressed="false">אור יום</button>
-                <button type="button" data-lighting-preset="sky" aria-pressed="false">שמים</button>
-                <button type="button" data-lighting-preset="golden" aria-pressed="false">שעת זהב</button>
-                <button type="button" data-lighting-preset="night" aria-pressed="false">לילה</button>
-              </div>
-              <label class="model-exposure"><span>חשיפה</span><input id="modelExposure" type="range" min="0.72" max="1.34" step="0.02" value="1.04"></label>
-            </div>
+            <div class="model-toolbar-main"><span class="model-status"><i aria-hidden="true"></i><b>מודל תלת־ממד אינטראקטיבי</b></span><span class="model-instruction">גררו לצפייה ב־360° · קרבו כדי לחשוף תחנות מערכת</span><button class="model-overview-control" type="button" id="modelOverviewControl">סקירת 360°</button></div>
+            <div class="model-lighting" role="group" aria-labelledby="modelLightingLabel"><span class="model-lighting-label" id="modelLightingLabel">תאורה</span><div class="lighting-presets" role="group" aria-label="סביבת תאורה"><button class="active" type="button" data-lighting-preset="studio" aria-pressed="true">סטודיו</button><button type="button" data-lighting-preset="daylight" aria-pressed="false">אור יום</button><button type="button" data-lighting-preset="sky" aria-pressed="false">שמים</button><button type="button" data-lighting-preset="golden" aria-pressed="false">שעת זהב</button><button type="button" data-lighting-preset="night" aria-pressed="false">לילה</button></div><label class="model-exposure"><span>חשיפה</span><input id="modelExposure" type="range" min="0.72" max="1.34" step="0.02" value="1.04"></label></div>
           </div>
           <figcaption>מודל קונספט פרמטרי · משטחי PBR צבאיים · פרופורציות מבוססות Ximango</figcaption>
         </figure>
       </div>
-    </section>
-
-    <section class="investment-section" id="investment" aria-labelledby="investmentTitle">
-      <div class="section-frame">
-        <header class="investment-header" data-reveal>
-          <div>
-            <span class="section-number">01 / EXECUTIVE BRIEF</span>
-            <h2 id="investmentTitle">הצעת השקעה אסטרטגית</h2>
-          </div>
-          <p>הצעה לשותפות המשלבת הון, יכולת תעשייתית וגישה למעטפת חימוש — בדרך מהדגמה קרקעית לסדרת ניסויי טיסה.</p>
-        </header>
-
-        <div class="investment-ledger" data-reveal>
-          <article class="ledger-item ledger-amber">
-            <span>01</span>
-            <strong dir="ltr">10M USD</strong>
-            <p>השקעה מבוקשת תמורת אחזקה שתוגדר במשא ומתן.</p>
-          </article>
-          <article class="ledger-item ledger-blue">
-            <span>02</span>
-            <strong>18 חודשים</strong>
-            <p>יעד: סדרת טיסות ניסוי לאחר הדגמה קרקעית משולבת.</p>
-          </article>
-          <article class="ledger-item ledger-teal">
-            <span>03</span>
-            <strong>שת״פ ארית</strong>
-            <p>אפשרויות חימוש, לרבות חימוש משוטט, כחלק מסל החימוש של המערכת.</p>
-          </article>
-        </div>
+      <div class="hero-investment-rail section-frame" id="investmentDetails" data-reveal>
+        <article><strong dir="ltr">10M USD</strong><p>השקעה מבוקשת תמורת אחזקה שתוגדר במשא ומתן.</p></article>
+        <article><strong>18 חודשים</strong><p>יעד: סדרת טיסות ניסוי לאחר הדגמה קרקעית משולבת.</p></article>
+        <article><strong>שת״פ ארית</strong><p>אפשרויות חימוש, לרבות חימוש משוטט, כחלק מסל החימוש של המערכת.</p></article>
+        <blockquote>ארית אינה נכנסת להשקעה פיננסית בלבד, אלא לשותפות אסטרטגית סביב מערכת אווירית היכולה לשאת, להפעיל ולמנף חימושים מתקדמים.</blockquote>
       </div>
     </section>
 
-    <section class="partnership-section" id="partnership" aria-labelledby="partnershipTitle">
-      <div class="section-frame partnership-grid">
-        <figure class="source-visual" data-reveal>
-          <img src="assets/investment-platform-reference.jpeg" alt="תמונת המחשה מבצעית מתוך מצגת המקור" width="1231" height="496">
-          <figcaption><span>תפיסת הפעלה</span><span>תמונת המחשה מתוך חומר המקור</span></figcaption>
-        </figure>
-        <div class="partnership-copy" data-reveal>
-          <span class="section-number">STRATEGIC PARTNERSHIP</span>
-          <h2 id="partnershipTitle">לא השקעה פיננסית בלבד.</h2>
-          <p>ארית נכנסת לשותפות אסטרטגית סביב מערכת אווירית היכולה לשאת, להפעיל ולמנף חימושים מתקדמים.</p>
-          <div class="partnership-outcome">
-            <span>מימוש משותף</span>
-            <strong>הון × תעשייה × ניסויי טיסה</strong>
-          </div>
-        </div>
+    <section class="story-section theme-light" id="system" aria-labelledby="systemTitle">
+      <div class="story-grid section-frame">
+        <div class="story-copy" data-reveal><p class="section-kicker">המערכת</p><h2 id="systemTitle">החלטה מהירה יותר.<br>תמונה מלאה יותר.</h2><p class="story-intro">קיצור זמן הגילוי, קבלת ההחלטה ונטרול האיום באמצעות פלטפורמה, קישוריות, תחנת שליטה וממשק הפעלה אחד.</p><ul class="principle-list"><li>הפעלה אינטואיטיבית באמצעות צוות קטן</li><li>מיזוג חיישנים ותמונת מצב מלאה בזמן אמת</li><li>ארכיטקטורה מודולרית, פתוחה ויתירה</li><li>תקשורת מאובטחת עם גיבוי LOS ו־SATCOM / Starlink</li><li>אדם בלולאת ההחלטה לכל פעולה קריטית</li></ul></div>
+        <div class="system-media" data-reveal><figure class="media-primary"><img src="assets/system-gcs.png" alt="תחנת שליטה ובקרה" width="112" height="130"><figcaption>תחנת שליטה · תמונת מצב אחודה</figcaption></figure><figure><img src="assets/system-vr.png" alt="מפעיל באמצעות ממשק מציאות רבודה" width="83" height="141"><figcaption>ממשק VR אינטואיטיבי</figcaption></figure><figure><img src="assets/system-network.png" alt="קישוריות LOS ו־SATCOM" width="113" height="113"><figcaption>LOS · SATCOM · הצפנה · יתירות</figcaption></figure></div>
+      </div>
+      <div class="capability-line section-frame" data-reveal><span>פלטפורמה אווירית</span><span>EO/IR ומגוון חימושים</span><span>AI Edge וטייס אוטומטי</span><span>בקרה וקישוריות</span></div>
+    </section>
+
+    <section class="story-section theme-dark" id="experience" aria-labelledby="experienceTitle">
+      <div class="story-grid section-frame">
+        <div class="story-copy" data-reveal><p class="section-kicker">ניסיון מוכח</p><h2 id="experienceTitle">הסבת מטוסים מאוישים לפלטפורמות בלתי מאוישות אינה תקדים.</h2><p class="story-intro">הניסיון העולמי מציג כמה מסלולים אפשריים להסבה, אינטגרציה ושינוי תצורה — ממטוסים קלים ועד פלטפורמות מנהלים.</p><div class="reference-index"><span>Diamond DA 42</span><span>Burt Rutan · Long‑EZ</span><span>Piaggio · Avanti 180</span></div></div>
+        <div class="aircraft-reference-grid" data-reveal><figure><img src="../diamond.jpg" alt="Diamond DA 42 מוסב לכטמ״ם" width="200" height="126"><figcaption>Diamond DA 42</figcaption></figure><figure><img src="../ar-cap.jpg" alt="פלטפורמת Diamond בלתי מאוישת באוויר" width="200" height="120"></figure><figure><img src="../burt.jpg" alt="Burt Rutan Long-EZ בתצורה בלתי מאוישת" width="235" height="127"><figcaption>Burt Rutan · Long‑EZ</figcaption></figure><figure><img src="../ar-cap-2.jpg" alt="Long-EZ בלתי מאויש בתצוגה קרקעית" width="235" height="120"></figure><figure><img src="../piaggio.jpg" alt="Piaggio Avanti 180" width="243" height="125"><figcaption>Piaggio · Avanti 180</figcaption></figure><figure><img src="../ar-cap-3.jpg" alt="Piaggio Avanti 180 בטיסה" width="244" height="120"></figure></div>
       </div>
     </section>
 
-    <nav class="deck-navigation" aria-label="ניווט במצגת">
-      <div class="section-frame">
-        <span>שקף 01 מתוך 06</span>
-        <span class="deck-current">תקציר מנהלים להשקעה</span>
-        <span class="deck-next">הבא: המערכת · בבנייה</span>
+    <section class="story-section theme-light" id="arit" aria-labelledby="aritTitle">
+      <div class="story-grid section-frame">
+        <div class="story-copy" data-reveal><p class="section-kicker">החיבור לארית</p><h2 id="aritTitle">מוצר משותף עם נתיב ניסויים ויכולת צמיחה.</h2><p class="story-intro">חימוש משוטט, אלקטרוניקה, בקרה ויכולת ייצור מתחברים לפלטפורמה אווירית מלאה — ולא למוצר בודד.</p><div class="argument-list"><article><h3>חימוש משוטט כמנוע צמיחה</h3><p>נשיאה, שיגור וניהול מהאוויר; הארכת טווח וגמישות הפעלה; יכולת מוצר משותף עם ארית.</p></article><article><h3>אלקטרוניקה ובקרה</h3><p>מחשב משימה, חיישנים וקישוריות; מרעומים, בקרה וממשקי חימוש; אינטגרציה ביטחונית כחול־לבן.</p></article><article><h3>פלטפורמה מתמידה ורב־משימתית</h3><p>שהייה בגזרה, מטען קינטי, חימושים נוספים, תא מטען פנימי ונקודות קשיחות.</p></article><article><h3>ערך לקוח ברור</h3><p>מענה לאיומים רבים וזולים, עלות פעולה נמוכה יותר ותגובה מוקדמת לפני קו המגע.</p></article></div></div>
+        <div class="arit-media" data-reveal><figure class="arit-airframe"><img src="assets/arit-airframe.png" alt="פלטפורמת AlonS" width="361" height="199"><figcaption>פלטפורמה מתמידה ורב־משימתית</figcaption></figure><figure class="arit-gimbal"><img src="assets/arit-gimbal.png" alt="צריח קינטי אווירי AKP" width="250" height="138"><figcaption>צריח קינטי אווירי AKP</figcaption></figure></div>
       </div>
-    </nav>
+      <p class="section-thesis section-frame" data-reveal>ההזדמנות היא להפוך יכולות חימוש ואלקטרוניקה לחלק ממערכת אווירית שלמה עם סיפור מבצעי, נתיב ניסויים ויכולת צמיחה מעבר למוצר בודד.</p>
+    </section>
+
+    <section class="story-section theme-dark roadmap-section" id="roadmap" aria-labelledby="roadmapTitle">
+      <div class="roadmap-header section-frame" data-reveal><div class="story-copy"><p class="section-kicker">תוכנית עבודה</p><h2 id="roadmapTitle">18 חודשים מהשקעה לסדרת טיסות ניסוי.</h2></div><p>ההשקעה מיועדת לייצר התקדמות מוחשית: מדגים קרקעי, אינטגרציה וסדרת טיסות הדגמה עבור לקוחות.</p></div>
+      <ol class="roadmap section-frame" data-reveal><li><span>0–3 חודשים</span><h3>יישור קו והשקעה</h3><p>משא ומתן טכני ומסחרי, Term Sheet והשקעה מול אבני דרך, והגדרת שיתוף הפעולה.</p></li><li><span>3–6 חודשים</span><h3>רכישת פלטפורמות ותכן</h3><p>AlonS לישראל, הקפאת ממשקים ותצורה, ותכן מערכת VR, AI ותקשורת.</p></li><li><span>6–12 חודשים</span><h3>הדגמה קרקעית משולבת</h3><p>GCS/VR, קישוריות ו־AI Edge; שילוב AKP וחימוש משוטט; בדיקות קרקע וסימולציות.</p></li><li><span>12–18 חודשים</span><h3>סדרת טיסות ניסוי</h3><p>הרחבת מעטפת, אימות שליטה ותקשורת, אימות מטענים והחלטת המשך עם לקוח עוגן.</p></li></ol>
+      <div class="roadmap-outcomes section-frame" data-reveal><article><h3>שימושי הכספים</h3><p>פלטפורמות והסבה · אינטגרציה · תחנת שליטה · תקשורת · AI ובטיחות · AKP · חימוש משוטט · ניסויים ותיעוד</p></article><article><h3>היעד מהפגישה</h3><p>עניין אסטרטגי עקרוני · צוות בדיקה משותף ל־30 יום · מסגרת שיתוף פעולה · עקרונות השקעה ואחזקות</p></article></div>
+    </section>
+
+    <section class="story-section theme-light leadership-section" id="leadership" aria-labelledby="leadershipTitle">
+      <div class="story-grid section-frame">
+        <div class="story-copy" data-reveal><p class="section-kicker">המייסדים וההנהלה</p><h2 id="leadershipTitle">ניסיון מבצעי. הנדסה עמוקה. יכולת ביצוע.</h2><p class="story-intro">צוות היודע לחבר צורך מבצעי, פלטפורמה, מערכת AI ולקוח ביטחוני למוצר מורכב ובר־ניסוי.</p><div class="leadership-bios"><article><h3>אביאל אלוני <span>מייסד שותף ומנכ״ל</span></h3><p>סא״ל במיל׳ בטייסת כטמ״ם. למעלה מ־30 שנות ניסיון בהפעלה מבצעית, ניהול לקוחות ביטחוניים והובלת פרויקטים במשרד הביטחון ובתעשיות הביטחוניות.</p></article><article><h3>קובי בלנק <span>מייסד שותף וסמנכ״ל טכנולוגיות</span></h3><p>רס״ן במיל׳ בטייסת כטמ״ם. מעל 30 שנות ניסיון בהנדסת מכונות, תוכנה, מערכות בלתי מאוישות ואינטגרציה.</p></article><article><h3>דורון אלוני <span>מייסד שותף וסמנכ״ל AI</span></h3><p>כ־30 שנות ניסיון בהייטק, DevOps, תשתיות תוכנה, AI ודאטה; מוביל ולידציה, אוטומציה ותמיכה בהחלטות מפעיל.</p></article></div></div>
+        <div class="leadership-media" data-reveal><figure><img src="../aviel.png" alt="אביאל אלוני" width="220" height="275"><figcaption>אביאל אלוני</figcaption></figure><figure><img src="../kobi.png" alt="קובי בלנק" width="220" height="275"><figcaption>קובי בלנק</figcaption></figure><figure><img src="../doron.png" alt="דורון אלוני" width="220" height="274"><figcaption>דורון אלוני</figcaption></figure><div class="field-proof"><img src="assets/leadership-field.png" alt="תיעוד שטח של הנהלת החברה" width="112" height="189"><img src="assets/leadership-rome.png" alt="תיעוד הנהלה מתוך חומר המקור" width="112" height="189"></div></div>
+      </div>
+    </section>
   </main>
 
-  <footer class="v2-footer">
-    <div class="section-frame">
-      <span>AIRSHIELD SYSTEMS</span>
-      <span>מסווג סודי מסחרי · לעיון ארית בלבד</span>
-      <span>© <span id="year">2026</span></span>
-    </div>
-  </footer>
+  <footer class="v2-footer"><div class="section-frame"><span>AIRSHIELD SYSTEMS</span><span>מסווג סודי מסחרי · לעיון ארית בלבד</span><span>© <span id="year">2026</span></span></div></footer>
 </body>
 </html>

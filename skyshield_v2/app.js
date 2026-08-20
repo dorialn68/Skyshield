@@ -106,6 +106,94 @@ mobileNav?.querySelectorAll("a").forEach((link) => {
   });
 });
 
+const megaMenu = document.getElementById("megaMenu");
+const megaKicker = document.getElementById("megaKicker");
+const megaTitle = document.getElementById("megaTitle");
+const megaDescription = document.getElementById("megaDescription");
+const megaLinks = document.getElementById("megaLinks");
+const navScrim = document.getElementById("navScrim");
+const desktopMenuLinks = Array.from(document.querySelectorAll("[data-menu-key]"));
+
+const megaMenuContent = {
+  investment: {
+    kicker: "תקציר מנהלים",
+    title: "ההשקעה",
+    description: "כניסה מוקדמת למיזם המשלב פלטפורמה אווירית, מערכות משימה, AI וחימושים מתקדמים.",
+    links: [["#investmentDetails", "עיקרי ההשקעה"], ["#modelFrame", "מודל 360°"]]
+  },
+  system: {
+    kicker: "מערכת משולבת",
+    title: "המערכת",
+    description: "פלטפורמה, קישוריות, תחנת שליטה וממשק מפעיל המחוברים לתמונת מצב אחת.",
+    links: [["#system", "עקרונות מפתח"], ["#system", "בקרה וקישוריות"]]
+  },
+  experience: {
+    kicker: "תקדימים תעשייתיים",
+    title: "ניסיון בהסבות",
+    description: "דוגמאות בינלאומיות הממחישות מסלולי הסבה ואינטגרציה ממטוסים מאוישים למערכות בלתי מאוישות.",
+    links: [["#experience", "Diamond DA 42"], ["#experience", "Long‑EZ"], ["#experience", "Avanti 180"]]
+  },
+  arit: {
+    kicker: "שותפות אסטרטגית",
+    title: "החיבור לארית",
+    description: "חימוש, אלקטרוניקה ויכולת ייצור כחלק ממערכת אווירית מלאה עם נתיב ניסויים וצמיחה.",
+    links: [["#arit", "מנועי הצמיחה"], ["#arit", "ערך ללקוח"]]
+  },
+  roadmap: {
+    kicker: "מהשקעה לטיסה",
+    title: "תוכנית 18 חודשים",
+    description: "רצף עבודה מדורג מהסכמות מסחריות, דרך הדגמה קרקעית, ועד סדרת טיסות ניסוי.",
+    links: [["#roadmap", "אבני הדרך"], ["#roadmap", "שימושי הכספים"]]
+  },
+  leadership: {
+    kicker: "יכולת ביצוע",
+    title: "המייסדים וההנהלה",
+    description: "ניסיון מבצעי, הנדסי וטכנולוגי עמוק המחבר פלטפורמה, AI ולקוח ביטחוני.",
+    links: [["#leadership", "הנהלת החברה"], ["#leadership", "הניסיון המצטבר"]]
+  }
+};
+
+function openMegaMenu(key) {
+  const content = megaMenuContent[key];
+  if (!header || !megaMenu || !content) return;
+  if (megaKicker) megaKicker.textContent = content.kicker;
+  if (megaTitle) megaTitle.textContent = content.title;
+  if (megaDescription) megaDescription.textContent = content.description;
+  if (megaLinks) {
+    megaLinks.replaceChildren(...content.links.map(([href, label]) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.textContent = label;
+      link.addEventListener("click", closeMegaMenu);
+      return link;
+    }));
+  }
+  header.classList.add("menu-open");
+  megaMenu.setAttribute("aria-hidden", "false");
+  navScrim?.classList.add("is-visible");
+  desktopMenuLinks.forEach((link) => link.classList.toggle("is-active", link.dataset.menuKey === key));
+}
+
+function closeMegaMenu() {
+  if (!header || !megaMenu) return;
+  header.classList.remove("menu-open");
+  megaMenu.setAttribute("aria-hidden", "true");
+  navScrim?.classList.remove("is-visible");
+  desktopMenuLinks.forEach((link) => link.classList.remove("is-active"));
+}
+
+desktopMenuLinks.forEach((link) => {
+  link.addEventListener("pointerenter", () => openMegaMenu(link.dataset.menuKey));
+  link.addEventListener("focus", () => openMegaMenu(link.dataset.menuKey));
+  link.addEventListener("click", closeMegaMenu);
+});
+
+header?.addEventListener("pointerleave", closeMegaMenu);
+navScrim?.addEventListener("click", closeMegaMenu);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMegaMenu();
+});
+
 const model = document.getElementById("aircraftModel");
 const modelStage = model?.closest(".hero-model");
 const exposureControl = document.getElementById("modelExposure");
