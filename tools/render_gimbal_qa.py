@@ -10,8 +10,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL = ROOT / "airshield-ximango-triangle-gear-v28.glb"
-OUTPUT_DIR = ROOT / "qa-gimbal-v28"
+MODEL = ROOT / "airshield-ximango-direct-tanks-v29.glb"
+OUTPUT_DIR = ROOT / "qa-gimbal-v29"
 
 
 def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:

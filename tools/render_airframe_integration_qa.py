@@ -9,8 +9,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL = ROOT / "airshield-ximango-triangle-gear-v28.glb"
-OUTPUT_DIR = ROOT / "qa-airframe-v28"
+MODEL = ROOT / "airshield-ximango-direct-tanks-v29.glb"
+OUTPUT_DIR = ROOT / "qa-airframe-v29"
 
 
 def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
@@ -69,6 +69,11 @@ views = {
     "main-gear-inboard-wheel": ((-2.95, 0.05, -0.84), (-1.51, 1.40, -0.82), 88),
     "main-gear-front-cant": ((-4.35, -0.10, -0.72), (-1.55, 0.0, -0.72), 82),
     "ground-stance-side": ((0.0, -16.5, 0.65), (0.0, 0.0, -0.15), 62),
+    "symmetric-wing-undersides": ((-4.50, 0.0, -4.20), (-1.45, 0.0, -0.25), 76),
+    "port-direct-tank-contact": ((-3.40, -4.90, -1.45), (-1.35, -2.68, -0.27), 88),
+    "starboard-direct-tank-contact": ((-3.40, 4.90, -1.45), (-1.35, 2.68, -0.27), 88),
+    "port-clean-gear-root": ((-2.65, -3.20, -1.30), (-1.62, -1.29, -0.30), 94),
+    "starboard-clean-gear-root": ((-2.65, 3.20, -1.30), (-1.62, 1.29, -0.30), 94),
     "forward-vr-camera": ((-3.72, -0.82, -0.42), (-2.60, 0.0, -0.15), 94),
     "gimbal-fuel-and-bay": ((-4.65, -6.40, -2.20), (-0.76, -0.40, -0.43), 72),
     "aft-fuselage": ((4.90, -7.10, 1.15), (1.80, 0.0, 0.06), 70),

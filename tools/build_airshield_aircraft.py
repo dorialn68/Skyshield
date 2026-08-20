@@ -20,8 +20,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-triangle-gear-v28.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v28.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-direct-tanks-v29.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v29.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v2.png"
@@ -1299,7 +1299,7 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
     root["landing_gear_layout"] = "two wing-mounted main gears with extended aft-and-outboard-canted legs, asymmetric right-angle wedge covers and exposed tire contact sections, plus compact tail wheel; no nose wheel"
-    root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations on clean continuous pylons"
+    root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations blended directly into the wing undersides without separate pylons"
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
     # attitude while keeping all three tires on the same apron plane.
@@ -1353,38 +1353,23 @@ def create_aircraft() -> bpy.types.Object:
         tip = canted_winglet(f"{label} winglet", side)
         tip.parent = root
 
-    # Two presentation-only external fuel tanks. Each uninterrupted teardrop
-    # shell is blended directly into one clean continuous underwing pylon; the
-    # former exposed pins and rectangular mounting lugs are intentionally absent.
+    # Two presentation-only external fuel tanks. Their dorsal crowns penetrate
+    # the wing undersides directly, eliminating the separate plates/pylons that
+    # previously read as unnecessary suspended geometry.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         station_y = 2.68 * side
-        pylon = fin_mesh(
-            f"{label} external fuel-tank pylon",
-            [
-                (-2.18, -0.19),
-                (-0.72, -0.13),
-                (-0.57, -0.27),
-                (-0.72, -0.42),
-                (-2.02, -0.42),
-                (-2.23, -0.31),
-            ],
-            0.075,
-            IAF_GRAY,
-            y_offset=station_y,
-        )
-        pylon.parent = root
-
+        tank_center_z = -0.330
         tank = create_loft(
             f"{label} external fuel tank",
             [
-                (-2.48, 0.020, 0.018, -0.565),
-                (-2.39, 0.085, 0.078, -0.565),
-                (-2.20, 0.158, 0.145, -0.565),
-                (-1.92, 0.202, 0.184, -0.565),
-                (-1.28, 0.212, 0.192, -0.565),
-                (-0.82, 0.188, 0.170, -0.565),
-                (-0.48, 0.116, 0.102, -0.565),
-                (-0.28, 0.028, 0.024, -0.565),
+                (-2.48, 0.020, 0.018, tank_center_z),
+                (-2.39, 0.085, 0.078, tank_center_z),
+                (-2.20, 0.158, 0.145, tank_center_z),
+                (-1.92, 0.202, 0.184, tank_center_z),
+                (-1.28, 0.212, 0.192, tank_center_z),
+                (-0.82, 0.188, 0.170, tank_center_z),
+                (-0.48, 0.116, 0.102, tank_center_z),
+                (-0.28, 0.028, 0.024, tank_center_z),
             ],
             IAF_GRAY,
             ring_segments=56,
@@ -1402,7 +1387,7 @@ def create_aircraft() -> bpy.types.Object:
                 x,
                 radius_y,
                 radius_z,
-                -0.565,
+                tank_center_z,
                 0.0036,
                 SEAM,
                 root,
@@ -1487,25 +1472,10 @@ def create_aircraft() -> bpy.types.Object:
         )
         wheel_well.parent = root
 
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            segments=36,
-            ring_count=18,
-            location=(mount_x, mount_y, -0.315),
-        )
-        blister = bpy.context.object
-        blister.name = f"{label} main gear wing-integrated trunnion fairing"
-        blister.scale = (0.220, 0.185, 0.080)
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        assign(blister, IAF_GRAY)
-        smooth(blister)
-        mark_export(blister)
-        blister.parent = root
-        mounting_wing = wing_left if side > 0.0 else wing_right
-        union_into_airframe(
-            mounting_wing,
-            blister,
-            f"{label} main gear integral wing mount",
-        )
+        # Do not Boolean a separate blister into either wing. Mirrored airfoil
+        # topology can otherwise resolve the union differently on each side and
+        # create a false underside bump. The socket and recessed throat already
+        # overlap the pristine wing mesh and provide a continuous connection.
 
         trunnion_socket = cylinder_between(
             f"{label} main gear structural trunnion socket",
