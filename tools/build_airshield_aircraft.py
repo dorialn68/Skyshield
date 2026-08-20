@@ -20,8 +20,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-connected-v19.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v19.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v1.png"
@@ -427,6 +427,32 @@ def assign(obj: bpy.types.Object, mat: bpy.types.Material) -> bpy.types.Object:
 def mark_export(obj: bpy.types.Object) -> bpy.types.Object:
     EXPORT_OBJECTS.append(obj)
     return obj
+
+
+def union_into_airframe(
+    target: bpy.types.Object,
+    addition: bpy.types.Object,
+    modifier_name: str,
+) -> bpy.types.Object:
+    """Fuse an intersecting aerodynamic mount into its parent airframe mesh."""
+    bpy.ops.object.select_all(action="DESELECT")
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    union = target.modifiers.new(modifier_name, "BOOLEAN")
+    union.operation = "UNION"
+    union.solver = "EXACT"
+    union.object = addition
+
+    # Keep any finishing bevel after the structural union in the stack so the
+    # resulting junction remains a radiused production surface.
+    while target.modifiers.find(union.name) > 0:
+        bpy.ops.object.modifier_move_up(modifier=union.name)
+    bpy.ops.object.modifier_apply(modifier=union.name)
+
+    if addition in EXPORT_OBJECTS:
+        EXPORT_OBJECTS.remove(addition)
+    bpy.data.objects.remove(addition, do_unlink=True)
+    return target
 
 
 def bevel(obj: bpy.types.Object, width: float, segments: int = 3) -> bpy.types.Object:
@@ -1307,6 +1333,12 @@ def create_aircraft() -> bpy.types.Object:
         smooth(blister)
         mark_export(blister)
         blister.parent = root
+        mounting_wing = wing_left if side > 0.0 else wing_right
+        union_into_airframe(
+            mounting_wing,
+            blister,
+            f"{label} main gear integral wing mount",
+        )
 
         trunnion_socket = cylinder_between(
             f"{label} main gear structural trunnion socket",
@@ -1420,6 +1452,8 @@ def create_aircraft() -> bpy.types.Object:
         (3.39, 0.0, -0.325),
         root,
     )
+    union_into_airframe(fuselage, tail_mount, "Integral tail wheel mounting shoe")
+    union_into_airframe(fuselage, tail_fairing, "Integral tail wheel spring fairing")
     landing_wheel("Tail", tail_wheel_location, 0.105, 0.065, root)
 
     # Open aft mission bay behind the wing. The dark recess and downward-opening
