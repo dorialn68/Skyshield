@@ -20,8 +20,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-connected-v19.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v19.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-corrected-v20.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v20.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v1.png"
@@ -1026,15 +1026,17 @@ def fin_mesh(
 
 
 def canted_winglet(name: str, side: float) -> bpy.types.Object:
-    """Tapered winglet canted outboard as shown on late Super Ximangos."""
+    """Tapered winglet with the Ximango fore/aft profile and outboard cant."""
     base_y = 8.71 * side
     top_y = 8.96 * side
     half_thickness = 0.022
     profile = [
         (-1.73, base_y, 0.12),
         (-1.15, base_y, 0.12),
-        (-1.29, top_y, 0.73),
-        (-1.61, top_y, 0.83),
+        # The previous cap was reversed fore/aft.  The higher corner belongs
+        # aft and the lower corner forward when the nose is toward negative X.
+        (-1.27, top_y, 0.83),
+        (-1.59, top_y, 0.73),
     ]
     verts = [(x, y - half_thickness, z) for x, y, z in profile] + [
         (x, y + half_thickness, z) for x, y, z in profile
@@ -1283,17 +1285,27 @@ def create_aircraft() -> bpy.types.Object:
         )
         stab.parent = root
 
-    # Nose spinner and two-blade variable-pitch propeller.
-    bpy.ops.mesh.primitive_cone_add(vertices=48, radius1=0.035, radius2=0.205, depth=0.34, location=(-4.00, 0, 0))
-    spinner = bpy.context.object
-    spinner.name = "Propeller spinner"
-    spinner.rotation_euler[1] = math.radians(90)
-    assign(spinner, HARDWARE_GRAY)
-    smooth(spinner)
-    mark_export(spinner)
+    # One closed white ogive replaces the exposed dark hub and simple cone.
+    # Its aft ring penetrates the first cowling section so the engine area reads
+    # as a continuous Ximango-style aerodynamic transition from every angle.
+    spinner = create_asymmetric_fuselage(
+        "White Ximango-style propeller spinner",
+        [
+            (-4.27, 0.010, 0.010, 0.010, 0.000, 0.88),
+            (-4.23, 0.040, 0.040, 0.038, 0.000, 0.82),
+            (-4.15, 0.090, 0.086, 0.082, 0.000, 0.76),
+            (-4.05, 0.145, 0.134, 0.126, 0.000, 0.72),
+            (-3.94, 0.184, 0.158, 0.145, 0.000, 0.72),
+            (-3.82, 0.202, 0.168, 0.153, 0.000, 0.78),
+        ],
+        PROP_WHITE,
+        ring_segments=56,
+    )
     spinner.parent = root
 
-    hub = cylinder_between("Propeller hub", (-4.13, 0, 0), (-4.24, 0, 0), 0.09, STEEL)
+    # The compact steel shaft remains inside the spinner rather than appearing
+    # as a second external nose shape.
+    hub = cylinder_between("Internal propeller shaft", (-4.10, 0, 0), (-4.23, 0, 0), 0.035, STEEL)
     hub.parent = root
     for angle, suffix in ((math.radians(14), "A"), (math.radians(194), "B")):
         propeller_blade(f"Propeller blade {suffix}", angle, root)
