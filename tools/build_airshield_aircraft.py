@@ -1710,7 +1710,7 @@ def create_aircraft() -> bpy.types.Object:
     # tall rounded sensor/receiver body, dominant side drive and low vented
     # barrel package. No internal or manufacturing geometry is represented.
     turret_x = -0.82
-    turret_y = -0.12
+    turret_y = 0.0
     body_x = -0.88
     body_z = -0.650
 
