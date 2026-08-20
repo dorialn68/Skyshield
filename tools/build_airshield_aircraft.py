@@ -20,8 +20,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-integration-corrections-v26.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v26.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-gear-camera-gimbal-v27.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v27.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v2.png"
@@ -1271,7 +1271,7 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_airfoil"] = "NACA 64(3)-618"
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
-    root["landing_gear_layout"] = "two perpendicular wing-mounted main gears with full composite leg fairings and enclosed wheel spats, plus compact tail wheel; no nose wheel"
+    root["landing_gear_layout"] = "two perpendicular wing-mounted main gears with tapered outboard composite covers and exposed tire contact sections, plus compact tail wheel; no nose wheel"
     root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations on clean continuous pylons"
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
@@ -1432,8 +1432,9 @@ def create_aircraft() -> bpy.types.Object:
         propeller_blade(f"Propeller blade {suffix}", angle, root)
 
     # Retractable tail-dragger gear. Each main leg drops perpendicular to the
-    # wing plane and is enclosed by a three-dimensional composite leg fairing
-    # flowing into a full wheel spat, as on the photographed Ximango gear.
+    # wing plane. A tapered outboard composite cover masks the wheel structure
+    # from the exterior while leaving the tire contact patch visible below and
+    # the wheel/fork legible from the inboard side, as in the Ximango photos.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         mount_x = -1.62
         mount_y = 1.40 * side
@@ -1531,34 +1532,35 @@ def create_aircraft() -> bpy.types.Object:
         )
         axle.parent = root
         landing_wheel(label, wheel_location, 0.165, 0.13, root)
-        wheel_spat = create_loft(
-            f"{label} fully enclosed aerodynamic wheel spat",
+
+        # This is deliberately an outboard cover rather than a closed pod. Its
+        # unequal tapered sides create the photographed non-equilateral shield
+        # silhouette, while the lower 25 mm of tire remains below the cover.
+        cover_y = wheel_y + side * 0.100
+        wheel_cover = fin_mesh(
+            f"{label} tapered outboard main-wheel aerodynamic cover",
             [
-                (mount_x - 0.265, 0.018, 0.030, -0.770),
-                (mount_x - 0.205, 0.075, 0.130, -0.785),
-                (mount_x - 0.105, 0.125, 0.185, -0.790),
-                (mount_x + 0.060, 0.145, 0.200, -0.780),
-                (mount_x + 0.205, 0.115, 0.170, -0.760),
-                (mount_x + 0.295, 0.035, 0.055, -0.735),
+                (mount_x - 0.145, -0.330),
+                (mount_x + 0.150, -0.330),
+                (mount_x + 0.205, -0.690),
+                (mount_x + 0.155, -0.940),
+                (mount_x - 0.150, -0.940),
+                (mount_x - 0.195, -0.650),
             ],
+            0.032,
             IAF_GRAY,
-            ring_segments=48,
-            y_offset=wheel_y,
+            y_offset=cover_y,
         )
-        wheel_spat.parent = root
-        elliptical_ring(
-            f"{label} wheel-spat maintenance seam",
-            mount_x + 0.060,
-            0.145,
-            0.200,
-            -0.780,
-            0.0025,
-            SEAM,
-            root,
-            segments=48,
-            tube_segments=6,
-            y_offset=wheel_y,
-        )
+        wheel_cover.parent = root
+        for seam_z, half_width in ((-0.505, 0.142), (-0.845, 0.135)):
+            cover_seam = cube(
+                f"{label} wheel-cover horizontal maintenance seam",
+                (mount_x, cover_y + side * 0.034, seam_z),
+                (half_width, 0.0025, 0.0025),
+                SEAM,
+                0.0015,
+            )
+            cover_seam.parent = root
 
     tail_wheel_location = (3.48, 0.0, -0.40)
 
@@ -1663,10 +1665,12 @@ def create_aircraft() -> bpy.types.Object:
         module.parent = root
 
     # The former aft EO/IR ball is removed. A much smaller conformal VR/visual
-    # navigation camera is integrated into the forward belly fairing.
-    camera_x = -3.30
+    # navigation camera is integrated farther aft on the forward belly, away
+    # from the spinner and closer to the aircraft center of mass.
+    camera_x = -2.58
     camera_y = 0.0
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(camera_x, camera_y, -0.245))
+    camera_z = -0.360
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=20, location=(camera_x, camera_y, camera_z))
     camera_fairing = bpy.context.object
     camera_fairing.name = "Forward VR camera aerodynamic fairing"
     camera_fairing.scale = (0.170, 0.135, 0.070)
@@ -1677,7 +1681,7 @@ def create_aircraft() -> bpy.types.Object:
     camera_fairing.parent = root
     camera_face = cube(
         "Forward VR camera recessed face plate",
-        (camera_x - 0.145, camera_y, -0.265),
+        (camera_x - 0.145, camera_y, camera_z - 0.005),
         (0.018, 0.085, 0.052),
         HARDWARE_GRAY,
         0.018,
@@ -1686,8 +1690,8 @@ def create_aircraft() -> bpy.types.Object:
     for offset, label in ((-0.035, "port"), (0.035, "starboard")):
         camera_lens = cylinder_between(
             f"Forward VR camera {label} aperture",
-            (camera_x - 0.158, camera_y + offset, -0.265),
-            (camera_x - 0.183, camera_y + offset, -0.265),
+            (camera_x - 0.158, camera_y + offset, camera_z - 0.005),
+            (camera_x - 0.183, camera_y + offset, camera_z - 0.005),
             0.020,
             LENS,
             vertices=32,
@@ -1702,7 +1706,7 @@ def create_aircraft() -> bpy.types.Object:
     turret_x = -0.82
     turret_y = -0.12
     body_x = -0.88
-    body_z = -0.625
+    body_z = -0.650
 
     # The mount is mechanically continuous with the aircraft belly. The broad
     # plate and captive isolators overlap the conformal fairing, eliminating the
@@ -1946,7 +1950,7 @@ def create_aircraft() -> bpy.types.Object:
     body = cube(
         "Integrated gimbal rounded sensor and receiver body",
         (body_x, turret_y, body_z),
-        (0.225, 0.218, 0.175),
+        (0.225, 0.218, 0.215),
         GIMBAL_ALLOY,
         0.0,
     )
@@ -1954,16 +1958,16 @@ def create_aircraft() -> bpy.types.Object:
     body.parent = root
     body_top = cube(
         "Integrated gimbal upper body structural shoulder",
-        (body_x + 0.005, turret_y, -0.501),
+        (body_x + 0.005, turret_y, -0.470),
         (0.178, 0.190, 0.034),
         HARDWARE_GRAY,
         0.026,
     )
     body_top.parent = root
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, location=(body_x + 0.025, turret_y, -0.757))
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, location=(body_x + 0.025, turret_y, -0.835))
     lower_fairing = bpy.context.object
     lower_fairing.name = "Integrated gimbal rounded lower mission-system fairing"
-    lower_fairing.scale = (0.205, 0.205, 0.073)
+    lower_fairing.scale = (0.205, 0.205, 0.085)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     assign(lower_fairing, GIMBAL_ALLOY)
     smooth(lower_fairing)
@@ -1984,10 +1988,10 @@ def create_aircraft() -> bpy.types.Object:
         (-1.015, -0.500),
         (-0.690, -0.500),
         (-0.620, -0.548),
-        (-0.602, -0.710),
-        (-0.668, -0.804),
-        (-0.910, -0.810),
-        (-1.020, -0.730),
+        (-0.602, -0.730),
+        (-0.668, -0.865),
+        (-0.910, -0.875),
+        (-1.020, -0.755),
     ]
     drive_lobe = extruded_plate_y(
         "Integrated gimbal reference-side elevation drive lobe",
@@ -2002,7 +2006,7 @@ def create_aircraft() -> bpy.types.Object:
         "Integrated gimbal reference-side elevation drive housing",
         (body_x + 0.050, turret_y - 0.260, body_z),
         (body_x + 0.050, turret_y - 0.326, body_z),
-        0.175,
+        0.195,
         GIMBAL_ALLOY,
         vertices=64,
     )
@@ -2011,7 +2015,7 @@ def create_aircraft() -> bpy.types.Object:
         "Integrated gimbal concentric elevation-drive access cover",
         (body_x + 0.050, turret_y - 0.323, body_z),
         (body_x + 0.050, turret_y - 0.344, body_z),
-        0.142,
+        0.158,
         HARDWARE_GRAY,
         vertices=64,
     )
@@ -2033,7 +2037,7 @@ def create_aircraft() -> bpy.types.Object:
         "Integrated gimbal opposite-side elevation bearing cap",
         (body_x + 0.050, turret_y + 0.258, body_z),
         (body_x + 0.050, turret_y + 0.305, body_z),
-        0.122,
+        0.135,
         GIMBAL_ALLOY,
         vertices=56,
     )
@@ -2044,8 +2048,8 @@ def create_aircraft() -> bpy.types.Object:
     # housing instead of floating as a separate aft camera.
     sensor_face = cube(
         "Integrated gimbal EO IR forward sensor face",
-        (-1.107, turret_y, -0.620),
-        (0.018, 0.162, 0.140),
+        (-1.107, turret_y, -0.645),
+        (0.018, 0.162, 0.175),
         GIMBAL_ALLOY,
         0.0,
     )
@@ -2087,11 +2091,11 @@ def create_aircraft() -> bpy.types.Object:
             )
             glint.parent = root
     for y_offset in (-0.142, 0.142):
-        for z_offset in (-0.112, 0.112):
+        for z_offset in (-0.145, 0.145):
             face_fastener = cylinder_between(
                 "Integrated gimbal sensor-face flush fastener",
-                (-1.125, turret_y + y_offset, -0.620 + z_offset),
-                (-1.139, turret_y + y_offset, -0.620 + z_offset),
+                (-1.125, turret_y + y_offset, -0.645 + z_offset),
+                (-1.139, turret_y + y_offset, -0.645 + z_offset),
                 0.005,
                 STEEL,
                 vertices=14,
@@ -2102,7 +2106,7 @@ def create_aircraft() -> bpy.types.Object:
     # embedded into the shroud surface to read as real vent openings while the
     # restrained stepped barrel terminates in a recessed muzzle bore.
     gun_y = turret_y - 0.015
-    gun_z = -0.747
+    gun_z = -0.785
     breech_block = cube(
         "Integrated gimbal lower barrel saddle",
         (-1.145, gun_y, gun_z),
@@ -2123,7 +2127,7 @@ def create_aircraft() -> bpy.types.Object:
     shroud = cylinder_between(
         "Integrated gimbal perforated barrel cooling shroud",
         (-1.285, gun_y, gun_z),
-        (-1.720, gun_y, gun_z),
+        (-1.625, gun_y, gun_z),
         0.052,
         STEEL,
         vertices=48,
@@ -2132,13 +2136,13 @@ def create_aircraft() -> bpy.types.Object:
     shroud_liner = cylinder_between(
         "Integrated gimbal dark inner barrel liner",
         (-1.292, gun_y, gun_z),
-        (-1.713, gun_y, gun_z),
+        (-1.618, gun_y, gun_z),
         0.041,
         GRAPHITE,
         vertices=48,
     )
     shroud_liner.parent = root
-    for ring_index, x_pos in enumerate((-1.345, -1.425, -1.505, -1.585, -1.665)):
+    for ring_index, x_pos in enumerate((-1.345, -1.425, -1.505, -1.585)):
         angle_offset = (ring_index % 2) * math.pi / 4.0
         for aperture_index in range(6):
             angle = angle_offset + aperture_index * math.pi / 3.0
@@ -2156,18 +2160,18 @@ def create_aircraft() -> bpy.types.Object:
             cut_from_hard_surface(shroud, cutter, "Machined elongated shroud vent")
     barrel = cylinder_between(
         "Integrated gimbal exposed precision barrel",
-        (-1.665, gun_y, gun_z),
-        (-2.000, gun_y, gun_z),
+        (-1.575, gun_y, gun_z),
+        (-1.860, gun_y, gun_z),
         0.023,
         GRAPHITE,
         vertices=36,
     )
     barrel.parent = root
     for x_pos, radius, label in (
-        (-1.735, 0.034, "shroud exit"),
-        (-1.815, 0.029, "first barrel step"),
-        (-1.925, 0.031, "muzzle support"),
-        (-1.985, 0.037, "muzzle ring"),
+        (-1.640, 0.034, "shroud exit"),
+        (-1.710, 0.029, "first barrel step"),
+        (-1.800, 0.031, "muzzle support"),
+        (-1.855, 0.037, "muzzle ring"),
     ):
         collar = cylinder_between(
             f"Integrated gimbal {label}",
@@ -2180,8 +2184,8 @@ def create_aircraft() -> bpy.types.Object:
         collar.parent = root
     muzzle = cylinder_between(
         "Integrated gimbal compact muzzle body",
-        (-1.955, gun_y, gun_z),
-        (-2.060, gun_y, gun_z),
+        (-1.830, gun_y, gun_z),
+        (-1.915, gun_y, gun_z),
         0.036,
         GRAPHITE,
         vertices=40,
@@ -2189,8 +2193,8 @@ def create_aircraft() -> bpy.types.Object:
     muzzle.parent = root
     muzzle_face = cylinder_between(
         "Integrated gimbal recessed muzzle face",
-        (-2.055, gun_y, gun_z),
-        (-2.073, gun_y, gun_z),
+        (-1.910, gun_y, gun_z),
+        (-1.928, gun_y, gun_z),
         0.027,
         STEEL,
         vertices=40,
@@ -2198,8 +2202,8 @@ def create_aircraft() -> bpy.types.Object:
     muzzle_face.parent = root
     bore = cylinder_between(
         "Integrated gimbal dark muzzle aperture",
-        (-2.071, gun_y, gun_z),
-        (-2.079, gun_y, gun_z),
+        (-1.926, gun_y, gun_z),
+        (-1.934, gun_y, gun_z),
         0.014,
         GRAPHITE,
         vertices=32,

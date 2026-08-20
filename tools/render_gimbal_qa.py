@@ -10,8 +10,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL = ROOT / "airshield-ximango-integration-corrections-v26.glb"
-OUTPUT_DIR = ROOT / "qa-gimbal-v26"
+MODEL = ROOT / "airshield-ximango-gear-camera-gimbal-v27.glb"
+OUTPUT_DIR = ROOT / "qa-gimbal-v27"
 
 
 def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
@@ -57,7 +57,7 @@ for location, energy, size, color in (
     light.data.shape = "DISK"
     light.data.size = size
     light.data.color = color
-    look_at(light, (-1.32, -0.12, -0.61))
+    look_at(light, (-1.32, -0.12, -0.66))
 
 bpy.ops.object.camera_add()
 camera = bpy.context.object
@@ -73,7 +73,7 @@ views = {
 }
 for label, location in views.items():
     camera.location = location
-    look_at(camera, (-1.36, -0.12, -0.61))
+    look_at(camera, (-1.36, -0.12, -0.66))
     scene.render.filepath = str(OUTPUT_DIR / f"{label}.png")
     bpy.ops.render.render(write_still=True)
 
