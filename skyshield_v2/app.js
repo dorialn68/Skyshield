@@ -194,6 +194,84 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeMegaMenu();
 });
 
+const systemSection = document.getElementById("system");
+const systemModules = Array.from(document.querySelectorAll("[data-system-module]"));
+const systemPrinciples = Array.from(document.querySelectorAll("[data-system-related]"));
+const systemDetailIndex = document.getElementById("systemDetailIndex");
+const systemDetailKicker = document.getElementById("systemDetailKicker");
+const systemDetailTitle = document.getElementById("systemDetailTitle");
+const systemDetailText = document.getElementById("systemDetailText");
+const systemDetailTags = document.getElementById("systemDetailTags");
+
+const systemDetailContent = {
+  airframe: {
+    index: "01",
+    kicker: "שכבת הפלטפורמה",
+    title: "חישה, נשיאה ואוטונומיה בקצה",
+    text: "הפלטפורמה מאחדת EO/IR, מטענים ייעודיים, AI Edge וטייס אוטומטי לכדי נכס אווירי רב־משימתי ומתמיד.",
+    tags: ["EO/IR", "AI Edge", "Autopilot"]
+  },
+  communications: {
+    index: "02",
+    kicker: "שכבת הקישוריות",
+    title: "רציפות תקשורתית גם מעבר לקו הראייה",
+    text: "קישורי LOS ו־SATCOM / Starlink, הצפנה ויתירות שומרים על שליטה מאובטחת ועל רציפות המשימה בתנאים משתנים.",
+    tags: ["LOS", "SATCOM", "Encrypted"]
+  },
+  mission: {
+    index: "03",
+    kicker: "שכבת השליטה",
+    title: "תמונת מצב אחת לכל שרשרת ההפעלה",
+    text: "תחנת השליטה מרכזת חיישנים, משימה ומעקב בזמן אמת כדי לקצר את המעבר מגילוי להבנה ולהחלטה.",
+    tags: ["GCS", "Mission", "Common picture"]
+  },
+  vr: {
+    index: "04",
+    kicker: "שכבת המפעיל",
+    title: "שליטה טבעית בסביבת מציאות רבודה",
+    text: "ממשק VR מציג למפעיל את המידע הרלוונטי בהקשר המבצעי ומאפשר תפעול אינטואיטיבי באמצעות צוות קטן.",
+    tags: ["VR", "Human in loop", "Small crew"]
+  }
+};
+
+function activateSystemModule(moduleKey) {
+  const content = systemDetailContent[moduleKey];
+  if (!systemSection || !content) return;
+
+  systemSection.dataset.systemActive = moduleKey;
+  systemModules.forEach((moduleButton) => {
+    const selected = moduleButton.dataset.systemModule === moduleKey;
+    moduleButton.classList.toggle("is-active", selected);
+    moduleButton.setAttribute("aria-pressed", String(selected));
+  });
+  systemPrinciples.forEach((principle) => {
+    const relatedModules = (principle.dataset.systemRelated ?? "").split(",");
+    principle.classList.toggle("is-related", relatedModules.includes(moduleKey));
+  });
+
+  if (systemDetailIndex) systemDetailIndex.textContent = content.index;
+  if (systemDetailKicker) systemDetailKicker.textContent = content.kicker;
+  if (systemDetailTitle) systemDetailTitle.textContent = content.title;
+  if (systemDetailText) systemDetailText.textContent = content.text;
+  if (systemDetailTags) {
+    systemDetailTags.replaceChildren(...content.tags.map((label) => {
+      const tag = document.createElement("span");
+      tag.textContent = label;
+      return tag;
+    }));
+  }
+}
+
+systemModules.forEach((moduleButton) => {
+  moduleButton.addEventListener("click", () => activateSystemModule(moduleButton.dataset.systemModule));
+  moduleButton.addEventListener("focus", () => activateSystemModule(moduleButton.dataset.systemModule));
+  moduleButton.addEventListener("pointerenter", (event) => {
+    if (event.pointerType === "mouse") activateSystemModule(moduleButton.dataset.systemModule);
+  });
+});
+
+activateSystemModule("airframe");
+
 const model = document.getElementById("aircraftModel");
 const modelStage = model?.closest(".hero-model");
 const exposureControl = document.getElementById("modelExposure");

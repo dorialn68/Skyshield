@@ -24,9 +24,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css?v=29">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=2" defer></script>
+  <script src="app.js?v=3" defer></script>
 </head>
 <body class="v2-page">
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -75,7 +75,6 @@
         <a href="#leadership" data-menu-key="leadership">הצוות</a>
       </nav>
       <div class="header-actions">
-        <a class="main-site-link" href="../">אתר התוכנית</a>
         <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav">
           <span class="menu-label">תפריט</span><span class="menu-icon" aria-hidden="true"></span>
         </button>
@@ -89,7 +88,7 @@
       </div>
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="ניווט בנייד" hidden>
-      <a href="#investment">ההשקעה</a><a href="#system">המערכת</a><a href="#experience">ניסיון</a><a href="#arit">ארית</a><a href="#roadmap">תוכנית</a><a href="#leadership">הצוות</a><a href="../">אתר התוכנית</a>
+      <a href="#investment">ההשקעה</a><a href="#system">המערכת</a><a href="#experience">ניסיון</a><a href="#arit">ארית</a><a href="#roadmap">תוכנית</a><a href="#leadership">הצוות</a>
     </nav>
   </header>
 
@@ -136,12 +135,60 @@
       </div>
     </section>
 
-    <section class="story-section theme-light" id="system" aria-labelledby="systemTitle">
-      <div class="story-grid section-frame">
-        <div class="story-copy" data-reveal><p class="section-kicker">המערכת</p><h2 id="systemTitle">החלטה מהירה יותר.<br>תמונה מלאה יותר.</h2><p class="story-intro">קיצור זמן הגילוי, קבלת ההחלטה ונטרול האיום באמצעות פלטפורמה, קישוריות, תחנת שליטה וממשק הפעלה אחד.</p><ul class="principle-list"><li>הפעלה אינטואיטיבית באמצעות צוות קטן</li><li>מיזוג חיישנים ותמונת מצב מלאה בזמן אמת</li><li>ארכיטקטורה מודולרית, פתוחה ויתירה</li><li>תקשורת מאובטחת עם גיבוי LOS ו־SATCOM / Starlink</li><li>אדם בלולאת ההחלטה לכל פעולה קריטית</li></ul></div>
-        <div class="system-media" data-reveal><figure class="media-primary"><img src="assets/system-gcs.png" alt="תחנת שליטה ובקרה" width="112" height="130"><figcaption>תחנת שליטה · תמונת מצב אחודה</figcaption></figure><figure><img src="assets/system-vr.png" alt="מפעיל באמצעות ממשק מציאות רבודה" width="83" height="141"><figcaption>ממשק VR אינטואיטיבי</figcaption></figure><figure><img src="assets/system-network.png" alt="קישוריות LOS ו־SATCOM" width="113" height="113"><figcaption>LOS · SATCOM · הצפנה · יתירות</figcaption></figure></div>
+    <section class="story-section system-section" id="system" aria-labelledby="systemTitle" data-system-active="airframe">
+      <div class="system-shell section-frame">
+        <header class="system-heading" data-reveal>
+          <p class="section-kicker">מערכת משולבת</p>
+          <h2 id="systemTitle">מערכת אחת.<br>ארבע שכבות מבצעיות.</h2>
+          <p>הפלטפורמה, הקישוריות, תחנת השליטה וממשק המפעיל פועלים כליבה אחת — מהגילוי ועד להחלטה.</p>
+        </header>
+
+        <div class="system-diagram" data-reveal>
+          <button class="system-module module-airframe is-active" type="button" data-system-module="airframe" aria-pressed="true">
+            <span class="system-module-head"><span class="system-module-number">01</span><strong>פלטפורמה אווירית</strong></span>
+            <span class="system-module-image"><img src="assets/system-airframe.png?v=2" alt="פלטפורמת AirShield בתצורה אווירית" width="741" height="439"></span>
+            <span class="system-module-summary">EO/IR · מגוון חימושים · AI Edge · טייס אוטומטי</span>
+          </button>
+
+          <button class="system-module module-mission" type="button" data-system-module="mission" aria-pressed="false">
+            <span class="system-module-head"><span class="system-module-number">03</span><strong>ניהול משימה ותמונת מצב</strong></span>
+            <span class="system-module-image"><img src="assets/system-gcs.png?v=2" alt="תחנת שליטה ובקרה עם תמונת מצב אחודה" width="611" height="705"></span>
+            <span class="system-module-summary">תחנת שליטה ובקרה · תמונת מצב אחודה</span>
+          </button>
+
+          <article class="system-core" aria-labelledby="systemCoreTitle">
+            <div class="system-core-heading"><span class="system-core-mark" aria-hidden="true"></span><div><span>ליבת ההחלטה</span><h3 id="systemCoreTitle">עקרונות מפתח</h3></div></div>
+            <ol class="system-principles">
+              <li data-system-related="airframe,vr"><span>01</span>הפעלה אינטואיטיבית באמצעות צוות קטן</li>
+              <li data-system-related="airframe,mission"><span>02</span>מיזוג חיישנים ותמונת מצב מלאה בזמן אמת</li>
+              <li data-system-related="airframe,communications"><span>03</span>ארכיטקטורה מודולרית, פתוחה ויתירה</li>
+              <li data-system-related="communications"><span>04</span>תקשורת מאובטחת עם גיבוי LOS ו־SATCOM / Starlink</li>
+              <li data-system-related="mission,vr"><span>05</span>אדם בלולאת ההחלטה לכל פעולה קריטית</li>
+            </ol>
+          </article>
+
+          <button class="system-module module-vr" type="button" data-system-module="vr" aria-pressed="false">
+            <span class="system-module-head"><span class="system-module-number">04</span><strong>מפעיל עם משקפי VR</strong></span>
+            <span class="system-module-image"><img src="assets/system-vr.png?v=2" alt="מפעיל עם ממשק מציאות רבודה" width="185" height="314"></span>
+            <span class="system-module-summary">שליטה אינטואיטיבית בסביבת מציאות רבודה</span>
+          </button>
+
+          <button class="system-module module-communications" type="button" data-system-module="communications" aria-pressed="false">
+            <span class="system-module-head"><span class="system-module-number">02</span><strong>תקשורת וקישוריות</strong></span>
+            <span class="system-module-image"><img src="assets/system-network.png?v=2" alt="קישוריות LOS ו־SATCOM באמצעות רשת לוויינית" width="183" height="218"></span>
+            <span class="system-module-summary">LOS · SATCOM / Starlink · הצפנה · יתירות</span>
+          </button>
+        </div>
+
+        <aside class="system-detail" data-reveal aria-live="polite">
+          <span class="system-detail-index" id="systemDetailIndex">01</span>
+          <div class="system-detail-heading"><span id="systemDetailKicker">שכבת הפלטפורמה</span><h3 id="systemDetailTitle">חישה, נשיאה ואוטונומיה בקצה</h3></div>
+          <p id="systemDetailText">הפלטפורמה מאחדת EO/IR, מטענים ייעודיים, AI Edge וטייס אוטומטי לכדי נכס אווירי רב־משימתי ומתמיד.</p>
+          <div class="system-detail-tags" id="systemDetailTags"><span>EO/IR</span><span>AI Edge</span><span>Autopilot</span></div>
+        </aside>
+
+        <p class="system-outcome" data-reveal>קיצור זמן הגילוי, קבלת ההחלטה ונטרול האיום באמצעות תמונת מצב אחת ורצף הפעלה אחוד.</p>
       </div>
-      <div class="capability-line section-frame" data-reveal><span>פלטפורמה אווירית</span><span>EO/IR ומגוון חימושים</span><span>AI Edge וטייס אוטומטי</span><span>בקרה וקישוריות</span></div>
     </section>
 
     <section class="story-section theme-dark" id="experience" aria-labelledby="experienceTitle">
