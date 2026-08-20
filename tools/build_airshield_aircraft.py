@@ -56,13 +56,14 @@ def material(
     return mat
 
 
-IAF_GRAY = material("IAF matte light gray", (0.39, 0.405, 0.40, 1.0), 0.02, 0.48)
-IAF_GRAY_DARK = material("Avionics fairing gray", (0.055, 0.085, 0.10, 1.0), 0.10, 0.24)
+IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
+IAF_GRAY_DARK = material("Neutral smoked-gray canopy", (0.075, 0.082, 0.085, 1.0), 0.08, 0.19)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
 CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.30)
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
 LENS = material("Sensor glass", (0.015, 0.055, 0.075, 1.0), 0.38, 0.08)
 STEEL = material("Mechanism steel", (0.18, 0.20, 0.21, 1.0), 0.72, 0.24)
+RAIL = material("Empty launch rail anodized alloy", (0.075, 0.083, 0.086, 1.0), 0.62, 0.30)
 SEAM = material("Composite panel seam", (0.055, 0.062, 0.064, 1.0), 0.04, 0.58)
 NAV_RED = material("Port navigation lens", (0.34, 0.008, 0.006, 1.0), 0.0, 0.16)
 NAV_GREEN = material("Starboard navigation lens", (0.006, 0.28, 0.09, 1.0), 0.0, 0.16)
@@ -153,6 +154,27 @@ def textured_principled_material(
     links.new(normal.outputs["Normal"], bsdf.inputs["Normal"])
 
 
+def attach_gltf_occlusion(mat: bpy.types.Material, image: bpy.types.Image) -> None:
+    """Expose a micro-cavity map to glTF real-time viewers as ambient occlusion."""
+    group = bpy.data.node_groups.get("glTF Material Output")
+    if group is None:
+        group = bpy.data.node_groups.new("glTF Material Output", "ShaderNodeTree")
+        group.interface.new_socket(name="Occlusion", in_out="INPUT", socket_type="NodeSocketFloat")
+        group.nodes.new("NodeGroupInput")
+
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    occlusion = nodes.new("ShaderNodeTexImage")
+    occlusion.name = f"{mat.name} micro-cavity occlusion"
+    occlusion.image = image
+    occlusion.interpolation = "Linear"
+    occlusion.extension = "REPEAT"
+    output = nodes.new("ShaderNodeGroup")
+    output.name = "glTF Material Output"
+    output.node_tree = group
+    links.new(occlusion.outputs["Color"], output.inputs["Occlusion"])
+
+
 def build_pbr_materials() -> None:
     """Generate portable PBR maps used by both the hero render and model-viewer."""
     rng = np.random.default_rng(1968)
@@ -172,20 +194,26 @@ def build_pbr_materials() -> None:
         + np.roll(grain, 1, axis=1)
         + np.roll(grain, -1, axis=1)
     ) / 5.0
-    skin_variation = broad * 0.012 + grain * 0.010
+    skin_variation = broad * 0.013 + grain * 0.011
     skin_rgb = np.clip(
-        np.array([0.645, 0.655, 0.648], dtype=np.float32)[None, None, :] + skin_variation[..., None],
+        np.array([0.600, 0.617, 0.627], dtype=np.float32)[None, None, :] + skin_variation[..., None],
         0.0,
         1.0,
     )
-    skin_roughness = np.clip(0.50 + broad * 0.035 + grain * 0.028, 0.39, 0.64)
-    skin_height = broad * 0.06 + grain * 0.035
+    skin_roughness = np.clip(0.49 + broad * 0.045 + grain * 0.036, 0.36, 0.66)
+    skin_height = broad * 0.075 + grain * 0.052
+    skin_occlusion = np.clip(0.975 - np.maximum(broad, 0.0) * 0.030 - np.abs(grain) * 0.020, 0.90, 1.0)
 
     skin_base = write_texture("airshield_skin_basecolor", rgba_from_rgb(skin_rgb), "sRGB")
     skin_rough = write_texture("airshield_skin_roughness", rgba_from_gray(skin_roughness), "Non-Color")
     skin_normal = write_texture(
         "airshield_skin_normal",
-        normal_map_from_height(skin_height, 3.2),
+        normal_map_from_height(skin_height, 4.0),
+        "Non-Color",
+    )
+    skin_ao = write_texture(
+        "airshield_skin_occlusion",
+        rgba_from_gray(skin_occlusion),
         "Non-Color",
     )
     textured_principled_material(
@@ -194,10 +222,11 @@ def build_pbr_materials() -> None:
         skin_rough,
         skin_normal,
         metallic=0.015,
-        normal_strength=0.24,
-        coat_weight=0.18,
-        coat_roughness=0.34,
+        normal_strength=0.38,
+        coat_weight=0.22,
+        coat_roughness=0.31,
     )
+    attach_gltf_occlusion(IAF_GRAY, skin_ao)
 
     carbon_size = 512
     cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
@@ -208,11 +237,17 @@ def build_pbr_materials() -> None:
     carbon_rgb[..., 2] *= 1.08
     carbon_roughness = np.clip(0.24 + (1.0 - weave) * 0.12, 0.20, 0.40)
     carbon_height = (warp * weft) * 0.06
+    carbon_occlusion = np.clip(0.90 + weave * 0.10, 0.88, 1.0)
     carbon_base = write_texture("airshield_carbon_basecolor", rgba_from_rgb(carbon_rgb), "sRGB")
     carbon_rough = write_texture("airshield_carbon_roughness", rgba_from_gray(carbon_roughness), "Non-Color")
     carbon_normal = write_texture(
         "airshield_carbon_normal",
         normal_map_from_height(carbon_height, 4.5),
+        "Non-Color",
+    )
+    carbon_ao = write_texture(
+        "airshield_carbon_occlusion",
+        rgba_from_gray(carbon_occlusion),
         "Non-Color",
     )
     textured_principled_material(
@@ -225,12 +260,15 @@ def build_pbr_materials() -> None:
         coat_weight=0.46,
         coat_roughness=0.18,
     )
+    attach_gltf_occlusion(CARBON, carbon_ao)
 
     fairing_bsdf = IAF_GRAY_DARK.node_tree.nodes.get("Principled BSDF")
     set_bsdf_input(fairing_bsdf, "Metallic", 0.04)
-    set_bsdf_input(fairing_bsdf, "Roughness", 0.17)
-    set_bsdf_input(fairing_bsdf, "Coat Weight", 0.72)
-    set_bsdf_input(fairing_bsdf, "Coat Roughness", 0.10)
+    set_bsdf_input(fairing_bsdf, "Roughness", 0.13)
+    set_bsdf_input(fairing_bsdf, "Transmission Weight", 0.08)
+    set_bsdf_input(fairing_bsdf, "Coat Weight", 0.90)
+    set_bsdf_input(fairing_bsdf, "Coat Roughness", 0.07)
+    set_bsdf_input(fairing_bsdf, "Specular IOR Level", 0.46)
     set_bsdf_input(fairing_bsdf, "IOR", 1.47)
 
     graphite_bsdf = GRAPHITE.node_tree.nodes.get("Principled BSDF")
@@ -242,6 +280,12 @@ def build_pbr_materials() -> None:
     set_bsdf_input(steel_bsdf, "Metallic", 0.88)
     set_bsdf_input(steel_bsdf, "Roughness", 0.20)
     set_bsdf_input(steel_bsdf, "Anisotropic", 0.22)
+
+    rail_bsdf = RAIL.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(rail_bsdf, "Metallic", 0.70)
+    set_bsdf_input(rail_bsdf, "Roughness", 0.28)
+    set_bsdf_input(rail_bsdf, "Anisotropic", 0.18)
+    set_bsdf_input(rail_bsdf, "Coat Weight", 0.12)
 
     rubber_bsdf = RUBBER.node_tree.nodes.get("Principled BSDF")
     set_bsdf_input(rubber_bsdf, "Roughness", 0.76)
@@ -791,6 +835,23 @@ def add_airframe_surface_details(root: bpy.types.Object) -> None:
     elliptical_ring("Mission bay shell joint", 0.30, 0.402, 0.392, 0.07, 0.0045, SEAM, root)
     elliptical_ring("Aft shell joint", 2.35, 0.222, 0.212, -0.03, 0.0040, SEAM, root)
 
+    # Fine canopy-to-fuselage seals keep the glazed avionics fairing from
+    # reading as a single toy-like blob while preserving its smooth profile.
+    for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
+        surface_detail_line(
+            f"{label} canopy perimeter seal",
+            [
+                (-2.66, 0.17 * side, 0.45),
+                (-2.34, 0.35 * side, 0.43),
+                (-1.78, 0.44 * side, 0.42),
+                (-1.16, 0.38 * side, 0.40),
+                (-0.72, 0.18 * side, 0.39),
+            ],
+            0.0060,
+            SEAM,
+            root,
+        )
+
     # Flap and aileron hinge lines sit just above the lifting-surface skin.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         surface_detail_line(
@@ -864,6 +925,8 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_main_gear_track_m"] = 2.80
     root["reference_gear_axis_spacing_m"] = 5.35
     root["landing_gear_layout"] = "two retractable main gears and coupled tail wheel"
+    root["external_store_visualization"] = "two symmetric empty underwing pylons and launch rails"
+    root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
     # attitude while keeping all three tires on the same apron plane.
     root["ground_attitude_deg"] = 4.7
@@ -923,6 +986,46 @@ def create_aircraft() -> bpy.types.Object:
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         tip = canted_winglet(f"{label} winglet", side)
         tip.parent = root
+
+    # Symmetric empty external-store stations.  The shallow composite pylons
+    # follow the lower wing surface; only the launch rails are shown, with no
+    # munition installed, so the configuration remains a presentation concept.
+    for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
+        station_y = 2.68 * side
+        pylon = fin_mesh(
+            f"{label} underwing payload pylon",
+            [
+                (-1.92, -0.22),
+                (-0.92, -0.18),
+                (-0.84, -0.35),
+                (-1.02, -0.53),
+                (-1.68, -0.53),
+                (-1.92, -0.39),
+            ],
+            0.060,
+            IAF_GRAY,
+            y_offset=station_y,
+        )
+        pylon.parent = root
+
+        rail = cube(
+            f"{label} empty launch rail",
+            (-1.39, station_y, -0.585),
+            (0.66, 0.082, 0.040),
+            RAIL,
+            0.028,
+        )
+        rail.parent = root
+        for x, suffix in ((-1.82, "forward"), (-1.08, "aft")):
+            clevis = cylinder_between(
+                f"{label} rail {suffix} attachment",
+                (x, station_y - 0.095, -0.50),
+                (x, station_y + 0.095, -0.50),
+                0.026,
+                STEEL,
+                vertices=20,
+            )
+            clevis.parent = root
 
     # Vertical fin and high-mounted stabilizer.
     vertical = fin_mesh(
@@ -1023,32 +1126,42 @@ def create_aircraft() -> bpy.types.Object:
     tail_fairing.parent = root
     landing_wheel("Tail", tail_wheel_location, 0.105, 0.065, root)
 
-    # EO/IR gimbal: approximately 0.34 m diameter, beneath the forward fuselage.
-    gimbal_location = (-2.62, 0, -0.55)
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=20, radius=0.17, location=gimbal_location)
+    # EO/IR gimbal moved aft of the turret so the sensor is no longer visually
+    # ahead of the weapon station.  The offset also preserves an unobstructed
+    # presentation view from the port-forward camera angle.
+    gimbal_y = 0.12
+    gimbal_location = (-0.40, gimbal_y, -0.55)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=24, radius=0.20, location=gimbal_location)
     gimbal = bpy.context.object
     gimbal.name = "EO IR stabilized gimbal"
     assign(gimbal, GRAPHITE)
     smooth(gimbal)
     mark_export(gimbal)
     gimbal.parent = root
-    pylon = cylinder_between("EO IR gimbal pylon", (-2.62, 0, -0.33), (-2.62, 0, -0.48), 0.07, STEEL)
+    pylon = cylinder_between(
+        "EO IR gimbal pylon",
+        (-0.40, gimbal_y, -0.30),
+        (-0.40, gimbal_y, -0.46),
+        0.082,
+        STEEL,
+        vertices=28,
+    )
     pylon.parent = root
-    for y, z, radius in ((-0.055, -0.53, 0.045), (0.055, -0.59, 0.033)):
+    for y, z, radius in ((gimbal_y - 0.064, -0.53, 0.052), (gimbal_y + 0.064, -0.60, 0.038)):
         lens = cylinder_between(
             "EO IR sensor aperture",
-            (-2.775, y, z),
-            (-2.80, y, z),
+            (-0.585, y, z),
+            (-0.620, y, z),
             radius,
             LENS,
-            vertices=32,
+            vertices=36,
         )
         lens.parent = root
 
-    # Compact .338-class stabilized remote weapon station.
-    # The full visible system is under 1.25 m long and kept behind the EO/IR field of view.
-    turret_y = -0.18
-    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=0.19, depth=0.10, location=(-0.92, turret_y, -0.49))
+    # Enlarged stabilized turret visualization.  These are presentation-only
+    # exterior proportions, intentionally omitting functional weapon detail.
+    turret_y = -0.20
+    bpy.ops.mesh.primitive_cylinder_add(vertices=40, radius=0.27, depth=0.14, location=(-1.00, turret_y, -0.50))
     yaw_base = bpy.context.object
     yaw_base.name = "Stabilized weapon yaw base"
     assign(yaw_base, GRAPHITE)
@@ -1056,54 +1169,74 @@ def create_aircraft() -> bpy.types.Object:
     mark_export(yaw_base)
     yaw_base.parent = root
     receiver = cube(
-        "Compact cannon receiver",
-        (-1.11, turret_y, -0.63),
-        (0.28, 0.105, 0.11),
+        "Gimballed cannon receiver",
+        (-1.19, turret_y, -0.67),
+        (0.38, 0.15, 0.145),
         GRAPHITE,
-        0.035,
+        0.052,
     )
     receiver.parent = root
     trunnion = cylinder_between(
         "Weapon elevation trunnion",
-        (-1.00, turret_y - 0.16, -0.62),
-        (-1.00, turret_y + 0.16, -0.62),
-        0.07,
+        (-1.04, turret_y - 0.23, -0.65),
+        (-1.04, turret_y + 0.23, -0.65),
+        0.095,
         STEEL,
+        vertices=32,
     )
     trunnion.parent = root
+    for y, suffix in ((turret_y - 0.19, "port"), (turret_y + 0.19, "starboard")):
+        yoke = cylinder_between(
+            f"Weapon mount {suffix} yoke",
+            (-1.04, y, -0.52),
+            (-1.04, y, -0.65),
+            0.034,
+            STEEL,
+            vertices=24,
+        )
+        yoke.parent = root
+    sleeve = cylinder_between(
+        "Cannon barrel thermal sleeve",
+        (-1.48, turret_y, -0.66),
+        (-1.88, turret_y, -0.66),
+        0.050,
+        RAIL,
+        vertices=28,
+    )
+    sleeve.parent = root
     barrel = cylinder_between(
         "Cannon barrel",
-        (-1.36, turret_y, -0.62),
-        (-2.20, turret_y, -0.62),
-        0.018,
+        (-1.48, turret_y, -0.66),
+        (-2.58, turret_y, -0.66),
+        0.026,
         GRAPHITE,
-        vertices=20,
+        vertices=24,
     )
     barrel.parent = root
     muzzle = cylinder_between(
         "Cannon muzzle device",
-        (-2.16, turret_y, -0.62),
-        (-2.27, turret_y, -0.62),
-        0.029,
+        (-2.52, turret_y, -0.66),
+        (-2.72, turret_y, -0.66),
+        0.043,
         GRAPHITE,
-        vertices=20,
+        vertices=24,
     )
     muzzle.parent = root
     optic = cube(
         "Weapon boresight optic",
-        (-1.16, turret_y - 0.14, -0.55),
-        (0.09, 0.055, 0.055),
+        (-1.22, turret_y - 0.20, -0.55),
+        (0.115, 0.068, 0.070),
         GRAPHITE,
-        0.018,
+        0.025,
     )
     optic.parent = root
     optic_lens = cylinder_between(
         "Weapon optic aperture",
-        (-1.255, turret_y - 0.14, -0.55),
-        (-1.275, turret_y - 0.14, -0.55),
-        0.028,
+        (-1.330, turret_y - 0.20, -0.55),
+        (-1.360, turret_y - 0.20, -0.55),
+        0.036,
         LENS,
-        vertices=24,
+        vertices=30,
     )
     optic_lens.parent = root
 
@@ -1166,9 +1299,15 @@ def setup_scene() -> None:
 
     world = scene.world
     world.use_nodes = True
-    bg = world.node_tree.nodes.get("Background")
-    bg.inputs["Color"].default_value = (0.11, 0.13, 0.15, 1.0)
-    bg.inputs["Strength"].default_value = 0.52
+    world_nodes = world.node_tree.nodes
+    world_links = world.node_tree.links
+    bg = world_nodes.get("Background")
+    environment = world_nodes.new("ShaderNodeTexEnvironment")
+    environment.name = "CC0 cloudy hangar apron environment"
+    environment.image = bpy.data.images.load(str(ROOT / "environments" / "apron-cloudy-1k.hdr"), check_existing=True)
+    environment.interpolation = "Linear"
+    world_links.new(environment.outputs["Color"], bg.inputs["Color"])
+    bg.inputs["Strength"].default_value = 0.62
 
     # Concrete apron.
     bpy.ops.mesh.primitive_plane_add(size=70, location=(0, 0, -0.79))
@@ -1176,12 +1315,8 @@ def setup_scene() -> None:
     ground.name = "Concrete apron"
     assign(ground, CONCRETE)
 
-    # Restrained hangar mass in the far background.
-    hangar = cube("Background hangar", (9.0, 15.0, 2.9), (10.0, 5.0, 4.0), HANGAR, 0.10, export=False)
-    door = cube("Hangar opening", (0.7, 9.92, 2.5), (3.4, 0.08, 3.0), GRAPHITE, 0.03, export=False)
-    door.parent = hangar
-
-    # Neutral key, fill and sunlight.
+    # Neutral key, fill and sunlight complement the HDR environment while
+    # preserving contact shadows under the three-point landing gear.
     bpy.ops.object.light_add(type="SUN", location=(-4, -8, 14))
     sun = bpy.context.object
     sun.name = "Late morning sun"

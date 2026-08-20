@@ -708,6 +708,16 @@ button {
   --poster-color: transparent;
 }
 
+.hero-model[data-lighting="hangar"] model-viewer {
+  background:
+    radial-gradient(circle at 44% 35%, #9ca7aa 0, #5f6a6e 46%, #303a3e 100%);
+}
+
+.hero-model[data-lighting="inspection"] model-viewer {
+  background:
+    radial-gradient(circle at 50% 38%, #edf1f0 0, #cdd5d5 48%, #9ba8aa 100%);
+}
+
 .hero-model model-viewer::part(default-progress-bar) {
   display: none;
 }
@@ -736,11 +746,9 @@ button {
 
 .model-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 44px;
-  padding-inline: 13px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   color: var(--slate);
   background: rgba(255, 255, 255, 0.62);
   border: 1px solid var(--line);
@@ -748,6 +756,76 @@ button {
   font-size: 10px;
   letter-spacing: 0.045em;
   text-transform: uppercase;
+}
+
+.model-toolbar-main,
+.model-lighting {
+  min-height: 44px;
+  padding-inline: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.model-lighting {
+  justify-content: flex-start;
+  border-block-start: 1px solid var(--line);
+  background: rgba(246, 248, 248, 0.72);
+}
+
+.model-lighting-label {
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.lighting-presets {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(11, 23, 34, 0.18);
+}
+
+.lighting-presets button {
+  min-height: 28px;
+  padding-inline: 11px;
+  color: var(--slate);
+  background: transparent;
+  border: 0;
+  border-inline-end: 1px solid rgba(11, 23, 34, 0.14);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.lighting-presets button:last-child {
+  border-inline-end: 0;
+}
+
+.lighting-presets button:hover,
+.lighting-presets button:focus-visible {
+  color: var(--ink);
+  background: rgba(11, 23, 34, 0.06);
+}
+
+.lighting-presets button.active {
+  color: var(--white);
+  background: var(--ink-2);
+}
+
+.model-exposure {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.model-exposure input {
+  width: 104px;
+  accent-color: var(--blue);
+  direction: ltr;
 }
 
 .model-status {
@@ -1722,8 +1800,40 @@ html[dir="rtl"] .person-card h3 {
     min-height: 40px;
   }
 
-  .model-toolbar > span:last-child {
+  .model-toolbar-main {
+    min-height: 40px;
+  }
+
+  .model-instruction {
     display: none;
+  }
+
+  .model-lighting {
+    min-height: 0;
+    padding-block: 10px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .model-lighting-label {
+    width: 100%;
+  }
+
+  .lighting-presets {
+    flex: 1 1 auto;
+  }
+
+  .lighting-presets button {
+    flex: 1;
+    padding-inline: 7px;
+  }
+
+  .model-exposure {
+    margin-inline-start: 0;
+  }
+
+  .model-exposure input {
+    width: 78px;
   }
 
   .hero h1 {

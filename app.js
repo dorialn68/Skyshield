@@ -96,6 +96,11 @@ const translations = {
     heroAlt: "Interactive 3D concept model of the AI.onSuper Ximango-derived unmanned aircraft",
     modelStatus: "Interactive 3D model",
     modelInstruction: "Drag for a full 360° view · Scroll to zoom",
+    modelLighting: "Lighting",
+    lightingApron: "Apron",
+    lightingHangar: "Hangar",
+    lightingInspection: "Inspection",
+    lightingExposure: "Exposure",
     heroCaption: "Parametric concept model · Ximango-derived proportions · Configuration subject to change",
     targetsHeading: "Program targets",
     metricEnduranceValue: "50+ hr",
@@ -229,6 +234,11 @@ const translations = {
     heroAlt: "מודל תלת־ממד אינטראקטיבי של קונספט AI.onSuper, המבוסס על פרופורציות Ximango",
     modelStatus: "מודל תלת־ממד אינטראקטיבי",
     modelInstruction: "גררו לצפייה מלאה ב־360° · גלגלו לקירוב",
+    modelLighting: "תאורה",
+    lightingApron: "רחבה",
+    lightingHangar: "האנגר",
+    lightingInspection: "בדיקה",
+    lightingExposure: "חשיפה",
     heroCaption: "מודל קונספט פרמטרי · פרופורציות המבוססות על Ximango · התצורה עשויה להשתנות",
     targetsHeading: "יעדי תוכנית",
     metricEnduranceValue: "50+ שעות",
@@ -540,6 +550,54 @@ systemTabs.forEach((tab, index) => {
 });
 
 const model = document.getElementById("aircraftModel");
+const modelStage = model?.closest(".hero-model");
+const exposureControl = document.getElementById("modelExposure");
+const lightingButtons = Array.from(document.querySelectorAll("[data-lighting-preset]"));
+const lightingPresets = {
+  apron: {
+    environment: "environments/apron-cloudy-1k.hdr",
+    exposure: 1.08,
+    shadowIntensity: 1.35,
+    shadowSoftness: 0.72
+  },
+  hangar: {
+    environment: "environments/hangar-interior-1k.hdr",
+    exposure: 0.92,
+    shadowIntensity: 1.55,
+    shadowSoftness: 0.48
+  },
+  inspection: {
+    environment: "environments/inspection-workshop-1k.hdr",
+    exposure: 1.18,
+    shadowIntensity: 1.15,
+    shadowSoftness: 0.58
+  }
+};
+
+function applyLightingPreset(presetName) {
+  if (!model || !lightingPresets[presetName]) return;
+  const preset = lightingPresets[presetName];
+  model.setAttribute("environment-image", preset.environment);
+  model.setAttribute("exposure", String(preset.exposure));
+  model.setAttribute("shadow-intensity", String(preset.shadowIntensity));
+  model.setAttribute("shadow-softness", String(preset.shadowSoftness));
+  if (modelStage) modelStage.dataset.lighting = presetName;
+  if (exposureControl) exposureControl.value = String(preset.exposure);
+  lightingButtons.forEach((button) => {
+    const selected = button.dataset.lightingPreset === presetName;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+}
+
+lightingButtons.forEach((button) => {
+  button.addEventListener("click", () => applyLightingPreset(button.dataset.lightingPreset));
+});
+
+exposureControl?.addEventListener("input", () => {
+  if (model) model.setAttribute("exposure", exposureControl.value);
+});
+
 if (model) {
   model.addEventListener("load", () => {
     const progress = model.querySelector(".model-progress");
