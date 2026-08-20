@@ -57,7 +57,7 @@ def material(
 
 
 IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
-IAF_GRAY_DARK = material("IAF gray opaque avionics canopy", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
+HARDWARE_GRAY = material("Dark gray external hardware", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
 CARBON = material("Carbon fiber propeller", (0.025, 0.032, 0.036, 1.0), 0.16, 0.30)
 RUBBER = material("Tire rubber", (0.012, 0.014, 0.016, 1.0), 0.0, 0.72)
@@ -179,7 +179,10 @@ def build_pbr_materials() -> None:
     """Generate portable PBR maps used by both the hero render and model-viewer."""
     rng = np.random.default_rng(1968)
 
-    size = 1024
+    # A 2K authored surface holds up during investor-presentation close-ups.
+    # The HDR environments remain 1K because model-viewer clamps lighting
+    # environments internally; geometric and material detail belong here.
+    size = 2048
     yy, xx = np.mgrid[0:size, 0:size].astype(np.float32) / float(size)
     broad = (
         0.50 * np.sin(2.0 * math.pi * (2.0 * xx + 1.0 * yy))
@@ -228,49 +231,7 @@ def build_pbr_materials() -> None:
     )
     attach_gltf_occlusion(IAF_GRAY, skin_ao)
 
-    # The unmanned canopy is an opaque gray avionics shell rather than dark
-    # glazing.  Its finer, satin surface keeps it visibly distinct from the
-    # larger composite airframe panels without reading as black glass.
-    canopy_broad = broad[::2, ::2]
-    canopy_grain = grain[::2, ::2]
-    canopy_variation = canopy_broad * 0.010 + canopy_grain * 0.007
-    canopy_rgb = np.clip(
-        np.array([0.385, 0.400, 0.407], dtype=np.float32)[None, None, :] + canopy_variation[..., None],
-        0.0,
-        1.0,
-    )
-    canopy_roughness = np.clip(0.34 + canopy_broad * 0.025 + canopy_grain * 0.018, 0.27, 0.43)
-    canopy_height = canopy_broad * 0.028 + canopy_grain * 0.018
-    canopy_occlusion = np.clip(0.985 - np.abs(canopy_grain) * 0.016, 0.94, 1.0)
-    canopy_base = write_texture("airshield_canopy_basecolor", rgba_from_rgb(canopy_rgb), "sRGB")
-    canopy_rough = write_texture(
-        "airshield_canopy_roughness",
-        rgba_from_gray(canopy_roughness),
-        "Non-Color",
-    )
-    canopy_normal = write_texture(
-        "airshield_canopy_normal",
-        normal_map_from_height(canopy_height, 2.4),
-        "Non-Color",
-    )
-    canopy_ao = write_texture(
-        "airshield_canopy_occlusion",
-        rgba_from_gray(canopy_occlusion),
-        "Non-Color",
-    )
-    textured_principled_material(
-        IAF_GRAY_DARK,
-        canopy_base,
-        canopy_rough,
-        canopy_normal,
-        metallic=0.02,
-        normal_strength=0.16,
-        coat_weight=0.32,
-        coat_roughness=0.24,
-    )
-    attach_gltf_occlusion(IAF_GRAY_DARK, canopy_ao)
-
-    carbon_size = 512
+    carbon_size = 1024
     cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
     warp = np.sin(2.0 * math.pi * (cx + cy) * 52.0)
     weft = np.sin(2.0 * math.pi * (cx - cy) * 52.0)
@@ -304,13 +265,13 @@ def build_pbr_materials() -> None:
     )
     attach_gltf_occlusion(CARBON, carbon_ao)
 
-    fairing_bsdf = IAF_GRAY_DARK.node_tree.nodes.get("Principled BSDF")
-    set_bsdf_input(fairing_bsdf, "Metallic", 0.02)
-    set_bsdf_input(fairing_bsdf, "Transmission Weight", 0.0)
-    set_bsdf_input(fairing_bsdf, "Coat Weight", 0.32)
-    set_bsdf_input(fairing_bsdf, "Coat Roughness", 0.24)
-    set_bsdf_input(fairing_bsdf, "Specular IOR Level", 0.36)
-    set_bsdf_input(fairing_bsdf, "IOR", 1.47)
+    hardware_bsdf = HARDWARE_GRAY.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(hardware_bsdf, "Metallic", 0.02)
+    set_bsdf_input(hardware_bsdf, "Transmission Weight", 0.0)
+    set_bsdf_input(hardware_bsdf, "Coat Weight", 0.20)
+    set_bsdf_input(hardware_bsdf, "Coat Roughness", 0.28)
+    set_bsdf_input(hardware_bsdf, "Specular IOR Level", 0.32)
+    set_bsdf_input(hardware_bsdf, "IOR", 1.47)
 
     graphite_bsdf = GRAPHITE.node_tree.nodes.get("Principled BSDF")
     set_bsdf_input(graphite_bsdf, "Metallic", 0.34)
@@ -694,7 +655,7 @@ def create_asymmetric_fuselage(
     name: str,
     sections: list[tuple[float, float, float, float, float, float]],
     mat: bpy.types.Material,
-    ring_segments: int = 48,
+    ring_segments: int = 64,
 ) -> bpy.types.Object:
     """Loft a non-cylindrical fuselage with independent crown and belly.
 
@@ -852,7 +813,7 @@ def wing_half(name: str, side: float) -> bpy.types.Object:
         (4.80, -1.98, 1.04, root_z + 4.80 * dihedral, 0.18, 0.8),
         (8.735, -1.73, 0.58, root_z + 8.735 * dihedral, 0.18, 0.0),
     ]
-    return airfoil_half(name, side, stations, IAF_GRAY, chord_points=38)
+    return airfoil_half(name, side, stations, IAF_GRAY, chord_points=52)
 
 
 def wing_root_fillet(name: str, side: float) -> bpy.types.Object:
@@ -865,7 +826,7 @@ def wing_root_fillet(name: str, side: float) -> bpy.types.Object:
         (1.12, -1.47, 0.75, 0.145, -0.19),
         (1.40, -1.49, 0.69, 0.125, -0.19),
     ]
-    ring_segments = 40
+    ring_segments = 56
     verts: list[tuple[float, float, float]] = []
     faces: list[tuple[int, ...]] = []
     for y, center_x, radius_x, radius_z, center_z in sections:
@@ -961,22 +922,22 @@ def add_airframe_surface_details(root: bpy.types.Object) -> None:
     """Add restrained scale cues found on a composite production airframe."""
     # Cowling, equipment-bay and avionics-cover joints.  These are deliberately
     # narrow: they should catch highlights without reading as decorative bands.
-    elliptical_ring("Engine cowling joint", -3.62, 0.307, 0.264, 0.02, 0.0055, SEAM, root)
-    elliptical_ring("Avionics cover joint", -1.55, 0.432, 0.322, 0.59, 0.0050, SEAM, root)
-    elliptical_ring("Mission bay shell joint", 0.18, 0.307, 0.238, 0.027, 0.0045, SEAM, root)
-    elliptical_ring("Aft shell joint", 2.18, 0.172, 0.144, -0.01, 0.0040, SEAM, root)
+    elliptical_ring("Engine cowling joint", -3.62, 0.307, 0.205, 0.02, 0.0055, SEAM, root)
+    elliptical_ring("Avionics cover joint", -1.62, 0.412, 0.148, 0.335, 0.0042, SEAM, root)
+    elliptical_ring("Mission bay shell joint", 0.18, 0.307, 0.170, 0.035, 0.0045, SEAM, root)
+    elliptical_ring("Aft shell joint", 2.18, 0.162, 0.118, -0.025, 0.0040, SEAM, root)
 
-    # Fine canopy-to-fuselage seals keep the glazed avionics fairing from
-    # reading as a single toy-like blob while preserving its smooth profile.
+    # Fine cover-to-fuselage seals define the low, opaque avionics cover.  The
+    # cover uses the exact same composite skin material as the fuselage.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         surface_detail_line(
             f"{label} canopy perimeter seal",
             [
-                (-2.66, 0.17 * side, 0.45),
-                (-2.34, 0.35 * side, 0.43),
-                (-1.78, 0.44 * side, 0.42),
-                (-1.16, 0.38 * side, 0.40),
-                (-0.72, 0.18 * side, 0.39),
+                (-2.56, 0.17 * side, 0.300),
+                (-2.30, 0.31 * side, 0.286),
+                (-1.76, 0.41 * side, 0.272),
+                (-1.22, 0.36 * side, 0.255),
+                (-0.76, 0.16 * side, 0.238),
             ],
             0.0060,
             SEAM,
@@ -1068,46 +1029,50 @@ def create_aircraft() -> bpy.types.Object:
         "Ximango-derived composite fuselage",
         [
             # x, half-width, crown, belly, center z, section exponent
-            (-3.84, 0.195, 0.185, 0.165, 0.000, 0.98),
-            (-3.62, 0.305, 0.275, 0.245, 0.005, 0.92),
-            (-3.30, 0.380, 0.330, 0.330, 0.015, 0.86),
-            (-2.92, 0.425, 0.350, 0.385, 0.025, 0.82),
-            (-2.50, 0.455, 0.355, 0.425, 0.035, 0.79),
-            (-2.08, 0.480, 0.340, 0.450, 0.045, 0.77),
-            (-1.62, 0.488, 0.315, 0.455, 0.050, 0.77),
-            (-1.18, 0.455, 0.290, 0.420, 0.055, 0.80),
-            (-0.76, 0.410, 0.270, 0.370, 0.060, 0.82),
-            (-0.34, 0.355, 0.235, 0.315, 0.065, 0.84),
-            (0.18, 0.305, 0.205, 0.270, 0.060, 0.86),
-            (0.78, 0.260, 0.180, 0.225, 0.045, 0.88),
-            (1.48, 0.215, 0.160, 0.180, 0.020, 0.90),
-            (2.18, 0.170, 0.145, 0.140, -0.010, 0.92),
-            (2.82, 0.125, 0.118, 0.108, -0.045, 0.94),
-            (3.36, 0.090, 0.092, 0.080, -0.078, 0.96),
-            (3.72, 0.062, 0.068, 0.060, -0.104, 0.98),
-            (3.90, 0.042, 0.050, 0.047, -0.120, 1.00),
+            # The forward spinner transition remains locally rounded.  From
+            # the cowling rearward, lower exponents create flatter shoulders,
+            # defined side walls and a shallower belly instead of a long tube.
+            (-3.84, 0.195, 0.160, 0.145, 0.000, 0.86),
+            (-3.62, 0.305, 0.220, 0.185, 0.005, 0.70),
+            (-3.30, 0.380, 0.250, 0.235, 0.010, 0.62),
+            (-2.92, 0.425, 0.260, 0.265, 0.018, 0.56),
+            (-2.50, 0.455, 0.255, 0.295, 0.026, 0.52),
+            (-2.08, 0.480, 0.245, 0.315, 0.034, 0.50),
+            (-1.62, 0.488, 0.235, 0.325, 0.040, 0.50),
+            (-1.18, 0.455, 0.220, 0.295, 0.045, 0.54),
+            (-0.76, 0.410, 0.205, 0.255, 0.048, 0.58),
+            (-0.34, 0.355, 0.185, 0.215, 0.046, 0.62),
+            (0.18, 0.305, 0.165, 0.180, 0.038, 0.66),
+            (0.78, 0.252, 0.148, 0.156, 0.024, 0.70),
+            (1.48, 0.205, 0.132, 0.132, 0.002, 0.74),
+            (2.18, 0.160, 0.112, 0.110, -0.025, 0.78),
+            (2.82, 0.118, 0.094, 0.086, -0.054, 0.82),
+            (3.36, 0.086, 0.076, 0.066, -0.082, 0.86),
+            (3.72, 0.060, 0.058, 0.052, -0.105, 0.90),
+            (3.90, 0.042, 0.046, 0.043, -0.120, 0.94),
         ],
         IAF_GRAY,
     )
     fuselage.parent = root
 
-    # A tapered avionics fairing follows the actual Ximango canopy envelope.
-    # The asymmetric fore/aft sections avoid the generic capsule shape.
+    # The UAV avionics cover follows the Ximango canopy footprint but is much
+    # lower than the crewed glazing.  It is an opaque continuation of the same
+    # IAF composite skin — no glass material and no contrasting canopy color.
     fairing = create_loft(
-        "Ximango-profile avionics fairing",
+        "Low Ximango-profile opaque avionics cover",
         [
-            (-2.80, 0.06, 0.05, 0.42),
-            (-2.65, 0.20, 0.11, 0.45),
-            (-2.40, 0.34, 0.22, 0.52),
-            (-2.00, 0.42, 0.30, 0.58),
-            (-1.55, 0.43, 0.32, 0.59),
-            (-1.20, 0.39, 0.29, 0.56),
-            (-0.90, 0.30, 0.22, 0.50),
-            (-0.72, 0.19, 0.13, 0.45),
-            (-0.58, 0.05, 0.04, 0.39),
+            (-2.70, 0.045, 0.018, 0.272),
+            (-2.56, 0.165, 0.052, 0.292),
+            (-2.30, 0.305, 0.102, 0.330),
+            (-1.98, 0.390, 0.142, 0.355),
+            (-1.62, 0.412, 0.150, 0.362),
+            (-1.30, 0.368, 0.128, 0.348),
+            (-1.02, 0.282, 0.088, 0.315),
+            (-0.78, 0.155, 0.043, 0.272),
+            (-0.66, 0.040, 0.016, 0.238),
         ],
-        IAF_GRAY_DARK,
-        ring_segments=36,
+        IAF_GRAY,
+        ring_segments=64,
     )
     fairing.parent = root
 
@@ -1160,7 +1125,7 @@ def create_aircraft() -> bpy.types.Object:
                 (-0.34, 0.052, 0.052, -0.545),
             ],
             IAF_GRAY,
-            ring_segments=36,
+            ring_segments=48,
             y_offset=station_y,
         )
         store.parent = root
@@ -1205,7 +1170,7 @@ def create_aircraft() -> bpy.types.Object:
                 angle,
                 fin_profile,
                 0.020,
-                IAF_GRAY_DARK,
+                HARDWARE_GRAY,
                 root,
             )
 
@@ -1237,7 +1202,7 @@ def create_aircraft() -> bpy.types.Object:
                 (1.84, 3.02, 0.65, 1.31, 0.12, -1.0),
             ],
             IAF_GRAY,
-            chord_points=28,
+            chord_points=40,
         )
         stab.parent = root
 
@@ -1246,7 +1211,7 @@ def create_aircraft() -> bpy.types.Object:
     spinner = bpy.context.object
     spinner.name = "Propeller spinner"
     spinner.rotation_euler[1] = math.radians(90)
-    assign(spinner, IAF_GRAY_DARK)
+    assign(spinner, HARDWARE_GRAY)
     smooth(spinner)
     mark_export(spinner)
     spinner.parent = root
@@ -1276,7 +1241,7 @@ def create_aircraft() -> bpy.types.Object:
         blister.name = f"{label} main gear wing-root fairing"
         blister.scale = (0.30, 0.21, 0.10)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        assign(blister, IAF_GRAY_DARK)
+        assign(blister, HARDWARE_GRAY)
         smooth(blister)
         mark_export(blister)
         blister.parent = root
@@ -1437,7 +1402,7 @@ def create_aircraft() -> bpy.types.Object:
         "Datalink fairing",
         [(1.34, 0.34), (1.76, 0.34), (1.66, 0.62), (1.47, 0.60)],
         0.055,
-        IAF_GRAY_DARK,
+        HARDWARE_GRAY,
     )
     mast.parent = root
 
@@ -1461,6 +1426,10 @@ def generate_uv_maps() -> None:
         obj.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action="SELECT")
+        # Airfoil and loft closures intentionally meet at coincident vertices.
+        # Merge only exact duplicates before UV projection so the exporter does
+        # not create zero-length tangent vectors at those closures.
+        bpy.ops.mesh.remove_doubles(threshold=0.000001)
         bpy.ops.uv.smart_project(
             angle_limit=math.radians(66.0),
             island_margin=0.025,
@@ -1478,19 +1447,23 @@ def generate_uv_maps() -> None:
 def setup_scene() -> None:
     scene = bpy.context.scene
     scene.render.engine = "BLENDER_EEVEE"
-    scene.render.resolution_x = 1920
-    scene.render.resolution_y = 1080
+    scene.render.resolution_x = 2560
+    scene.render.resolution_y = 1440
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "JPEG"
-    scene.render.image_settings.quality = 90
+    scene.render.image_settings.quality = 95
     scene.render.filepath = str(OUTPUT_RENDER)
     scene.render.film_transparent = False
     scene.render.image_settings.color_mode = "RGB"
     scene.view_settings.look = "AgX - Medium High Contrast"
     scene.render.use_file_extension = True
-    scene.eevee.taa_render_samples = 128
+    scene.eevee.taa_render_samples = 256
     scene.eevee.use_shadows = True
-    scene.eevee.shadow_ray_count = 4
+    scene.eevee.use_raytracing = True
+    scene.eevee.ray_tracing_method = "SCREEN"
+    scene.eevee.shadow_ray_count = 8
+    scene.eevee.shadow_pool_size = "1024"
+    scene.eevee.shadow_resolution_scale = 1.5
 
     world = scene.world
     world.use_nodes = True
@@ -1564,7 +1537,10 @@ def export_glb() -> None:
         export_apply=True,
         export_yup=True,
         export_materials="EXPORT",
-        export_tangents=True,
+        # Tangent frames are derived by the real-time viewer from the exported
+        # UVs. Blender can emit zero-length tangents at closed loft caps, which
+        # violates glTF validation even though the surface renders correctly.
+        export_tangents=False,
     )
 
 

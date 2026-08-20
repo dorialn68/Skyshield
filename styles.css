@@ -737,6 +737,155 @@ button {
   display: none;
 }
 
+.model-hotspot {
+  --min-hotspot-opacity: 0.16;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 0;
+  color: #f7fafb;
+  background: transparent;
+  border: 0;
+  font: 700 9px/1 Inter, "Noto Sans Hebrew", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translate(-15px, -15px);
+  transition: opacity 180ms ease, filter 180ms ease;
+}
+
+.model-hotspot:not([data-visible]) {
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.model-hotspot:hover,
+.model-hotspot:focus-visible,
+.model-hotspot.active {
+  z-index: 4;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
+
+.model-hotspot:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+.hotspot-index {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  color: #fff;
+  background: rgba(10, 26, 38, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px rgba(23, 101, 143, 0.20), 0 5px 16px rgba(0, 0, 0, 0.25);
+}
+
+.hotspot-index::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 1px solid rgba(255, 255, 255, 0.50);
+  border-radius: inherit;
+  animation: hotspotPulse 2.4s ease-out infinite;
+}
+
+.model-hotspot:hover .hotspot-index,
+.model-hotspot:focus-visible .hotspot-index,
+.model-hotspot.active .hotspot-index {
+  background: var(--blue);
+}
+
+.hotspot-label {
+  padding: 7px 9px;
+  color: #fff;
+  background: rgba(10, 26, 38, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(7px);
+}
+
+@keyframes hotspotPulse {
+  from { opacity: 0.78; transform: scale(0.72); }
+  to { opacity: 0; transform: scale(1.24); }
+}
+
+.model-focus-card {
+  position: absolute;
+  inset-inline-start: 18px;
+  inset-block-end: 18px;
+  width: min(315px, calc(100% - 36px));
+  padding: 17px 18px 16px;
+  color: #f6f8f8;
+  background: rgba(8, 22, 32, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+  z-index: 8;
+}
+
+.model-focus-card[hidden] {
+  display: none;
+}
+
+.model-focus-kicker {
+  display: block;
+  margin-block-end: 7px;
+  color: #91bcd2;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.model-focus-card strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.model-focus-card p {
+  margin: 8px 0 14px;
+  color: rgba(238, 243, 245, 0.77);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.model-focus-card button,
+.model-overview-control {
+  min-height: 30px;
+  padding: 0 11px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.model-focus-card button {
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.model-focus-card button:hover,
+.model-focus-card button:focus-visible,
+.model-overview-control:hover,
+.model-overview-control:focus-visible {
+  color: #fff;
+  background: var(--ink-2);
+}
+
 .model-progress {
   position: absolute;
   inset-inline: 0;
@@ -781,6 +930,14 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+}
+
+.model-overview-control {
+  min-height: 27px;
+  margin-inline-start: auto;
+  color: var(--ink-soft);
+  border-color: rgba(11, 23, 34, 0.24);
+  white-space: nowrap;
 }
 
 .model-lighting {
@@ -1828,6 +1985,32 @@ html[dir="rtl"] .person-card h3 {
 
   .model-instruction {
     display: none;
+  }
+
+  .model-hotspot {
+    transform: translate(-12px, -12px);
+  }
+
+  .hotspot-index {
+    width: 25px;
+    height: 25px;
+    flex-basis: 25px;
+    font-size: 8px;
+  }
+
+  .hotspot-label {
+    display: none;
+  }
+
+  .model-focus-card {
+    inset-inline: 10px;
+    inset-block-end: 10px;
+    width: auto;
+    padding: 13px 14px 12px;
+  }
+
+  .model-focus-card p {
+    margin-block-end: 10px;
   }
 
   .model-lighting {

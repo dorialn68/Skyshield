@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
@@ -115,8 +115,8 @@
         <figure class="hero-visual hero-model" data-lighting="airport" data-reveal>
           <model-viewer
             id="aircraftModel"
-            src="airshield-ximango.glb?v=10"
-            poster="airshield-xmango-hero.jpg?v=10"
+            src="airshield-ximango.glb?v=11"
+            poster="airshield-xmango-hero.jpg?v=11"
             alt="Interactive 3D concept model of the AI.onSuper Ximango-derived unmanned aircraft"
             data-i18n-alt="heroAlt"
             camera-controls
@@ -128,21 +128,64 @@
             shadow-intensity="1.35"
             shadow-softness="0.72"
             exposure="1.08"
-            tone-mapping="neutral"
+            tone-mapping="agx"
             environment-image="environments/apron-cloudy-1k.hdr"
+            skybox-image="environments/apron-cloudy-1k.hdr"
             camera-orbit="30deg 78deg 72%"
+            interpolation-decay="160"
             field-of-view="28deg"
-            min-field-of-view="22deg"
-            max-field-of-view="38deg">
+            min-field-of-view="12deg"
+            max-field-of-view="45deg"
+            min-camera-orbit="auto 12deg 1.5m"
+            max-camera-orbit="auto 168deg 30m">
             <div class="model-progress" slot="progress-bar"><span></span></div>
+
+            <button class="model-hotspot" type="button" slot="hotspot-airframe"
+              data-position="-1.57m 0.63m 0m" data-normal="0m 1m 0m"
+              data-target="-1.57m 0.30m 0m" data-orbit="-38deg 72deg 3.0m"
+              data-component="airframe" data-visibility-attribute="visible">
+              <span class="hotspot-index">01</span><span class="hotspot-label" data-i18n="hotspotAirframe">Airframe</span>
+            </button>
+            <button class="model-hotspot" type="button" slot="hotspot-eoir"
+              data-position="-0.44m -0.52m -0.12m" data-normal="-1m -0.15m 0m"
+              data-target="-0.44m -0.52m -0.12m" data-orbit="-58deg 82deg 2.5m"
+              data-component="eoir" data-visibility-attribute="visible">
+              <span class="hotspot-index">02</span><span class="hotspot-label" data-i18n="hotspotEoir">EO / IR</span>
+            </button>
+            <button class="model-hotspot" type="button" slot="hotspot-mission-mount"
+              data-position="-1.24m -0.57m 0.20m" data-normal="-1m -0.10m 0m"
+              data-target="-1.24m -0.57m 0.20m" data-orbit="-35deg 86deg 2.7m"
+              data-component="missionMount" data-visibility-attribute="visible">
+              <span class="hotspot-index">03</span><span class="hotspot-label" data-i18n="hotspotMissionMount">Mission mount</span>
+            </button>
+            <button class="model-hotspot" type="button" slot="hotspot-external-interface"
+              data-position="-1.39m -0.43m -2.68m" data-normal="0m -1m -0.25m"
+              data-target="-1.39m -0.43m -2.68m" data-orbit="15deg 84deg 3.1m"
+              data-component="externalInterface" data-visibility-attribute="visible">
+              <span class="hotspot-index">04</span><span class="hotspot-label" data-i18n="hotspotExternalInterface">External interface</span>
+            </button>
+            <button class="model-hotspot" type="button" slot="hotspot-propulsion"
+              data-position="-3.99m 0.33m 0m" data-normal="-1m 0m 0m"
+              data-target="-3.99m 0.33m 0m" data-orbit="-75deg 76deg 2.7m"
+              data-component="propulsion" data-visibility-attribute="visible">
+              <span class="hotspot-index">05</span><span class="hotspot-label" data-i18n="hotspotPropulsion">Propulsion</span>
+            </button>
+
+            <aside class="model-focus-card" id="modelFocusCard" aria-live="polite" hidden>
+              <span class="model-focus-kicker" data-i18n="componentFocus">Component focus</span>
+              <strong id="modelFocusTitle"></strong>
+              <p id="modelFocusText"></p>
+              <button type="button" id="modelFocusOverview" data-i18n="modelFocusOverview">Return to 360° overview</button>
+            </aside>
           </model-viewer>
           <div class="model-toolbar">
             <div class="model-toolbar-main">
               <span class="model-status"><i aria-hidden="true"></i><b data-i18n="modelStatus">Interactive 3D model</b></span>
               <span class="model-instruction" data-i18n="modelInstruction">Drag for a full 360° view · Scroll to zoom</span>
+              <button class="model-overview-control" type="button" id="modelOverviewControl" data-i18n="modelOverview">360° overview</button>
             </div>
-            <div class="model-lighting" aria-label="3D lighting controls">
-              <span class="model-lighting-label" data-i18n="modelLighting">Lighting</span>
+            <div class="model-lighting" role="group" aria-labelledby="modelLightingLabel">
+              <span class="model-lighting-label" id="modelLightingLabel" data-i18n="modelLighting">Lighting</span>
               <div class="lighting-presets" role="group" aria-label="Lighting environment">
                 <button class="active" type="button" data-lighting-preset="airport" aria-pressed="true" data-i18n="lightingAirport">Airport</button>
                 <button type="button" data-lighting-preset="hangar" aria-pressed="false" data-i18n="lightingHangar">Hangar</button>
@@ -151,7 +194,7 @@
                 <button type="button" data-lighting-preset="daylight" aria-pressed="false" data-i18n="lightingDaylight">Daylight</button>
                 <button type="button" data-lighting-preset="sky" aria-pressed="false" data-i18n="lightingSky">Sky</button>
               </div>
-              <label class="model-exposure" for="modelExposure">
+              <label class="model-exposure">
                 <span data-i18n="lightingExposure">Exposure</span>
                 <input id="modelExposure" type="range" min="0.72" max="1.34" step="0.02" value="1.08">
               </label>

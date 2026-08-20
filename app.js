@@ -104,6 +104,24 @@ const translations = {
     lightingDaylight: "Daylight",
     lightingSky: "Sky",
     lightingExposure: "Exposure",
+    modelOverview: "360° overview",
+    modelFocusOverview: "Return to 360° overview",
+    componentFocus: "Component focus",
+    hotspotAirframe: "Airframe",
+    hotspotEoir: "EO / IR",
+    hotspotMissionMount: "Mission mount",
+    hotspotExternalInterface: "External interface",
+    hotspotPropulsion: "Propulsion",
+    focusAirframeTitle: "Ximango-derived airframe",
+    focusAirframeText: "Flattened composite sections, a tapered belly and low-wing root blending follow the reference aircraft silhouette.",
+    focusEoirTitle: "Stabilized EO / IR payload",
+    focusEoirText: "Close inspection view of the multi-aperture electro-optical and infrared sensor presentation geometry.",
+    focusMissionMountTitle: "Stabilized mission mount",
+    focusMissionMountText: "Presentation-only external geometry showing the receiver housing, visible trunnion and forward barrel envelope.",
+    focusExternalInterfaceTitle: "External mission interface",
+    focusExternalInterfaceText: "Symmetric underwing pylon and aerodynamic store mockup; configuration remains subject to engineering review.",
+    focusPropulsionTitle: "Forward propulsion installation",
+    focusPropulsionText: "Close view of the spinner, variable-pitch propeller envelope and the changing engine-cowling cross-section.",
     heroCaption: "Parametric concept model · Ximango-derived proportions · Configuration subject to change",
     targetsHeading: "Program targets",
     metricEnduranceValue: "50+ hr",
@@ -245,6 +263,24 @@ const translations = {
     lightingDaylight: "אור יום",
     lightingSky: "שמים",
     lightingExposure: "חשיפה",
+    modelOverview: "סקירת 360°",
+    modelFocusOverview: "חזרה לתצוגת 360°",
+    componentFocus: "מיקוד ברכיב",
+    hotspotAirframe: "גוף המטוס",
+    hotspotEoir: "מערכת EO / IR",
+    hotspotMissionMount: "מתלה משימה",
+    hotspotExternalInterface: "ממשק חיצוני",
+    hotspotPropulsion: "מערכת הנעה",
+    focusAirframeTitle: "גוף מטוס המבוסס על Ximango",
+    focusAirframeText: "חתכי גוף שטוחים יותר, בטן מתחדדת וחיבור כנף נמוכה עוצבו בהתאם לצללית מטוס הייחוס.",
+    focusEoirTitle: "מטען EO / IR מיוצב",
+    focusEoirText: "תצוגת תקריב של הגאומטריה החיצונית למערכת החישה האלקטרו־אופטית והאינפרה־אדומה מרובת המפתחים.",
+    focusMissionMountTitle: "מתלה משימה מיוצב",
+    focusMissionMountText: "גאומטריה חיצונית להמחשה בלבד, המציגה את בית המכלול, ציר ההטיה והמעטפת הקדמית.",
+    focusExternalInterfaceTitle: "ממשק משימה חיצוני",
+    focusExternalInterfaceText: "מתלה כנף סימטרי ומדמה מטען אווירודינמי; התצורה כפופה להמשך בחינה הנדסית.",
+    focusPropulsionTitle: "מערכת ההנעה הקדמית",
+    focusPropulsionText: "תקריב של הכיפה הקדמית, מעטפת המדחף בעל הפסיעה המשתנה והחתך המשתנה של בית המנוע.",
     heroCaption: "מודל קונספט פרמטרי · פרופורציות המבוססות על Ximango · התצורה עשויה להשתנות",
     targetsHeading: "יעדי תוכנית",
     metricEnduranceValue: "50+ שעות",
@@ -491,6 +527,7 @@ function applyLanguage(nextLanguage) {
   languageToggle.setAttribute("aria-label", language === "en" ? "Switch to Hebrew" : "Switch to English");
 
   renderSystem(activeSystem);
+  updateModelFocusCard();
 
   try {
     localStorage.setItem("airshield-language", language);
@@ -559,6 +596,20 @@ const model = document.getElementById("aircraftModel");
 const modelStage = model?.closest(".hero-model");
 const exposureControl = document.getElementById("modelExposure");
 const lightingButtons = Array.from(document.querySelectorAll("[data-lighting-preset]"));
+const modelHotspots = Array.from(model?.querySelectorAll(".model-hotspot") ?? []);
+const modelFocusCard = document.getElementById("modelFocusCard");
+const modelFocusTitle = document.getElementById("modelFocusTitle");
+const modelFocusText = document.getElementById("modelFocusText");
+const modelOverviewControl = document.getElementById("modelOverviewControl");
+const modelFocusOverview = document.getElementById("modelFocusOverview");
+let activeModelComponent = null;
+const modelFocusContent = {
+  airframe: ["focusAirframeTitle", "focusAirframeText"],
+  eoir: ["focusEoirTitle", "focusEoirText"],
+  missionMount: ["focusMissionMountTitle", "focusMissionMountText"],
+  externalInterface: ["focusExternalInterfaceTitle", "focusExternalInterfaceText"],
+  propulsion: ["focusPropulsionTitle", "focusPropulsionText"]
+};
 const lightingPresets = {
   airport: {
     environment: "environments/apron-cloudy-1k.hdr",
@@ -602,6 +653,7 @@ function applyLightingPreset(presetName) {
   if (!model || !lightingPresets[presetName]) return;
   const preset = lightingPresets[presetName];
   model.setAttribute("environment-image", preset.environment);
+  model.setAttribute("skybox-image", preset.environment);
   model.setAttribute("exposure", String(preset.exposure));
   model.setAttribute("shadow-intensity", String(preset.shadowIntensity));
   model.setAttribute("shadow-softness", String(preset.shadowSoftness));
@@ -621,6 +673,55 @@ lightingButtons.forEach((button) => {
 exposureControl?.addEventListener("input", () => {
   if (model) model.setAttribute("exposure", exposureControl.value);
 });
+
+function updateModelFocusCard() {
+  if (!activeModelComponent || !modelFocusCard || !modelFocusTitle || !modelFocusText) return;
+  const contentKeys = modelFocusContent[activeModelComponent];
+  if (!contentKeys) return;
+  modelFocusTitle.textContent = translations[language][contentKeys[0]];
+  modelFocusText.textContent = translations[language][contentKeys[1]];
+}
+
+function focusModelComponent(hotspot) {
+  if (!model) return;
+  activeModelComponent = hotspot.dataset.component;
+  model.removeAttribute("auto-rotate");
+  model.cameraTarget = hotspot.dataset.target;
+  model.cameraOrbit = hotspot.dataset.orbit;
+  model.fieldOfView = "18deg";
+  modelHotspots.forEach((button) => {
+    const selected = button === hotspot;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  updateModelFocusCard();
+  if (modelFocusCard) modelFocusCard.hidden = false;
+}
+
+function resetModelOverview() {
+  if (!model) return;
+  activeModelComponent = null;
+  model.cameraTarget = "auto auto auto";
+  model.cameraOrbit = "30deg 78deg 72%";
+  model.fieldOfView = "28deg";
+  model.setAttribute("auto-rotate", "");
+  modelHotspots.forEach((button) => {
+    button.classList.remove("active");
+    button.setAttribute("aria-pressed", "false");
+  });
+  if (modelFocusCard) modelFocusCard.hidden = true;
+}
+
+modelHotspots.forEach((hotspot) => {
+  hotspot.setAttribute("aria-pressed", "false");
+  hotspot.addEventListener("click", (event) => {
+    event.stopPropagation();
+    focusModelComponent(hotspot);
+  });
+});
+
+modelOverviewControl?.addEventListener("click", resetModelOverview);
+modelFocusOverview?.addEventListener("click", resetModelOverview);
 
 if (model) {
   model.addEventListener("load", () => {
