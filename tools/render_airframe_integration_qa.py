@@ -94,6 +94,8 @@ views = {
     "gimbal-muzzle-open-bore": ((-3.50, -0.13, -0.26), (-2.75, -0.01, -0.35), 110),
     "propeller-smooth-profile": ((-5.35, -2.35, 0.32), (-3.95, 0.0, 0.0), 98),
     "rotax-reduction-gearbox-cutaway": ((-4.75, -2.15, 0.82), (-3.28, 0.0, 0.36), 108),
+    "rotax-916isc-starboard-detail": ((-4.30, -1.90, 0.72), (-3.20, -0.02, 0.30), 112),
+    "rotax-916isc-installed-three-quarter": ((-4.65, -2.80, 1.05), (-3.20, -0.02, 0.28), 98),
 }
 requested_labels = {
     label.strip()
@@ -106,7 +108,7 @@ if requested_labels:
         raise ValueError(f"Unknown QA view labels: {sorted(unknown_labels)}")
     views = {label: view for label, view in views.items() if label in requested_labels}
 for label, (location, target, lens) in views.items():
-    isolated_rotax = label == "rotax-reduction-gearbox-cutaway"
+    isolated_rotax = label.startswith("rotax-")
     for scene_object in scene.objects:
         if scene_object.type == "MESH":
             scene_object.hide_render = isolated_rotax and "Rotax 916" not in scene_object.name

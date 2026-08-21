@@ -86,6 +86,9 @@ ROTAX_TURBO = material("Rotax 916 turbocharger", (0.30, 0.235, 0.165, 1.0), 0.76
 ROTAX_STEEL = material("Rotax 916 brushed stainless hardware", (0.28, 0.30, 0.31, 1.0), 0.90, 0.20)
 ROTAX_RUBBER = material("Rotax 916 reinforced hose rubber", (0.012, 0.016, 0.018, 1.0), 0.0, 0.70)
 ROTAX_ACCENT = material("Rotax 916 service accent", (0.42, 0.065, 0.025, 1.0), 0.12, 0.36)
+ROTAX_COVER = material("Rotax 916 pearl-gray branded covers", (0.63, 0.66, 0.67, 1.0), 0.44, 0.22)
+ROTAX_LABEL = material("Rotax 916 recessed cover lettering", (0.095, 0.105, 0.108, 1.0), 0.32, 0.30)
+ROTAX_HEAT_WRAP = material("Rotax 916 exhaust heat wrap", (0.30, 0.285, 0.255, 1.0), 0.08, 0.84)
 NAV_RED = material("Port navigation lens", (0.46, 0.004, 0.003, 1.0), 0.0, 0.14)
 NAV_GREEN = material("Starboard navigation lens", (0.003, 0.42, 0.045, 1.0), 0.0, 0.14)
 NAV_WHITE = material("Aft navigation lens", (0.72, 0.76, 0.78, 1.0), 0.0, 0.12)
@@ -722,6 +725,105 @@ def cylinder_between(
     return obj
 
 
+def curved_tube(
+    name: str,
+    points: list[tuple[float, float, float]],
+    radius: float,
+    mat: bpy.types.Material,
+    resolution: int = 4,
+) -> bpy.types.Object:
+    """Create a smooth presentation tube through a small set of control points."""
+    curve_data = bpy.data.curves.new(f"{name} path", type="CURVE")
+    curve_data.dimensions = "3D"
+    curve_data.resolution_u = 12
+    curve_data.bevel_depth = radius
+    curve_data.bevel_resolution = resolution
+    curve_data.fill_mode = "FULL"
+    spline = curve_data.splines.new("BEZIER")
+    spline.bezier_points.add(len(points) - 1)
+    for bezier_point, coordinate in zip(spline.bezier_points, points):
+        bezier_point.co = coordinate
+        bezier_point.handle_left_type = "AUTO"
+        bezier_point.handle_right_type = "AUTO"
+    obj = bpy.data.objects.new(name, curve_data)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.convert(target="MESH")
+    obj = bpy.context.object
+    obj.name = name
+    smooth(obj)
+    mark_export(obj)
+    return obj
+
+
+def chamfered_xz_cover(
+    name: str,
+    center: tuple[float, float, float],
+    half_size: tuple[float, float, float],
+    mat: bpy.types.Material,
+    edge: float = 0.010,
+) -> bpy.types.Object:
+    """Build an eight-corner cover plate extruded along Y."""
+    center_x, center_y, center_z = center
+    half_x, half_y, half_z = half_size
+    outline = (
+        (-0.64 * half_x, -half_z),
+        (0.64 * half_x, -half_z),
+        (half_x, -0.68 * half_z),
+        (half_x, 0.64 * half_z),
+        (0.66 * half_x, half_z),
+        (-0.66 * half_x, half_z),
+        (-half_x, 0.64 * half_z),
+        (-half_x, -0.68 * half_z),
+    )
+    vertices: list[tuple[float, float, float]] = []
+    for y_offset in (-half_y, half_y):
+        vertices.extend((center_x + x, center_y + y_offset, center_z + z) for x, z in outline)
+    faces: list[tuple[int, ...]] = [tuple(reversed(range(8))), tuple(range(8, 16))]
+    for index in range(8):
+        following = (index + 1) % 8
+        faces.append((index, following, following + 8, index + 8))
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    if edge:
+        bevel(obj, edge, segments=3)
+    mark_export(obj)
+    return obj
+
+
+def raised_cover_text(
+    name: str,
+    body: str,
+    location: tuple[float, float, float],
+    side: float,
+    size: float,
+) -> bpy.types.Object:
+    """Convert compact cover lettering to mesh so it survives GLB export."""
+    bpy.ops.object.text_add(location=location, rotation=(math.radians(-90.0 * side), 0.0, 0.0))
+    obj = bpy.context.object
+    obj.name = name
+    obj.data.body = body
+    obj.data.align_x = "CENTER"
+    obj.data.align_y = "CENTER"
+    obj.data.size = size
+    obj.data.extrude = 0.0012
+    obj.data.bevel_depth = 0.0004
+    obj.data.bevel_resolution = 2
+    assign(obj, ROTAX_LABEL)
+    bpy.ops.object.convert(target="MESH")
+    obj = bpy.context.object
+    obj.name = name
+    mark_export(obj)
+    return obj
+
+
 def open_tube_between(
     name: str,
     start: tuple[float, float, float],
@@ -730,22 +832,39 @@ def open_tube_between(
     mat: bpy.types.Material,
     vertices: int = 32,
 ) -> bpy.types.Object:
-    """Create an uncapped tube with inward normals for a visible recessed bore."""
+    """Create an uncapped inward-facing tube with its axis baked into the mesh.
+
+    Baking the orientation avoids a glTF transform edge case that reset the
+    bore liner to Blender's default Z axis and produced a detached vertical
+    black rod beside the weapon.
+    """
     a, b = Vector(start), Vector(end)
     delta = b - a
     midpoint = (a + b) * 0.5
-    bpy.ops.mesh.primitive_cylinder_add(
-        vertices=vertices,
-        radius=radius,
-        depth=delta.length,
-        end_fill_type="NOTHING",
-        location=midpoint,
-    )
-    obj = bpy.context.object
-    obj.name = name
-    obj.rotation_mode = "QUATERNION"
-    obj.rotation_quaternion = delta.to_track_quat("Z", "Y")
-    for polygon in obj.data.polygons:
+    axis = delta.normalized()
+    reference = Vector((0.0, 0.0, 1.0)) if abs(axis.z) < 0.92 else Vector((0.0, 1.0, 0.0))
+    radial_u = axis.cross(reference).normalized()
+    radial_v = axis.cross(radial_u).normalized()
+    mesh_vertices: list[tuple[float, float, float]] = []
+    # Keep geometry local to the tube's midpoint. The complete gimbal is later
+    # reparented into a shared scale/translation node, so storing absolute
+    # coordinates here would apply that installation transform twice.
+    for endpoint in (a - midpoint, b - midpoint):
+        for index in range(vertices):
+            angle = index * math.tau / vertices
+            radial = radial_u * (math.cos(angle) * radius) + radial_v * (math.sin(angle) * radius)
+            mesh_vertices.append(tuple(endpoint + radial))
+    faces: list[tuple[int, int, int, int]] = []
+    for index in range(vertices):
+        next_index = (index + 1) % vertices
+        faces.append((index, next_index, vertices + next_index, vertices + index))
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(mesh_vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.location = midpoint
+    for polygon in mesh.polygons:
         polygon.flip()
         polygon.use_smooth = True
     assign(obj, mat)
@@ -1468,6 +1587,8 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
 
     def parent_engine(obj: bpy.types.Object) -> bpy.types.Object:
         obj.parent = engine_group
+        if getattr(obj, "data", None) is not None:
+            obj.data.name = obj.name
         obj["system_station"] = "STA 02"
         obj["visualization_detail"] = "high-detail textured Rotax 916 iS/iSc cutaway"
         return obj
@@ -1620,20 +1741,29 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                 )
             )
             parent_engine(
-                cube(
-                    f"Rotax 916 cylinder-head cover {pair_index} {side_name}",
+                chamfered_xz_cover(
+                    f"Rotax 916 pearl-gray cylinder-head cover {pair_index} {side_name}",
                     (cylinder_x, side * 0.305, 0.025),
-                    (0.105, 0.042, 0.095),
-                    ROTAX_ALLOY,
-                    edge=0.025,
+                    (0.105, 0.045, 0.090),
+                    ROTAX_COVER,
+                    edge=0.012,
+                )
+            )
+            parent_engine(
+                raised_cover_text(
+                    f"Rotax 916 ROTAX head-cover lettering {pair_index} {side_name}",
+                    "ROTAX",
+                    (cylinder_x, side * 0.353, 0.062),
+                    side,
+                    0.021,
                 )
             )
             for fin_offset in (-0.068, -0.051, -0.034, -0.017, 0.0, 0.017, 0.034, 0.051, 0.068):
                 parent_engine(
                     cube(
                         f"Rotax 916 cooling fin {pair_index} {side_name} {fin_offset:+.3f}",
-                        (cylinder_x + fin_offset, side * 0.235, 0.025),
-                        (0.004, 0.115, 0.094),
+                        (cylinder_x + fin_offset, side * 0.190, 0.025),
+                        (0.004, 0.074, 0.094),
                         ROTAX_DARK,
                         edge=0.002,
                     )
@@ -1643,18 +1773,16 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     # STA 02 camera pushes inside the translucent cowling.
     for cylinder_x in (-3.385, -3.105):
         for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
-            for bolt_x in (-0.070, 0.070):
-                for bolt_z in (-0.060, 0.060):
-                    parent_engine(
-                        cylinder_between(
-                            f"Rotax 916 {side_name} head-cover fastener",
-                            (cylinder_x + bolt_x, side * 0.345, 0.025 + bolt_z),
-                            (cylinder_x + bolt_x, side * 0.361, 0.025 + bolt_z),
-                            0.0065,
-                            ROTAX_STEEL,
-                            vertices=20,
-                        )
-                    )
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 {side_name} central head-cover fastener",
+                    (cylinder_x, side * 0.348, 0.006),
+                    (cylinder_x, side * 0.363, 0.006),
+                    0.0080,
+                    ROTAX_STEEL,
+                    vertices=24,
+                )
+            )
             parent_engine(
                 cylinder_between(
                     f"Rotax 916 {side_name} spark-plug insulator",
@@ -1675,6 +1803,28 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                     vertices=24,
                 )
             )
+
+    # The raised 916 iS induction covers and pearl-gray rocker covers are the
+    # most immediate visual identifiers in Rotax's official product imagery.
+    for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
+        parent_engine(
+            chamfered_xz_cover(
+                f"Rotax 916 branded upper induction cover {side_name}",
+                (-3.165, side * 0.275, 0.174),
+                (0.140, 0.034, 0.052),
+                ROTAX_COVER,
+                edge=0.012,
+            )
+        )
+        parent_engine(
+            raised_cover_text(
+                f"Rotax 916 916 iS cover lettering {side_name}",
+                "916 iS",
+                (-3.165, side * 0.312, 0.184),
+                side,
+                0.031,
+            )
+        )
 
     for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
         parent_engine(
@@ -1706,7 +1856,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                     (cylinder_x, side * 0.305, -0.040),
                     (cylinder_x + 0.075, side * 0.190, -0.175),
                     0.021,
-                    ROTAX_STEEL,
+                    ROTAX_HEAT_WRAP,
                     vertices=28,
                 )
             )
@@ -1716,7 +1866,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                 (-3.420, side * 0.190, -0.175),
                 (-2.875, side * 0.190, -0.175),
                 0.027,
-                ROTAX_STEEL,
+                ROTAX_HEAT_WRAP,
                 vertices=32,
             )
         )
@@ -1747,11 +1897,11 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
 
     parent_engine(
         cube(
-            "Rotax 916 intake plenum",
-            (-3.155, 0.0, 0.165),
-            (0.250, 0.120, 0.055),
+            "Rotax 916 lower induction plenum",
+            (-3.210, 0.0, 0.145),
+            (0.235, 0.105, 0.040),
             ROTAX_DARK,
-            edge=0.035,
+            edge=0.026,
         )
     )
     for cylinder_x in (-3.385, -3.105):
@@ -1767,12 +1917,43 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                 )
             )
 
-    # A side-facing compressor scroll makes the turbo unmistakable through the
-    # port cutaway without increasing polygon count excessively.
+    # The official 916 installation carries a broad molded charge tube across
+    # the top of the engine. A smooth multi-point elbow is visually much closer
+    # to that assembly than the former rectangular plenum.
+    parent_engine(
+        curved_tube(
+            "Rotax 916 broad upper charge-air tube",
+            [
+                (-2.720, -0.085, 0.105),
+                (-2.780, -0.095, 0.205),
+                (-2.965, -0.070, 0.255),
+                (-3.245, -0.015, 0.255),
+                (-3.490, 0.035, 0.205),
+            ],
+            0.047,
+            ROTAX_RUBBER,
+            resolution=5,
+        )
+    )
+    for clamp_x, clamp_z in ((-2.780, 0.195), (-3.450, 0.213)):
+        parent_engine(
+            cylinder_between(
+                "Rotax 916 upper charge-tube stainless clamp",
+                (clamp_x - 0.010, -0.072, clamp_z),
+                (clamp_x + 0.010, -0.072, clamp_z),
+                0.052,
+                ROTAX_STEEL,
+                vertices=40,
+            )
+        )
+
+    # The turbo is low and outboard, matching the official front three-quarter
+    # imagery. It is placed on the station's default visible side so the
+    # compressor eye reads immediately when the cowling fades.
     bpy.ops.mesh.primitive_torus_add(
         major_segments=48,
         minor_segments=18,
-        location=(-2.870, 0.205, -0.070),
+        location=(-2.870, -0.205, -0.070),
         major_radius=0.092,
         minor_radius=0.032,
         rotation=(math.radians(90), 0.0, 0.0),
@@ -1786,8 +1967,8 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     parent_engine(
         cylinder_between(
             "Rotax 916 turbocharger core",
-            (-2.870, 0.160, -0.070),
-            (-2.870, 0.275, -0.070),
+            (-2.870, -0.160, -0.070),
+            (-2.870, -0.275, -0.070),
             0.050,
             ROTAX_DARK,
             vertices=40,
@@ -1796,8 +1977,8 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     parent_engine(
         cylinder_between(
             "Rotax 916 turbocharger machined inlet",
-            (-2.870, 0.270, -0.070),
-            (-2.870, 0.338, -0.070),
+            (-2.870, -0.270, -0.070),
+            (-2.870, -0.338, -0.070),
             0.067,
             ROTAX_ALLOY,
             vertices=48,
@@ -1806,8 +1987,8 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     parent_engine(
         cylinder_between(
             "Rotax 916 turbocharger compressor eye",
-            (-2.870, 0.337, -0.070),
-            (-2.870, 0.346, -0.070),
+            (-2.870, -0.337, -0.070),
+            (-2.870, -0.348, -0.070),
             0.039,
             ROTAX_DARK,
             vertices=48,
@@ -1816,39 +1997,95 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     parent_engine(
         cylinder_between(
             "Rotax 916 turbocharger exhaust transition",
-            (-2.875, 0.190, -0.175),
-            (-2.870, 0.200, -0.112),
+            (-2.875, -0.190, -0.175),
+            (-2.870, -0.200, -0.112),
             0.030,
-            ROTAX_STEEL,
+            ROTAX_HEAT_WRAP,
             vertices=32,
         )
     )
     parent_engine(
-        cylinder_between(
-            "Rotax 916 charge pipe",
-            (-2.865, 0.205, 0.025),
-            (-3.035, 0.120, 0.150),
-            0.024,
+        curved_tube(
+            "Rotax 916 turbo-to-intercooler charge pipe",
+            [
+                (-2.870, -0.205, 0.015),
+                (-2.805, -0.185, 0.070),
+                (-2.720, -0.145, 0.115),
+                (-2.690, -0.090, 0.145),
+            ],
+            0.027,
             ROTAX_ALLOY,
-            vertices=32,
+            resolution=4,
+        )
+    )
+    parent_engine(
+        curved_tube(
+            "Rotax 916 heat-wrapped turbo exhaust outlet",
+            [
+                (-2.875, -0.175, -0.135),
+                (-2.815, -0.155, -0.205),
+                (-2.700, -0.115, -0.245),
+                (-2.575, -0.075, -0.245),
+            ],
+            0.029,
+            ROTAX_HEAT_WRAP,
+            resolution=4,
         )
     )
 
+    # Compact dual electronic modules and their harnesses add the dense,
+    # installation-ready character visible around the official upper covers.
+    for module_x in (-3.290, -3.080):
+        parent_engine(
+            cube(
+                "Rotax 916 engine-control electronics module",
+                (module_x, 0.010, 0.288),
+                (0.072, 0.060, 0.027),
+                ROTAX_DARK,
+                edge=0.010,
+            )
+        )
+        parent_engine(
+            curved_tube(
+                "Rotax 916 engine-control wiring harness",
+                [
+                    (module_x, -0.020, 0.270),
+                    (module_x + 0.030, -0.090, 0.235),
+                    (module_x + 0.055, -0.180, 0.165),
+                ],
+                0.008,
+                ROTAX_RUBBER,
+                resolution=3,
+            )
+        )
+
+    # A dark fin matrix with machined side tanks recreates the prominent
+    # rectangular intercooler shown behind the upper charge duct.
     parent_engine(
         cube(
-            "Rotax 916 intercooler",
+            "Rotax 916 intercooler dark fin core",
             (-2.735, 0.0, 0.080),
-            (0.075, 0.245, 0.145),
-            ROTAX_HEAD,
-            edge=0.018,
+            (0.060, 0.235, 0.137),
+            ROTAX_DARK,
+            edge=0.012,
         )
     )
+    for side in (-1.0, 1.0):
+        parent_engine(
+            cube(
+                "Rotax 916 intercooler machined side tank",
+                (-2.730, side * 0.244, 0.080),
+                (0.071, 0.018, 0.148),
+                ROTAX_ALLOY,
+                edge=0.014,
+            )
+        )
     for z in (-0.030, -0.010, 0.010, 0.030, 0.050, 0.070, 0.090, 0.110, 0.130, 0.150, 0.170, 0.190):
         parent_engine(
             cube(
                 f"Rotax 916 intercooler fin {z:+.3f}",
-                (-2.660, 0.0, z),
-                (0.008, 0.235, 0.007),
+                (-2.671, 0.0, z),
+                (0.006, 0.225, 0.005),
                 ROTAX_ALLOY,
                 edge=0.002,
             )
@@ -1857,8 +2094,8 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
         parent_engine(
             cube(
                 f"Rotax 916 intercooler vertical fin {y:+.3f}",
-                (-2.657, y, 0.080),
-                (0.007, 0.004, 0.135),
+                (-2.669, y, 0.080),
+                (0.005, 0.003, 0.130),
                 ROTAX_ALLOY,
                 edge=0.0015,
             )
@@ -1878,12 +2115,12 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                 )
             )
 
-    parent["engine_model"] = "Rotax 916 iS/iSc, turbo"
+    parent["engine_model"] = "Rotax 916 iS/C, turbo"
     parent["engine_takeoff_power_hp"] = 160
     parent["engine_continuous_power_hp"] = 137
     parent["engine_propeller_reduction_ratio"] = "2.5454:1"
     parent["engine_gearbox_protection"] = "integrated overload clutch"
-    parent["engine_visualization"] = "high-detail textured cutaway, illustrative and not manufacturing geometry"
+    parent["engine_visualization"] = "official-reference high-detail cutaway, illustrative and not manufacturing geometry"
     engine_group.matrix_local = (
         Matrix.Translation(engine_pivot)
         @ Matrix.Scale(engine_scale, 4)
@@ -3422,19 +3659,6 @@ def create_aircraft() -> bpy.types.Object:
             vent_inset.parent = root
             vent_insets.append(vent_inset)
 
-    # Export the perforation pattern as one mesh. Keeping forty identically
-    # named, separately transformed nodes caused the final vent to lose its
-    # local rotation in the GLB and appear as a detached black ring. Joining
-    # them before the shared gimbal transform preserves every recess in place.
-    primary_vent = vent_insets[0]
-    for vent_inset in vent_insets[1:]:
-        EXPORT_OBJECTS.remove(vent_inset)
-    bpy.ops.object.select_all(action="DESELECT")
-    for vent_inset in vent_insets:
-        vent_inset.select_set(True)
-    bpy.context.view_layer.objects.active = primary_vent
-    bpy.ops.object.join()
-    primary_vent.name = "Integrated gimbal shroud recessed vent array"
     barrel = hollow_cylinder_between(
         "Integrated gimbal exposed precision barrel",
         (-1.635, gun_y, gun_z),
@@ -3494,6 +3718,22 @@ def create_aircraft() -> bpy.types.Object:
     # Every concentric component, including the cooling-shroud liner, is an
     # annulus. The dark inward-facing tube runs deep into the breech so the
     # muzzle reads as a genuine open bore from frontal and oblique views.
+
+    # Export the perforation pattern as one mesh. Keep this operator-based join
+    # after all concentric barrel parts have been created: Blender otherwise
+    # leaves the joined vent array active and the following custom meshes can
+    # lose their individual placement when export_apply flattens the hierarchy.
+    # Joining here preserves both the recess pattern and the complete barrel
+    # axis through the final GLB transform.
+    primary_vent = vent_insets[0]
+    for vent_inset in vent_insets[1:]:
+        EXPORT_OBJECTS.remove(vent_inset)
+    bpy.ops.object.select_all(action="DESELECT")
+    for vent_inset in vent_insets:
+        vent_inset.select_set(True)
+    bpy.context.view_layer.objects.active = primary_vent
+    bpy.ops.object.join()
+    primary_vent.name = "Integrated gimbal shroud recessed vent array"
 
     # Scale the complete kinetic gimbal to 75 percent and move its mounting
     # axis into the forward third of the root chord. A shared transform keeps
