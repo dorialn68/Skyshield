@@ -377,7 +377,10 @@ const modelFocusTitle = document.getElementById("modelFocusTitle");
 const modelFocusText = document.getElementById("modelFocusText");
 const modelOverviewControl = document.getElementById("modelOverviewControl");
 const modelFocusOverview = document.getElementById("modelFocusOverview");
+const modelStationsToggle = document.getElementById("modelStationsToggle");
+const modelStationsToggleState = document.getElementById("modelStationsToggleState");
 let activeModelComponent = null;
+let modelStationsVisible = true;
 let activeLightingPreset = "studio";
 let navigationBlinkTimer = null;
 let navigationBlinkOn = false;
@@ -530,7 +533,7 @@ function updateHotspotDensity() {
   modelStage.dataset.hotspotDensity = maximumLevel === 1 ? "overview" : maximumLevel === 2 ? "systems" : "detail";
   modelHotspots.forEach((hotspot) => {
     const isActive = hotspot.dataset.component === activeModelComponent;
-    const shouldShow = isActive || Number(hotspot.dataset.detailLevel ?? 1) <= maximumLevel;
+    const shouldShow = modelStationsVisible && (isActive || Number(hotspot.dataset.detailLevel ?? 1) <= maximumLevel);
     hotspot.hidden = !shouldShow;
     hotspot.setAttribute("aria-hidden", String(!shouldShow));
   });
@@ -542,7 +545,7 @@ function scheduleHotspotDensityUpdate() {
 }
 
 function focusModelComponent(hotspot) {
-  if (!model) return;
+  if (!model || !modelStationsVisible) return;
   activeModelComponent = hotspot.dataset.component;
   hotspot.hidden = false;
   hotspot.setAttribute("aria-hidden", "false");
@@ -557,6 +560,29 @@ function focusModelComponent(hotspot) {
   });
   updateModelFocusCard();
   if (modelFocusCard) modelFocusCard.hidden = false;
+  scheduleHotspotDensityUpdate();
+}
+
+function setModelStationsVisibility(visible) {
+  modelStationsVisible = visible;
+  if (modelStage) modelStage.dataset.stationsVisible = String(visible);
+  if (modelStationsToggle) {
+    modelStationsToggle.classList.toggle("is-active", visible);
+    modelStationsToggle.setAttribute("aria-pressed", String(visible));
+  }
+  if (modelStationsToggleState) modelStationsToggleState.textContent = visible ? "מוצג" : "מוסתר";
+
+  if (!visible) {
+    activeModelComponent = null;
+    modelHotspots.forEach((hotspot) => {
+      hotspot.hidden = true;
+      hotspot.classList.remove("active");
+      hotspot.setAttribute("aria-hidden", "true");
+      hotspot.setAttribute("aria-pressed", "false");
+    });
+    if (modelFocusCard) modelFocusCard.hidden = true;
+  }
+
   scheduleHotspotDensityUpdate();
 }
 
@@ -588,6 +614,7 @@ modelHotspots.forEach((hotspot) => {
 
 modelOverviewControl?.addEventListener("click", resetModelOverview);
 modelFocusOverview?.addEventListener("click", resetModelOverview);
+modelStationsToggle?.addEventListener("click", () => setModelStationsVisibility(!modelStationsVisible));
 
 if (model) {
   model.addEventListener("camera-change", scheduleHotspotDensityUpdate);
