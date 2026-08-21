@@ -102,7 +102,8 @@ const translations = {
     lightingSky: "Sky",
     lightingGolden: "Golden hour",
     lightingNight: "Night",
-    lightingExposure: "Exposure",
+    lightingBlackout: "Blackout",
+    lightingExposure: "Dimming",
     modelOverview: "360° overview",
     modelFocusOverview: "Return to 360° overview",
     componentFocus: "Component focus",
@@ -118,9 +119,9 @@ const translations = {
     hotspotFuselageBay: "Fuselage bay",
     hotspotExternalInterface: "External fuel tanks",
     focusPropellerTitle: "Propeller and spinner",
-    focusPropellerText: "White-coated two-blade variable-pitch propeller envelope and spinner transition at the forward end of the Ximango-derived cowling.",
+    focusPropellerText: "White-coated two-blade variable-pitch propeller with a visibly twisted blade profile. The blade plane is moved aft to the spinner base beside the cowling, matching the reference installation instead of floating near the spinner tip.",
     focusEngineTitle: "Powerplant installation",
-    focusEngineText: "The station identifies the engine-cowling volume and its changing cross-section; internal powerplant geometry is not shown.",
+    focusEngineText: "The rounded Ximango-derived cowling uses one restrained material-subtracted NACA-style intake on each side. Its slightly asymmetric opening and contoured floor deepen gradually from a fine forward tip toward the rounded aft mouth, with no circular opening or protruding exterior lip. Internal powerplant geometry is not shown.",
     focusFlightComputerTitle: "Flight control computer (FCC)",
     focusFlightComputerText: "Reserved avionics volume inside the forward fuselage beneath the uninterrupted upper skin; no crew cockpit or separate cover is represented.",
     focusDatalinkTitle: "Conformal datalink antenna",
@@ -128,17 +129,17 @@ const translations = {
     focusLandingGearTitle: "Retractable Ximango-style main gear",
     focusLandingGearText: "Two extended main legs deploy almost perpendicular to the low wing, with the subtle aft rake and outboard cant visible in Ximango side and front views. Each wheel has the characteristic asymmetric right-angle wedge cover: its triangular sweep masks the wheel externally while leaving a small tire contact section below and the wheel and fork readable from the inboard side; there is no nose wheel.",
     focusWingTitle: "Laminar-flow wing",
-    focusWingText: "Low-mounted, high-aspect-ratio wing with a continuous non-swollen center transition, restrained dihedral and upturned tips.",
+    focusWingText: "Low-mounted, high-aspect-ratio wing with a continuous non-swollen center transition, restrained dihedral and clean upturned tips without protruding static-discharge rods. Red and green navigation lenses sit on the outermost winglet corners and blink when Night or Blackout lighting is active.",
     focusTailTitle: "Tail group",
-    focusTailText: "T-tail assembly, control-surface break lines and a compact tail wheel carried by a structural shoe blended continuously into the aft fuselage.",
+    focusTailText: "T-tail assembly on a fuller-width aft fuselage, with clearly defined elevator and rudder hinge lines and a compact tail wheel on a shortened fork that overlaps a structural shoe blended continuously into the belly.",
     focusRemoteWeaponTitle: "Integrated EO/IR kinetic gimbal",
-    focusRemoteWeaponText: "Reference-matched exterior demonstrator with a continuous aircraft interface, vibration-isolated suspension frame, layered multi-axis stabilization stack, articulated service carrier, twin elevation yoke, vertically enlarged receiver body, dominant side-drive housing, integrated four-aperture EO/IR face and a shortened ventilated barrel package. External presentation geometry only; mass properties, recoil management and airworthiness remain subject to engineering validation.",
+    focusRemoteWeaponText: "Reference-matched exterior demonstrator with a smooth aircraft-interface shroud that conceals the mounting fasteners, vibration-isolated suspension frame, layered multi-axis stabilization stack, articulated service carrier, twin elevation yoke, vertically enlarged receiver body, dominant side-drive housing, integrated four-aperture EO/IR face and an extended multi-row perforated cooling shroud terminating in a visibly recessed hollow bore. External presentation geometry only; mass properties, recoil management and airworthiness remain subject to engineering validation.",
     focusForwardCameraTitle: "Forward VR navigation camera",
     focusForwardCameraText: "Small conformal dual-aperture visual-navigation camera positioned aft of the spinner on the forward belly, closer to the aircraft center of mass; the former aft sensor ball has been removed.",
     focusFuselageBayTitle: "Center-of-mass mission bay",
-    focusFuselageBayText: "Mission volume moved forward from the narrow aft boom toward the aircraft center of mass, shown with downward-opening doors and neutral interchangeable cartridges for drone, loitering-system or directed-energy payload concepts; no operational internals are represented.",
+    focusFuselageBayText: "Mission volume moved forward toward the aircraft center of mass and enclosed by a low-profile longitudinal aerodynamic cover. Its tapered nose and tail align with the airflow; no doors, exposed rails or operational internals are represented.",
     focusExternalInterfaceTitle: "External fuel tanks",
-    focusExternalInterfaceText: "Two teardrop external fuel-tank visualizations attach directly to and overlap the wing undersides, without separate pylons, suspension pins or unrelated mounting blocks; internal fuel-system detail is not shown.",
+    focusExternalInterfaceText: "Two teardrop external fuel-tank visualizations sit clearly beneath the wing skins on short streamlined pylons, without exposed suspension pins or unrelated mounting blocks; internal fuel-system detail is not shown.",
     heroCaption: "Parametric concept model · Texture-baked military PBR surfaces · Ximango-derived proportions",
     targetsHeading: "Program targets",
     metricEnduranceValue: "50+ hr",
@@ -278,7 +279,8 @@ const translations = {
     lightingSky: "שמים",
     lightingGolden: "שעת זהב",
     lightingNight: "לילה",
-    lightingExposure: "חשיפה",
+    lightingBlackout: "החשכה",
+    lightingExposure: "עמעום",
     modelOverview: "סקירת 360°",
     modelFocusOverview: "חזרה לתצוגת 360°",
     componentFocus: "מיקוד ברכיב",
@@ -294,9 +296,9 @@ const translations = {
     hotspotFuselageBay: "תא משימה בגוף",
     hotspotExternalInterface: "בידוני דלק חיצוניים",
     focusPropellerTitle: "מדחף וכיפה קדמית",
-    focusPropellerText: "מעטפת של מדחף דו־להבי לבן בעל פסיעה משתנה והמעבר אל בית המנוע המבוסס על פרופורציות Ximango.",
+    focusPropellerText: "מדחף דו־להבי לבן בעל פסיעה משתנה ופיתול נראה לאורך הלהב. מישור הלהבים הוזז לאחור אל בסיס הכיפה הצמוד לבית המנוע, בהתאם להתקנת הייחוס ולא סמוך לקצה הכיפה.",
     focusEngineTitle: "התקנת מערכת ההנעה",
-    focusEngineText: "התחנה מסמנת את נפח בית המנוע ואת החתך המשתנה שלו; גאומטריית המנוע הפנימית אינה מוצגת.",
+    focusEngineText: "בכל צד של בית המנוע המעוגל המבוסס על ה־Ximango נגרע חומר ליצירת כונס NACA עדין. הפתח הא־סימטרי והרצפה הקמורה מעמיקים בהדרגה מקצה קדמי דק אל פה אחורי מעוגל, ללא פתח עגול וללא שפה חיצונית בולטת. גאומטריית המנוע הפנימית אינה מוצגת.",
     focusFlightComputerTitle: "מחשב בקרת טיסה (FCC)",
     focusFlightComputerText: "נפח אוויוניקה שמור בתוך הגוף הקדמי ומתחת למעטפת העליונה הרציפה; לא מוצגים תא טייס או חיפוי נפרד.",
     focusDatalinkTitle: "אנטנת קישור נתונים קונפורמית",
@@ -304,17 +306,17 @@ const translations = {
     focusLandingGearTitle: "כני נסע ראשיים נשלפים בתצורת Ximango",
     focusLandingGearText: "שני כני הנסע הראשיים המוארכים יורדים כמעט בניצב לכנף הנמוכה, עם נטייה קלה לאחור והחוצה הנראית במבטי הצד והחזית של ה־Ximango. לכל גלגל חיפוי הטריז הא־סימטרי האופייני בעל הפינה הישרה: המעטפת המשולשת מסתירה את הגלגל מבחוץ, משאירה קטע קטן מהצמיג גלוי מתחתיה ואת הגלגל והמזלג נראים מן הצד הפנימי; אין כן נסע קדמי.",
     focusWingTitle: "כנף בזרימה למינרית",
-    focusWingText: "כנף נמוכה בעלת מנת־ממדים גבוהה, מעבר מרכזי רציף שאינו מעובה, דיהדרל מתון וקצות כנף מורמים.",
+    focusWingText: "כנף נמוכה בעלת מנת־ממדים גבוהה, מעבר מרכזי רציף שאינו מעובה, דיהדרל מתון וקצות כנף מורמים ונקיים ללא מוטות פריקת חשמל סטטי בולטים. עדשות הניווט האדומה והירוקה ממוקמות בפינות החיצוניות ביותר של קצות הכנף ומהבהבות במצבי לילה והחשכה.",
     focusTailTitle: "מכלול הזנב",
-    focusTailText: "מכלול זנב בתצורת T, קווי משטחי היגוי וכן נסע זנבי קצר המחובר באמצעות תושבת מבנית המשולבת ברציפות בגוף האחורי.",
+    focusTailText: "מכלול זנב בתצורת T על גוף אחורי רחב ומלא יותר, עם קווי ציר ברורים להגה הגובה ולהגה הכיוון וכן נסע זנבי קומפקטי המחובר במזלג מקוצר החופף לתושבת מבנית המשולבת ברציפות בגחון.",
     focusRemoteWeaponTitle: "צריח קינטי מיוצב עם EO/IR",
-    focusRemoteWeaponText: "מדגים חיצוני מפורט התואם את מכלול הייחוס: ממשק מטוס רציף, מתלה מבודד־רעידות, מערכת ייצוב רב־צירית, שרשרת שירות מפרקית, עריסת הגבהה דו־צדדית, גוף מקלט מוגבה בציר האנכי, בית הנעה צדי, חזית חיישני EO/IR משולבת ומכלול קנה מאוורר ומקוצר. זוהי גאומטריית המחשה חיצונית בלבד; נתוני המסה, ניהול הרתע והכשירות האווירית כפופים לאימות הנדסי.",
+    focusRemoteWeaponText: "מדגים חיצוני מפורט התואם את מכלול הייחוס: חיפוי חלק בממשק המטוס שמסתיר את ברגי החיבור, מתלה מבודד־רעידות, מערכת ייצוב רב־צירית, שרשרת שירות מפרקית, עריסת הגבהה דו־צדדית, גוף מקלט מוגבה בציר האנכי, בית הנעה צדי, חזית חיישני EO/IR משולבת וחיפוי קירור מחורר ומוארך בעל מספר שורות, המסתיים בקדח חלול ושקוע הנראה לעין. זוהי גאומטריית המחשה חיצונית בלבד; נתוני המסה, ניהול הרתע והכשירות האווירית כפופים לאימות הנדסי.",
     focusForwardCameraTitle: "מצלמת ניווט VR קדמית",
     focusForwardCameraText: "מצלמת ניווט חזותית קטנה בעלת שני פתחים, הממוקמת בגחון הקדמי מאחורי הספינר וקרוב יותר למרכז הכובד של המטוס; כדור החיישנים האחורי הוסר.",
     focusFuselageBayTitle: "תא משימה סמוך למרכז הכובד",
-    focusFuselageBayText: "נפח המשימה הועבר קדימה מאזור קורת הזנב הצרה לכיוון מרכז הכובד של המטוס. הוא מוצג עם דלתות הנפתחות כלפי מטה ומחסניות מודולריות ניטרליות לקונספטים של רחפנים, חימוש משוטט או מטעני אנרגיה מכוונת; לא מוצגים פרטים מבצעיים.",
+    focusFuselageBayText: "נפח המשימה הועבר קדימה לכיוון מרכז הכובד של המטוס ונסגר בחיפוי אווירודינמי נמוך ואורכי. החרטום והזנב המחודדים שלו מיושרים עם זרימת האוויר; לא מוצגים דלתות, מסילות חשופות או פרטים מבצעיים.",
     focusExternalInterfaceTitle: "בידוני דלק חיצוניים",
-    focusExternalInterfaceText: "שני בידוני דלק חיצוניים בעלי מעטפת טיפתית מתחברים ישירות וחופפים למעטפת התחתונה של הכנפיים, ללא מתלים נפרדים, פיני תלייה חשופים או בלוקי חיבור שאינם שייכים; פרטי מערכת הדלק הפנימית אינם מוצגים.",
+    focusExternalInterfaceText: "שני בידוני דלק חיצוניים בעלי מעטפת טיפתית יושבים בבירור מתחת למעטפת הכנפיים על גבי מתלים אווירודינמיים קצרים, ללא פיני תלייה חשופים או בלוקי חיבור שאינם שייכים; פרטי מערכת הדלק הפנימית אינם מוצגים.",
     heroCaption: "מודל קונספט פרמטרי · משטחי PBR צבאיים עם אפיית טקסטורות · פרופורציות המבוססות על Ximango",
     targetsHeading: "יעדי תוכנית",
     metricEnduranceValue: "50+ שעות",
@@ -677,6 +679,9 @@ const modelFocusText = document.getElementById("modelFocusText");
 const modelOverviewControl = document.getElementById("modelOverviewControl");
 const modelFocusOverview = document.getElementById("modelFocusOverview");
 let activeModelComponent = null;
+let activeLightingPreset = "studio";
+let navigationBlinkTimer = null;
+let navigationBlinkOn = false;
 const modelFocusContent = {
   propeller: { station: "STA 01", title: "focusPropellerTitle", text: "focusPropellerText" },
   engine: { station: "STA 02", title: "focusEngineTitle", text: "focusEngineText" },
@@ -722,15 +727,59 @@ const lightingPresets = {
   night: {
     environment: "environments/night-moonrise-1k.hdr",
     skybox: "environments/night-moonrise-1k.hdr",
-    exposure: 1.12,
-    shadowIntensity: 1.04,
-    shadowSoftness: 0.70
+    exposure: 0.50,
+    shadowIntensity: 0.48,
+    shadowSoftness: 0.82
+  },
+  blackout: {
+    environment: "environments/night-moonrise-1k.hdr",
+    skybox: "environments/night-moonrise-1k.hdr",
+    exposure: 0.26,
+    shadowIntensity: 0.28,
+    shadowSoftness: 0.90
   }
 };
+
+function setNavigationLights(on) {
+  const materials = model?.model?.materials ?? [];
+  materials.forEach((material) => {
+    const isPort = material.name === "Port navigation lens";
+    const isStarboard = material.name === "Starboard navigation lens";
+    if (!isPort && !isStarboard) return;
+    const color = isPort ? [1.0, 0.002, 0.001] : [0.002, 1.0, 0.028];
+    material.setEmissiveFactor(on ? color : [0, 0, 0]);
+    if (typeof material.setEmissiveStrength === "function") {
+      material.setEmissiveStrength(on ? 10.0 : 0.0);
+    }
+  });
+}
+
+function syncNavigationBlinking() {
+  if (navigationBlinkTimer) {
+    window.clearInterval(navigationBlinkTimer);
+    navigationBlinkTimer = null;
+  }
+  const exposure = Number(model?.getAttribute("exposure") ?? 1);
+  const sceneIsDark = activeLightingPreset === "night"
+    || activeLightingPreset === "blackout"
+    || exposure <= 0.56;
+  if (!sceneIsDark || document.hidden) {
+    navigationBlinkOn = false;
+    setNavigationLights(false);
+    return;
+  }
+  navigationBlinkOn = true;
+  setNavigationLights(true);
+  navigationBlinkTimer = window.setInterval(() => {
+    navigationBlinkOn = !navigationBlinkOn;
+    setNavigationLights(navigationBlinkOn);
+  }, 680);
+}
 
 function applyLightingPreset(presetName) {
   if (!model || !lightingPresets[presetName]) return;
   const preset = lightingPresets[presetName];
+  activeLightingPreset = presetName;
   model.setAttribute("environment-image", preset.environment);
   if (preset.skybox) model.setAttribute("skybox-image", preset.skybox);
   else model.removeAttribute("skybox-image");
@@ -744,6 +793,7 @@ function applyLightingPreset(presetName) {
     button.classList.toggle("active", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
+  syncNavigationBlinking();
 }
 
 lightingButtons.forEach((button) => {
@@ -751,8 +801,13 @@ lightingButtons.forEach((button) => {
 });
 
 exposureControl?.addEventListener("input", () => {
-  if (model) model.setAttribute("exposure", exposureControl.value);
+  if (!model) return;
+  model.setAttribute("exposure", exposureControl.value);
+  syncNavigationBlinking();
 });
+
+model?.addEventListener("load", syncNavigationBlinking);
+document.addEventListener("visibilitychange", syncNavigationBlinking);
 
 function updateModelFocusCard() {
   if (!activeModelComponent || !modelFocusCard || !modelFocusTitle || !modelFocusText) return;
