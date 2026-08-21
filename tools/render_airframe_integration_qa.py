@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 import bpy
 from mathutils import Vector
@@ -74,17 +75,41 @@ views = {
     "starboard-direct-tank-contact": ((-3.40, 4.90, -1.45), (-1.35, 2.68, -0.27), 88),
     "port-clean-gear-root": ((-2.65, -3.20, -1.30), (-1.62, -1.29, -0.30), 94),
     "starboard-clean-gear-root": ((-2.65, 3.20, -1.30), (-1.62, 1.29, -0.30), 94),
-    "forward-vr-camera": ((-3.72, -0.82, -0.42), (-2.60, 0.0, -0.15), 94),
+    "downward-vr-camera": ((-3.10, -1.18, -1.02), (-2.41, 0.0, -0.06), 96),
+    "vr-propeller-clearance": ((-3.05, -6.20, 0.15), (-3.05, 0.0, 0.19), 68),
+    "radiator-intercooler-chin-inlet": ((-5.20, 0.0, 0.15), (-3.46, 0.0, 0.15), 102),
+    "cooling-inlet-side-blend": ((-3.95, -2.10, 0.28), (-3.43, 0.0, 0.15), 100),
     "gimbal-fuel-and-bay": ((-4.95, -6.40, -2.20), (-1.30, -0.40, -0.40), 72),
     "gimbal-forward-third": ((-4.45, -3.85, -1.55), (-1.82, 0.0, -0.52), 82),
-    "drone-bay-hatch-seam": ((-1.20, -2.20, -1.25), (-0.28, 0.0, -0.23), 94),
-    "port-navigation-light": ((-3.30, 10.70, 1.70), (-1.46, 8.98, 0.75), 105),
-    "starboard-navigation-light": ((-3.30, -10.70, 1.70), (-1.46, -8.98, 0.75), 105),
+    "flush-drone-bay-hatch": ((-1.10, -2.05, -1.15), (-0.25, 0.0, -0.19), 98),
+    "port-navigation-light": ((-3.05, 10.45, 1.42), (-1.45, 8.91, 0.60), 108),
+    "starboard-navigation-light": ((-3.05, -10.45, 1.42), (-1.45, -8.91, 0.60), 108),
+    "winglet-75-percent-profile": ((-2.20, -10.65, 1.08), (-1.37, -8.91, 0.77), 98),
+    "vertical-tail-airfoil-leading-edge": ((1.90, -2.25, 0.35), (3.13, 0.0, 0.25), 98),
+    "horizontal-tail-airfoil-leading-edge": ((2.05, -3.25, 1.35), (3.30, 0.0, 0.91), 98),
+    "tail-root-fillet": ((2.35, -2.15, -0.10), (3.20, 0.0, -0.36), 100),
+    "fuel-tank-pylon-blends": ((-2.85, -4.50, -0.92), (-1.38, -2.68, -0.27), 102),
     "aft-fuselage": ((4.90, -7.10, 1.15), (1.80, 0.0, 0.06), 70),
     "gimbal-barrel-cleanup": ((-3.55, -2.35, -1.05), (-2.42, 0.0, -0.42), 102),
+    "gimbal-muzzle-open-bore": ((-3.50, -0.13, -0.26), (-2.75, -0.01, -0.35), 110),
     "propeller-smooth-profile": ((-5.35, -2.35, 0.32), (-3.95, 0.0, 0.0), 98),
+    "rotax-reduction-gearbox-cutaway": ((-4.75, -2.15, 0.82), (-3.28, 0.0, 0.36), 108),
 }
+requested_labels = {
+    label.strip()
+    for label in os.environ.get("SKYSHIELD_QA_ONLY", "").split(",")
+    if label.strip()
+}
+if requested_labels:
+    unknown_labels = requested_labels.difference(views)
+    if unknown_labels:
+        raise ValueError(f"Unknown QA view labels: {sorted(unknown_labels)}")
+    views = {label: view for label, view in views.items() if label in requested_labels}
 for label, (location, target, lens) in views.items():
+    isolated_rotax = label == "rotax-reduction-gearbox-cutaway"
+    for scene_object in scene.objects:
+        if scene_object.type == "MESH":
+            scene_object.hide_render = isolated_rotax and "Rotax 916" not in scene_object.name
     camera.location = location
     camera.data.lens = lens
     look_at(camera, target)
