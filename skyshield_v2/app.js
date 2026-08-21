@@ -116,10 +116,16 @@ const desktopMenuLinks = Array.from(document.querySelectorAll("[data-menu-key]")
 
 const megaMenuContent = {
   investment: {
-    kicker: "תקציר מנהלים",
-    title: "ההשקעה",
-    description: "כניסה מוקדמת למיזם המשלב פלטפורמה אווירית, מערכות משימה, AI וחימושים מתקדמים.",
-    links: [["#investmentDetails", "עיקרי ההשקעה"], ["#modelFrame", "מודל 360°"]]
+    kicker: "מערכת מגן תוקף",
+    title: "הגנת גבולות",
+    description: "נוכחות רציפה, זיהוי מוקדם ונטרול מבוקר לפני קו המגע — מתוך תמונת משימה אחת.",
+    links: [["#investment", "תפיסת הפתיחה"], ["#platform", "הפלטפורמה"]]
+  },
+  platform: {
+    kicker: "נכס אווירי מתמיד",
+    title: "הפלטפורמה",
+    description: "מודל תלת־ממד אינטראקטיבי המציג את כלי הטיס, תחנות המערכת וסביבות התאורה ב־360°.",
+    links: [["#modelFrame", "מודל 360°"], ["#investmentDetails", "עיקרי ההשקעה"]]
   },
   system: {
     kicker: "מערכת משולבת",
@@ -127,17 +133,17 @@ const megaMenuContent = {
     description: "פלטפורמה, קישוריות, תחנת שליטה וממשק מפעיל המחוברים לתמונת מצב אחת.",
     links: [["#system", "עקרונות מפתח"], ["#system", "בקרה וקישוריות"]]
   },
-  experience: {
-    kicker: "תקדימים תעשייתיים",
-    title: "ניסיון בהסבות",
-    description: "דוגמאות בינלאומיות הממחישות מסלולי הסבה ואינטגרציה ממטוסים מאוישים למערכות בלתי מאוישות.",
-    links: [["#experience", "Diamond DA 42"], ["#experience", "Long‑EZ"], ["#experience", "Avanti 180"]]
+  architecture: {
+    kicker: "חמש שכבות הנדסיות",
+    title: "ארכיטקטורת מערכת",
+    description: "הפרדה ברורה בין כלי הטיס, בקרת הטיסה, מחשוב המשימה, קווי הנתונים והבקרה הקרקעית.",
+    links: [["#architecture", "שכבות המערכת"], ["#architecture", "מצב התכן"]]
   },
-  arit: {
-    kicker: "שותפות אסטרטגית",
-    title: "החיבור לארית",
-    description: "חימוש, אלקטרוניקה ויכולת ייצור כחלק ממערכת אווירית מלאה עם נתיב ניסויים וצמיחה.",
-    links: [["#arit", "מנועי הצמיחה"], ["#arit", "ערך ללקוח"]]
+  planning: {
+    kicker: "Baseline to objective",
+    title: "בסיס תכנון",
+    description: "השוואה שקופה בין מטוס הייחוס המוסב של Block 0 לבין יעדי הביצועים והתכן של Block 1.",
+    links: [["#planning", "Block 0"], ["#planning", "Block 1"]]
   },
   roadmap: {
     kicker: "מהשקעה לטיסה",
@@ -271,6 +277,94 @@ systemModules.forEach((moduleButton) => {
 });
 
 activateSystemModule("airframe");
+
+const architectureSection = document.getElementById("architecture");
+const architectureTabs = Array.from(document.querySelectorAll("[data-architecture-layer]"));
+const architecturePanel = document.querySelector(".architecture-panel");
+const architectureNumber = document.getElementById("architectureNumber");
+const architectureKicker = document.getElementById("architectureKicker");
+const architecturePanelTitle = document.getElementById("architecturePanelTitle");
+const architectureDescription = document.getElementById("architectureDescription");
+const architectureStatus = document.getElementById("architectureStatus");
+const architecturePoints = document.getElementById("architecturePoints");
+
+const architectureContent = {
+  airframe: {
+    number: "01",
+    kicker: "כלי טיס",
+    title: "כלי טיס יעיל, מבוסס מסלול",
+    description: "פלטפורמה בעלת מוטת כנף גדולה, המבוססת על פרופורציות Ximango, תומכת ביעד השהייה; הפעלה ממסלול מפשטת התאוששות, תחזוקה וניסויי טיסה חוזרים.",
+    status: "בסיס התכן הוגדר · כפוף לתכן מפורט",
+    points: ["חלוקה ניתנת להתאמה בין דלק למטען", "המראה ונחיתה ממסלול", "מסלול פיתוח מ־Block 0 ל־Block 1"]
+  },
+  flight: {
+    number: "02",
+    kicker: "מערכת טיסה",
+    title: "בקרה קריטית לטיסה, המופרדת מיישומי המשימה",
+    description: "בקרת הטיסה, ההנעה, ניהול החשמל וניטור בריאות כלי הטיס מטופלים כתחום בטיחות מוגן, שאינו תלוי ביישומי המשימה.",
+    status: "הארכיטקטורה הוגדרה · בחירת החומרה בתהליך",
+    points: ["חישה והפעלה יתירות", "מצבי פעולה מוגדרים בתנאי כשל", "ראיות לכשירות אווירית כחלק מהתכן"]
+  },
+  compute: {
+    number: "03",
+    kicker: "מחשוב משימה",
+    title: "עיבוד על גבי כלי הטיס לחישה ולסיוע בקבלת החלטות",
+    description: "שכבת מחשוב המשימה מיועדת לאחד נתוני מטענים, לתעדף מידע ולתמוך בניווט — ללא סמכות בלתי מוגבלת על פעולות קריטיות.",
+    status: "קונספט תכן · אימות מעבדתי טרם בוצע",
+    points: ["יישומי מטען מודולריים", "עיבוד קצה ואיחוי חיישנים", "סמכות אנושית בפעולות קריטיות"]
+  },
+  links: {
+    number: "04",
+    kicker: "קווי נתונים",
+    title: "ערוצי תקשורת מרובים והתנהגות מוגדרת בעת אובדן קשר",
+    description: "ארכיטקטורת התקשורת כוללת חלופות בקו ראייה ומעבר לקו ראייה, הצפנה, יתירות ותגובה צפויה כאשר הקישור נפגע.",
+    status: "מערך החלופות הוגדר · נדרשת השלמת עבודה מול ספקים ורגולטורים",
+    points: ["חלופות LOS ו־BLOS", "פיקוד וטלמטריה מוצפנים", "לוגיקה ניתנת לבדיקה בעת אובדן קשר"]
+  },
+  gcs: {
+    number: "05",
+    kicker: "בקרה קרקעית",
+    title: "תמונה מבצעית אחודה לצוות מצומצם",
+    description: "המקטע הקרקעי מתוכנן סביב תפקידי מפעיל ברורים, תמונת משימה אחת ונקודות אישור מפורשות לפעילות קריטית לבטיחות ולמשימה.",
+    status: "קונספט ממשק אדם–מכונה · התכן המפורט טרם הושלם",
+    points: ["תצוגת משימה אחודה", "סמכות מפעיל מבוססת תפקיד", "ממשקי אינטגרציה פתוחים"]
+  }
+};
+
+function activateArchitectureLayer(layerKey) {
+  const content = architectureContent[layerKey];
+  if (!architectureSection || !content) return;
+
+  architectureSection.dataset.architectureActive = layerKey;
+  architectureTabs.forEach((tab) => {
+    const selected = tab.dataset.architectureLayer === layerKey;
+    tab.classList.toggle("is-active", selected);
+    tab.setAttribute("aria-selected", String(selected));
+  });
+
+  if (architectureNumber) architectureNumber.textContent = content.number;
+  if (architectureKicker) architectureKicker.textContent = content.kicker;
+  if (architecturePanelTitle) architecturePanelTitle.textContent = content.title;
+  if (architectureDescription) architectureDescription.textContent = content.description;
+  if (architectureStatus) architectureStatus.textContent = content.status;
+  if (architecturePoints) {
+    architecturePoints.replaceChildren(...content.points.map((point) => {
+      const item = document.createElement("li");
+      item.textContent = point;
+      return item;
+    }));
+  }
+
+  architecturePanel?.classList.remove("is-changing");
+  window.requestAnimationFrame(() => architecturePanel?.classList.add("is-changing"));
+}
+
+architectureTabs.forEach((tab) => {
+  tab.addEventListener("click", () => activateArchitectureLayer(tab.dataset.architectureLayer));
+  tab.addEventListener("focus", () => activateArchitectureLayer(tab.dataset.architectureLayer));
+});
+
+activateArchitectureLayer("airframe");
 
 const model = document.getElementById("aircraftModel");
 const modelStage = model?.closest(".hero-model");
