@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050607">
+  <meta name="description" content="AirShield.AI תוכנית השקעה הכוללת שימוש בהון, תקציב פיתוח, אבני דרך וכלכלת יחידה.">
+  <title>AirShield.AI | תוכנית השקעה</title>
+  <script>
+    document.documentElement.classList.add("access-pending");
+    try {
+      if (sessionStorage.getItem("airshield-preview-access") === "granted-v1") {
+        document.documentElement.classList.add("access-granted");
+      }
+    } catch (_) {
+      // Keep the access screen available when storage is restricted.
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css?v=v2-aero-20260821-1300">
+  <link rel="stylesheet" href="styles.css?v=v2-aero-20260821-1300">
+  <link rel="stylesheet" href="investment-plan.css?v=v2-finance-20260821-1510">
+  <script src="app.js?v=v2-aero-20260821-1300" defer></script>
+  <script src="investment-plan.js?v=v2-finance-20260821-1510" defer></script>
+</head>
+<body class="v2-page investment-plan-page">
+  <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
+    <div class="access-gate-grid" aria-hidden="true"></div>
+    <div class="access-panel">
+      <div class="access-brand">
+        <img src="../gate-brand.png" alt="AirShield.AI" width="620" height="108">
+        <span>Controlled investor briefing</span>
+      </div>
+      <div class="access-copy">
+        <p class="access-eyebrow">AIRSHIELD / INVESTOR BRIEFING / V2</p>
+        <h1 id="accessTitle">כניסה לתקציר המנהלים</h1>
+        <p class="access-hebrew">המצגת מוגנת. יש להזין את קוד הגישה בן ארבע הספרות כדי להמשיך.</p>
+      </div>
+      <form class="access-form" id="accessForm" novalidate>
+        <label for="accessCode">קוד גישה</label>
+        <div class="access-field-row">
+          <input id="accessCode" name="access-code" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="4" aria-describedby="accessHint accessStatus" required>
+          <button type="submit">כניסה לתדריך</button>
+        </div>
+        <div class="access-meta"><span id="accessHint">ארבע ספרות</span><span>AirShield.AI · confidential preview</span></div>
+        <p class="access-status" id="accessStatus" role="status" aria-live="polite"></p>
+      </form>
+      <noscript><p class="access-noscript">נדרש JavaScript כדי לפתוח את התדריך.</p></noscript>
+    </div>
+  </section>
+
+  <a class="skip-link" href="#main">דילוג לתוכן</a>
+  <header class="site-header v2-header plan-header" id="top">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="AirShield.AI חזרה לתקציר">
+        <img src="../band-logo.png" alt="" width="46" height="28">
+        <span>AIRSHIELD<span>.AI</span></span>
+      </a>
+      <nav class="desktop-nav v2-desktop-nav" aria-label="ניווט ראשי">
+        <a href="index.html">התקציר</a>
+        <a href="index.html#platform">פלטפורמה</a>
+        <a href="index.html#architecture">ארכיטקטורה</a>
+        <a href="index.html#roadmap">תוכנית 18 חודשים</a>
+        <a class="is-active" href="#main" aria-current="page">תוכנית השקעה</a>
+      </nav>
+      <div class="header-actions">
+        <a class="plan-back-link" href="index.html"><span aria-hidden="true">←</span> חזרה לתקציר</a>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav">
+          <span class="menu-label">תפריט</span><span class="menu-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="mobileNav" aria-label="ניווט בנייד" hidden>
+      <a href="index.html">התקציר</a><a href="index.html#platform">פלטפורמה</a><a href="index.html#roadmap">תוכנית 18 חודשים</a><a href="#main">תוכנית השקעה</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="plan-hero" aria-labelledby="planTitle">
+      <div class="plan-hero-grid section-frame">
+        <div class="plan-hero-copy" data-reveal>
+          <div class="plan-document-line"><span>INVESTMENT &amp; EXECUTION</span><span>18 MONTHS · USD</span></div>
+          <p class="section-kicker">תוכנית השקעה</p>
+          <h1 id="planTitle">גיוס של $10M מממן<br><em>18 חודשי פיתוח עד סדרת טיסות ניסוי.</em></h1>
+          <p>כל סעיף תקציב מקושר לתוצר הנדסי, לאבן דרך ולהחלטת מעבר ברורה. התוכנית מציגה גם את העלות הסדרתית לאחר השלמת הפיתוח.</p>
+          <div class="plan-hero-meta" aria-label="נתוני מסגרת">
+            <span><b>$10.0M</b> יעד גיוס</span>
+            <span><b>18</b> חודשי ביצוע</span>
+            <span><b>6.25–7</b> FTE ממוצע</span>
+          </div>
+        </div>
+        <div class="capital-flightpath" data-reveal aria-label="מסלול ההון מהשקעה למוצר סדרתי">
+          <div class="flightpath-grid" aria-hidden="true"></div>
+          <div class="flightpath-core"><span>CAPITAL</span><strong>$10M</strong><small>MISSION</small></div>
+          <div class="flightpath-node node-nre"><b>$6.188M</b><span>פיתוח חד פעמי</span></div>
+          <div class="flightpath-node node-assets"><b>$2.413M</b><span>נכסי פיתוח</span></div>
+          <div class="flightpath-node node-reserve"><b>$1.400M</b><span>רזרבה מוגנת</span></div>
+          <svg class="flightpath-lines" viewBox="0 0 760 520" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M380 260 C500 210 585 110 680 82"/>
+            <path d="M380 260 C510 270 600 270 708 290"/>
+            <path d="M380 260 C480 350 560 425 660 455"/>
+          </svg>
+          <span class="flightpath-caption">CAPITAL ALLOCATION / CONTROLLED RELEASE</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="plan-console section-frame" aria-label="תוכנית השקעה אינטראקטיבית">
+      <div class="plan-console-heading" data-reveal>
+        <div><p class="section-kicker">מפת המשימה הפיננסית</p><h2>מסלול אחד מהקצאת ההון עד למחיר היחידה.</h2></div>
+        <p>ארבעת הפרקים מציגים את התקציב, עבודת הפיתוח, לוח הביצוע והמודל המסחרי. בכל רגע מוצג פרק אחד במלואו.</p>
+      </div>
+
+      <div class="plan-tab-rail" role="tablist" aria-label="פרקי תוכנית ההשקעה" data-reveal>
+        <button class="plan-tab is-active" id="tab-allocation" type="button" role="tab" aria-selected="true" aria-controls="panel-allocation" data-plan-tab="allocation">
+          <span class="tab-number">01</span><span class="tab-copy"><b>שימוש בהון</b><small>הקצאת $10M</small></span><i aria-hidden="true"></i>
+        </button>
+        <button class="plan-tab" id="tab-nre" type="button" role="tab" aria-selected="false" aria-controls="panel-nre" tabindex="-1" data-plan-tab="nre">
+          <span class="tab-number">02</span><span class="tab-copy"><b>מפת NRE</b><small>תקציב הפיתוח החד פעמי</small></span><i aria-hidden="true"></i>
+        </button>
+        <button class="plan-tab" id="tab-execution" type="button" role="tab" aria-selected="false" aria-controls="panel-execution" tabindex="-1" data-plan-tab="execution">
+          <span class="tab-number">03</span><span class="tab-copy"><b>מסלול ביצוע</b><small>כוח אדם וגאנט</small></span><i aria-hidden="true"></i>
+        </button>
+        <button class="plan-tab" id="tab-economics" type="button" role="tab" aria-selected="false" aria-controls="panel-economics" tabindex="-1" data-plan-tab="economics">
+          <span class="tab-number">04</span><span class="tab-copy"><b>כלכלת יחידה</b><small>עלות, מחיר והחזר</small></span><i aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="plan-stage" id="planStage" data-active-panel="allocation" data-reveal>
+        <article class="plan-panel is-active" id="panel-allocation" role="tabpanel" aria-labelledby="tab-allocation" data-plan-panel="allocation">
+          <header class="panel-heading"><div><span>01 / CAPITAL ALLOCATION</span><h2>כל דולר מוקצה לתוצר והרזרבה נשמרת לסיכונים ממומשים.</h2></div><p>מתוך גיוס של $10M, סכום של $8.60M מוקצה לביצוע וסכום של $1.40M מנוהל כרזרבה טכנית ולוח זמנים.</p></header>
+          <div class="allocation-layout">
+            <div class="allocation-orbit" aria-label="חלוקת יעד הגיוס">
+              <div class="allocation-ring"><div><small>יעד גיוס</small><strong>$10.0M</strong><span>100%</span></div></div>
+              <div class="allocation-legend">
+                <div><i class="legend-nre"></i><span>פיתוח חד פעמי</span><b>$6.188M</b><small>61.88%</small></div>
+                <div><i class="legend-assets"></i><span>נכסי פיתוח</span><b>$2.413M</b><small>24.13%</small></div>
+                <div><i class="legend-reserve"></i><span>רזרבת הנהלה</span><b>$1.400M</b><small>14.00%</small></div>
+              </div>
+            </div>
+            <div class="allocation-cards">
+              <article><span>ENGINEERING</span><strong>$6.188M</strong><h3>פיתוח חד פעמי</h3><p>תכן, תוכנה, אינטגרציה, אימות וניסויי קרקע וטיסה כהשקעת הפיתוח של התוכנית.</p></article>
+              <article><span>DEVELOPMENT ASSETS</span><strong>$2.413M</strong><h3>נכסי פיתוח</h3><p>אבטיפוסים, חומרת פיתוח, ציוד בדיקה ותבניות וכלי ייצור ראשוניים.</p></article>
+              <article class="reserve-card"><span>CONTROLLED RESERVE</span><strong>$1.400M</strong><h3>רזרבה מוגנת</h3><p>14% מהגיוס מנוהלים מול סיכונים טכניים ואבני דרך בלוח הזמנים.</p></article>
+            </div>
+          </div>
+          <details class="plan-drawer">
+            <summary><span>פתיחת מפת ההקצאה המלאה</span><small>12 תחומי ביצוע · $10.0M</small></summary>
+            <div class="allocation-ledger" role="table" aria-label="מפת הקצאת ההון">
+              <div class="ledger-row ledger-head" role="row"><span role="columnheader">תחום</span><b role="columnheader">$M</b><small role="columnheader">%</small></div>
+              <div class="ledger-row" role="row"><span>רכישה והסבת פלטפורמת ניסוי, בלוק 0</span><b>0.85</b><small>8.5%</small></div>
+              <div class="ledger-row" role="row"><span>פיתוח קיט אוויוניקה</span><b>1.35</b><small>13.5%</small></div>
+              <div class="ledger-row" role="row"><span>הנעה רוטקס 916 ונתיב צמיחה טורבו פרופ</span><b>1.05</b><small>10.5%</small></div>
+              <div class="ledger-row" role="row"><span>מבנה ואווירודינמיקה, בלוק 1</span><b>0.75</b><small>7.5%</small></div>
+              <div class="ledger-row" role="row"><span>אינטגרציית מטעד קינטי מוטס</span><b>0.50</b><small>5.0%</small></div>
+              <div class="ledger-row" role="row"><span>תחנת שליטה, תוכנה ותקשורת</span><b>0.45</b><small>4.5%</small></div>
+              <div class="ledger-row" role="row"><span>הנדסה חיצונית וקבלני משנה</span><b>0.75</b><small>7.5%</small></div>
+              <div class="ledger-row" role="row"><span>אינטגרציה, אימות ובדיקות קרקע</span><b>0.30</b><small>3.0%</small></div>
+              <div class="ledger-row" role="row"><span>קמפיין ניסויי טיסה בחו״ל</span><b>1.05</b><small>10.5%</small></div>
+              <div class="ledger-row" role="row"><span>צוות ליבה, ניהול, משפטי וקניין רוחני</span><b>0.90</b><small>9.0%</small></div>
+              <div class="ledger-row" role="row"><span>תבניות, ג׳יגים וכלי ייצור ראשוניים</span><b>0.65</b><small>6.5%</small></div>
+              <div class="ledger-row" role="row"><span>רזרבת הנהלה</span><b>1.40</b><small>14.0%</small></div>
+            </div>
+          </details>
+        </article>
+
+        <article class="plan-panel" id="panel-nre" role="tabpanel" aria-labelledby="tab-nre" data-plan-panel="nre" hidden>
+          <header class="panel-heading"><div><span>02 / NON RECURRING ENGINEERING</span><h2>$6.188M מקדמים עשרה מסלולי פיתוח עד מוכנות לניסויי טיסה.</h2></div><p>תקציב NRE מרכז את עבודת ההנדסה החד פעמית. נכסי הפיתוח והרזרבה מנוהלים בערוצים ייעודיים לצד המודל הסדרתי.</p></header>
+          <div class="nre-layout">
+            <div class="nre-signal" aria-label="פירוט תקציב NRE">
+              <div class="nre-row"><span>פלטפורמת ניסוי בלוק 0</span><i style="--bar:32.4%"></i><b>$0.340M</b></div>
+              <div class="nre-row"><span>קיט אוויוניקה</span><i style="--bar:96.5%"></i><b>$1.013M</b></div>
+              <div class="nre-row"><span>אינטגרציית רוטקס 916</span><i style="--bar:60%"></i><b>$0.630M</b></div>
+              <div class="nre-row"><span>מבנה ואווירודינמיקה בלוק 1</span><i style="--bar:57.1%"></i><b>$0.600M</b></div>
+              <div class="nre-row"><span>מטעד קינטי מוטס</span><i style="--bar:33.3%"></i><b>$0.350M</b></div>
+              <div class="nre-row"><span>שליטה, תוכנה ותקשורת</span><i style="--bar:30%"></i><b>$0.315M</b></div>
+              <div class="nre-row"><span>הנדסה חיצונית וקבלנים</span><i style="--bar:71.4%"></i><b>$0.750M</b></div>
+              <div class="nre-row"><span>אימות ובדיקות קרקע</span><i style="--bar:22.9%"></i><b>$0.240M</b></div>
+              <div class="nre-row"><span>קמפיין ניסויי טיסה</span><i style="--bar:100%"></i><b>$1.050M</b></div>
+              <div class="nre-row"><span>צוות ליבה וקניין רוחני</span><i style="--bar:85.7%"></i><b>$0.900M</b></div>
+            </div>
+            <aside class="nre-total">
+              <span>NRE / PROGRAM TOTAL</span><strong>$6.188M</strong><p>62% מיעד הגיוס מוקצים ישירות לעבודה הנדסית חד פעמית.</p>
+              <div class="nre-separation"><div><small>נכסי פיתוח</small><b>$2.413M</b><span>ערוץ נכסי פיתוח</span></div><div><small>רזרבה</small><b>$1.400M</b><span>רזרבה מנוהלת</span></div></div>
+              <p class="nre-note">NRE ייעודי ללקוח מתומחר בנפרד לפי היקף העבודה.</p>
+            </aside>
+          </div>
+        </article>
+
+        <article class="plan-panel" id="panel-execution" role="tabpanel" aria-labelledby="tab-execution" data-plan-panel="execution" hidden>
+          <header class="panel-heading"><div><span>03 / PEOPLE &amp; EXECUTION</span><h2>צוות ליבה רזה מתקדם לפי שמונה אבני דרך מוגדרות.</h2></div><p>כוח האדם הפנימי נשמר בטווח של 6.25 עד 7 FTE בממוצע תקופתי. מומחים, ייצור וניסויי טיסה מצטרפים לפי שלבי הביצוע.</p></header>
+          <div class="fte-strip" aria-label="עומס כוח אדם פנימי לפי תקופה">
+            <div class="fte-title"><span>INTERNAL LOAD</span><b>יעד עליון: 10 FTE</b></div>
+            <div><strong>6.25</strong><span>חודשים 1–3</span></div><div><strong>6.25</strong><span>חודשים 4–6</span></div><div><strong>6.75</strong><span>חודשים 7–9</span></div><div><strong>7</strong><span>חודשים 10–12</span></div><div><strong>7</strong><span>חודשים 13–15</span></div><div><strong>7</strong><span>חודשים 16–18</span></div>
+          </div>
+          <div class="gantt-shell" aria-label="תוכנית עבודה ל-18 חודשים">
+            <div class="gantt-scroll">
+              <div class="gantt-grid">
+                <div class="gantt-months"><span class="gantt-label">תחום</span><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b><b>10</b><b>11</b><b>12</b><b>13</b><b>14</b><b>15</b><b>16</b><b>17</b><b>18</b></div>
+                <div class="gantt-row"><span class="gantt-label">מערכת וארכיטקטורה</span><i class="phase phase-a" style="--start:1;--span:4"></i></div>
+                <div class="gantt-row"><span class="gantt-label">קיט אוויוניקה ואימות</span><i class="phase phase-b" style="--start:1;--span:9"></i></div>
+                <div class="gantt-row"><span class="gantt-label">הסבת בלוק 0 וניסויי טיסה</span><i class="phase phase-c" style="--start:1;--span:11"></i></div>
+                <div class="gantt-row"><span class="gantt-label">מבנה ואווירודינמיקה בלוק 1</span><i class="phase phase-a" style="--start:4;--span:15"></i></div>
+                <div class="gantt-row"><span class="gantt-label">אינטגרציית רוטקס 916</span><i class="phase phase-b" style="--start:2;--span:17"></i></div>
+                <div class="gantt-row"><span class="gantt-label">נתיב צמיחה טורבו פרופ</span><i class="phase phase-d" style="--start:2;--span:17"></i></div>
+                <div class="gantt-row"><span class="gantt-label">אינטגרציית מטעד מקבילה</span><i class="phase phase-e" style="--start:4;--span:15"></i></div>
+                <div class="gantt-row"><span class="gantt-label">אתר וקמפיין ניסויי טיסה</span><i class="phase phase-c" style="--start:9;--span:10"></i></div>
+                <div class="milestone-row"><span class="gantt-label">אבני דרך</span><i style="--month:2"><b>SRR</b></i><i style="--month:4"><b>PDR</b></i><i style="--month:6"><b>CDR<br>אוויוניקה</b></i><i style="--month:9"><b>TRR</b></i><i style="--month:11"><b>טיסת<br>בלוק 0</b></i><i style="--month:12"><b>CDR<br>בלוק 1</b></i><i style="--month:15"><b>CDR<br>טורבו פרופ</b></i><i style="--month:18"><b>טיסת<br>בלוק 1A</b></i></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="plan-panel" id="panel-economics" role="tabpanel" aria-labelledby="tab-economics" data-plan-panel="economics" hidden>
+          <header class="panel-heading"><div><span>04 / UNIT ECONOMICS</span><h2>השקעת הפיתוח מובילה למחיר בסיס של $1.219M למטוס.</h2></div><p>המודל מציג את השקעת ה NRE, את עלות הייצור החוזרת ואת מבנה המחיר המסחרי לכל מטוס.</p></header>
+          <div class="economics-layout">
+            <div class="price-stack">
+              <div class="price-stack-head"><span>BASE AIRCRAFT PRICE</span><strong>$1.219M</strong><small>לפני NRE ייעודי ללקוח</small></div>
+              <div class="stack-bar" aria-label="מרכיבי מחיר המכירה הבסיסי"><div class="stack-direct" style="--share:60.7%"><span>עלות ישירה</span><b>$0.740M</b></div><div class="stack-overhead" style="--share:13.4%"><span>תקורה</span><b>$0.163M</b></div><div class="stack-profit" style="--share:25.9%"><span>רווח</span><b>$0.316M</b></div></div>
+              <div class="economics-equation"><span>$740K<br><small>עלות ישירה חוזרת</small></span><i>+</i><span>$163K<br><small>תקורה 22%</small></span><i>+</i><span>$316K<br><small>רווח 35%</small></span><i>=</i><strong>$1.219M<br><small>מחיר בסיס</small></strong></div>
+            </div>
+            <aside class="commercial-cards">
+              <article><span>GROUND CONTROL</span><strong>$0.165M</strong><p>תחנת שליטה נפרדת</p></article>
+              <article><span>THREE-AIRCRAFT PACKAGE</span><strong>$3.821M</strong><p>שלושה מטוסים ותחנת שליטה</p></article>
+              <article class="loaded-price"><span>LOADED COMMERCIAL CASE</span><strong>≈$1.444M</strong><p>מחיר הכולל החזר NRE, כלי ייצור והעמסה מסחרית.</p></article>
+            </aside>
+          </div>
+          <details class="plan-drawer economics-drawer">
+            <summary><span>פתיחת מבנה העלות החוזרת</span><small>5 רכיבים · $740K למטוס</small></summary>
+            <div class="recurring-costs">
+              <div><span>פלטפורמה וחבילת הנעה בסיסית</span><b>$360K</b></div><div><span>קיט כטב״ם ואוויוניקה מלא</span><b>$210K</b></div><div><span>חיישן תצפית בסיסי</span><b>$35K</b></div><div><span>מטעד קינטי למדגים</span><b>$50K</b></div><div><span>רזרבת רכש והתקנה</span><b>$85K</b></div>
+            </div>
+            <p class="payback-note"><b>תרחיש החזר</b> NRE של $6.188M בפריסה על 50 מטוסים שווה $123.8K ליחידה. כלי ייצור מוסיפים $13K ליחידה.</p>
+          </details>
+        </article>
+      </div>
+
+      <div class="plan-controls" aria-label="מעבר בין פרקי התוכנית">
+        <button class="plan-control" id="planPrev" type="button"><span aria-hidden="true">→</span><small>הקודם</small><b id="planPrevLabel">כלכלת יחידה</b></button>
+        <div class="plan-progress" aria-hidden="true"><i id="planProgress"></i><span id="planCounter">01 / 04</span></div>
+        <button class="plan-control" id="planNext" type="button"><small>הבא</small><b id="planNextLabel">מפת NRE</b><span aria-hidden="true">←</span></button>
+      </div>
+    </section>
+
+    <section class="plan-thesis">
+      <div class="section-frame"><p>ההשקעה מממנת רצף של תכן, אינטגרציה, ניסוי והגעה לכלכלה סדרתית.</p><a href="index.html#roadmap">חזרה לתוכנית 18 החודשים <span aria-hidden="true">←</span></a></div>
+    </section>
+  </main>
+
+  <footer class="v2-footer plan-footer"><div class="section-frame"><span>AIRSHIELD.AI</span><span>Investment Plan · <span id="year"></span></span></div></footer>
+</body>
+</html>
