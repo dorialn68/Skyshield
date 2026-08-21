@@ -25,6 +25,7 @@ OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v30.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v2.png"
+ROTAX_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_rotax_cast_aluminum_source_v1.png"
 
 EXPORT_OBJECTS: list[bpy.types.Object] = []
 
@@ -82,6 +83,9 @@ ROTAX_ALLOY = material("Rotax 916 engine alloy", (0.235, 0.255, 0.265, 1.0), 0.7
 ROTAX_DARK = material("Rotax 916 engine dark hardware", (0.035, 0.045, 0.050, 1.0), 0.38, 0.30)
 ROTAX_HEAD = material("Rotax 916 cylinder-head finish", (0.105, 0.115, 0.118, 1.0), 0.60, 0.24)
 ROTAX_TURBO = material("Rotax 916 turbocharger", (0.30, 0.235, 0.165, 1.0), 0.76, 0.26)
+ROTAX_STEEL = material("Rotax 916 brushed stainless hardware", (0.28, 0.30, 0.31, 1.0), 0.90, 0.20)
+ROTAX_RUBBER = material("Rotax 916 reinforced hose rubber", (0.012, 0.016, 0.018, 1.0), 0.0, 0.70)
+ROTAX_ACCENT = material("Rotax 916 service accent", (0.42, 0.065, 0.025, 1.0), 0.12, 0.36)
 NAV_RED = material("Port navigation lens", (0.46, 0.004, 0.003, 1.0), 0.0, 0.14)
 NAV_GREEN = material("Starboard navigation lens", (0.003, 0.42, 0.045, 1.0), 0.0, 0.14)
 NAV_WHITE = material("Aft navigation lens", (0.72, 0.76, 0.78, 1.0), 0.0, 0.12)
@@ -381,6 +385,120 @@ def build_pbr_materials() -> None:
         coat_roughness=0.30,
     )
     attach_gltf_occlusion(GIMBAL_ALLOY, gimbal_ao)
+
+    # A dedicated 1K cast-aluminum scan gives the exposed Rotax installation
+    # its own micro-scale response. The same measured-looking grain is tinted
+    # and calibrated per engine material, so the crankcase, black heads and
+    # turbo read as separate manufactured finishes instead of uniform blocks.
+    rotax_size = 1024
+    rotax_source = seamless_imagegen_source(ROTAX_IMAGEGEN_SOURCE, rotax_size)
+    rotax_luma = (
+        rotax_source[..., 0] * 0.2126
+        + rotax_source[..., 1] * 0.7152
+        + rotax_source[..., 2] * 0.0722
+    )
+    rotax_low = wrapped_low_pass(rotax_luma, (1, 2, 4, 8, 16, 32))
+    rotax_micro = normalized_field(rotax_luma - wrapped_low_pass(rotax_luma, (1, 2, 4)), limit=2.4)
+    rotax_macro = normalized_field(rotax_low, limit=2.0)
+    rotax_height = rotax_macro * 0.004 + rotax_micro * 0.022
+    rotax_occlusion = np.clip(0.982 - np.maximum(-rotax_micro, 0.0) * 0.020, 0.90, 1.0)
+    rotax_normal = write_texture(
+        "airshield_rotax_cast_normal",
+        normal_map_from_height(rotax_height, 4.2),
+        "Non-Color",
+    )
+    rotax_ao = write_texture(
+        "airshield_rotax_cast_occlusion",
+        rgba_from_gray(rotax_occlusion),
+        "Non-Color",
+    )
+
+    rotax_material_profiles = (
+        (
+            ROTAX_ALLOY,
+            "alloy",
+            np.array([0.34, 0.36, 0.37], dtype=np.float32),
+            0.47,
+            0.72,
+            0.28,
+            0.08,
+        ),
+        (
+            ROTAX_HEAD,
+            "head",
+            np.array([0.095, 0.105, 0.108], dtype=np.float32),
+            0.41,
+            0.58,
+            0.23,
+            0.12,
+        ),
+        (
+            ROTAX_DARK,
+            "dark_hardware",
+            np.array([0.030, 0.038, 0.042], dtype=np.float32),
+            0.34,
+            0.38,
+            0.18,
+            0.16,
+        ),
+        (
+            ROTAX_TURBO,
+            "turbo",
+            np.array([0.255, 0.190, 0.125], dtype=np.float32),
+            0.39,
+            0.78,
+            0.22,
+            0.05,
+        ),
+    )
+    for engine_material, suffix, color, roughness_center, metallic, normal_strength, coat_weight in rotax_material_profiles:
+        engine_rgb = np.clip(
+            color[None, None, :]
+            + rotax_macro[..., None] * 0.012
+            + rotax_micro[..., None] * 0.008,
+            0.0,
+            1.0,
+        )
+        engine_roughness = np.clip(
+            roughness_center + rotax_macro * 0.018 + rotax_micro * 0.028,
+            0.18,
+            0.72,
+        )
+        engine_base = write_texture(
+            f"airshield_rotax_{suffix}_basecolor",
+            rgba_from_rgb(engine_rgb),
+            "sRGB",
+        )
+        engine_rough = write_texture(
+            f"airshield_rotax_{suffix}_roughness",
+            rgba_from_gray(engine_roughness),
+            "Non-Color",
+        )
+        textured_principled_material(
+            engine_material,
+            engine_base,
+            engine_rough,
+            rotax_normal,
+            metallic=metallic,
+            normal_strength=normal_strength,
+            coat_weight=coat_weight,
+            coat_roughness=0.30,
+        )
+        attach_gltf_occlusion(engine_material, rotax_ao)
+
+    rotax_steel_bsdf = ROTAX_STEEL.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(rotax_steel_bsdf, "Metallic", 0.82)
+    set_bsdf_input(rotax_steel_bsdf, "Roughness", 0.28)
+    set_bsdf_input(rotax_steel_bsdf, "Anisotropic", 0.24)
+    set_bsdf_input(rotax_steel_bsdf, "Coat Weight", 0.06)
+
+    rotax_rubber_bsdf = ROTAX_RUBBER.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(rotax_rubber_bsdf, "Roughness", 0.78)
+    set_bsdf_input(rotax_rubber_bsdf, "Specular IOR Level", 0.20)
+
+    rotax_accent_bsdf = ROTAX_ACCENT.node_tree.nodes.get("Principled BSDF")
+    set_bsdf_input(rotax_accent_bsdf, "Coat Weight", 0.28)
+    set_bsdf_input(rotax_accent_bsdf, "Coat Roughness", 0.24)
 
     carbon_size = 1024
     cy, cx = np.mgrid[0:carbon_size, 0:carbon_size].astype(np.float32) / float(carbon_size)
@@ -1184,11 +1302,13 @@ def assign_forward_material(
 
 
 def create_rotax_916_engine(parent: bpy.types.Object) -> None:
-    """Build a lightweight presentation cutaway of a Rotax 916 installation.
+    """Build a high-detail presentation cutaway of a Rotax 916 installation.
 
-    The assembly captures the readable signatures of the installation rather
-    than manufacturing detail: reduction gearbox, compact crankcase, two pairs
-    of opposed cylinders, intake plenum, turbocharger, intercooler and mount.
+    The assembly remains visualization geometry rather than a manufacturing
+    replica, but close-up presentation now carries a complete material and
+    mechanical hierarchy: textured cast cases, machined gearbox stages,
+    opposed finned cylinders, fasteners, ignition hardware, coolant and charge
+    plumbing, exhaust collectors, turbocharger, intercooler and engine mount.
     It remains inside the closed cowling until STA 02 fades that shell at run
     time in model-viewer.
     """
@@ -1196,7 +1316,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     def parent_engine(obj: bpy.types.Object) -> bpy.types.Object:
         obj.parent = parent
         obj["system_station"] = "STA 02"
-        obj["visualization_detail"] = "low-resolution Rotax 916 iS/iSc cutaway"
+        obj["visualization_detail"] = "high-detail textured Rotax 916 iS/iSc cutaway"
         return obj
 
     parent_engine(
@@ -1218,6 +1338,63 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
         )
     )
 
+    # Cast-case ribs, side inspection covers and captive fasteners break up the
+    # large crankcase volumes at close range and provide realistic scale cues.
+    for rib_x in (-3.455, -3.355, -3.255, -3.155, -3.055):
+        parent_engine(
+            cube(
+                f"Rotax 916 crankcase reinforcement rib {rib_x:+.3f}",
+                (rib_x, 0.0, 0.0),
+                (0.010, 0.143, 0.112),
+                ROTAX_HEAD,
+                edge=0.005,
+            )
+        )
+    for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
+        parent_engine(
+            cylinder_between(
+                f"Rotax 916 {side_name} crankcase inspection cover",
+                (-3.235, side * 0.135, 0.0),
+                (-3.235, side * 0.151, 0.0),
+                0.098,
+                ROTAX_ALLOY,
+                vertices=48,
+            )
+        )
+        for angle_index in range(8):
+            angle = angle_index * math.tau / 8.0
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 {side_name} crankcase cover fastener {angle_index + 1:02d}",
+                    (-3.235 + math.cos(angle) * 0.078, side * 0.150, math.sin(angle) * 0.078),
+                    (-3.235 + math.cos(angle) * 0.078, side * 0.161, math.sin(angle) * 0.078),
+                    0.0065,
+                    ROTAX_STEEL,
+                    vertices=20,
+                )
+            )
+
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 oil filter",
+            (-3.000, -0.135, -0.135),
+            (-3.000, -0.135, -0.270),
+            0.044,
+            ROTAX_DARK,
+            vertices=40,
+        )
+    )
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 service oil cap",
+            (-3.075, 0.052, 0.118),
+            (-3.075, 0.052, 0.180),
+            0.032,
+            ROTAX_ACCENT,
+            vertices=32,
+        )
+    )
+
     # Reduction gearbox and the short drive line sit immediately behind the
     # spinner, making the front-to-back installation legible in the cutaway.
     for name, start_x, end_x, radius, mat in (
@@ -1226,7 +1403,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
         ("Rotax 916 reduction gearbox aft stage", -3.610, -3.490, 0.185, ROTAX_HEAD),
         ("Rotax 916 gearbox collar", -3.505, -3.455, 0.128, ROTAX_DARK),
     ):
-        parent_engine(cylinder_between(name, (start_x, 0.0, 0.0), (end_x, 0.0, 0.0), radius, mat, vertices=24))
+        parent_engine(cylinder_between(name, (start_x, 0.0, 0.0), (end_x, 0.0, 0.0), radius, mat, vertices=48))
 
     # Two opposed cylinder pairs. Alternating fore/aft offsets keep the compact
     # flat-four readable from either side instead of collapsing into one block.
@@ -1239,7 +1416,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                     (cylinder_x, side * 0.270, 0.025),
                     0.080,
                     ROTAX_HEAD,
-                    vertices=20,
+                    vertices=40,
                 )
             )
             parent_engine(
@@ -1251,16 +1428,122 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                     edge=0.025,
                 )
             )
-            for fin_offset in (-0.052, -0.026, 0.0, 0.026, 0.052):
+            for fin_offset in (-0.068, -0.051, -0.034, -0.017, 0.0, 0.017, 0.034, 0.051, 0.068):
                 parent_engine(
                     cube(
                         f"Rotax 916 cooling fin {pair_index} {side_name} {fin_offset:+.3f}",
                         (cylinder_x + fin_offset, side * 0.235, 0.025),
-                        (0.006, 0.115, 0.092),
+                        (0.004, 0.115, 0.094),
                         ROTAX_DARK,
-                        edge=0.003,
+                        edge=0.002,
                     )
                 )
+
+    # Machined cover bolts, plug boots and fuel rails remain readable when the
+    # STA 02 camera pushes inside the translucent cowling.
+    for cylinder_x in (-3.385, -3.105):
+        for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
+            for bolt_x in (-0.070, 0.070):
+                for bolt_z in (-0.060, 0.060):
+                    parent_engine(
+                        cylinder_between(
+                            f"Rotax 916 {side_name} head-cover fastener",
+                            (cylinder_x + bolt_x, side * 0.345, 0.025 + bolt_z),
+                            (cylinder_x + bolt_x, side * 0.361, 0.025 + bolt_z),
+                            0.0065,
+                            ROTAX_STEEL,
+                            vertices=20,
+                        )
+                    )
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 {side_name} spark-plug insulator",
+                    (cylinder_x, side * 0.312, 0.060),
+                    (cylinder_x, side * 0.312, 0.132),
+                    0.013,
+                    ROTAX_ACCENT,
+                    vertices=24,
+                )
+            )
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 {side_name} spark-plug boot",
+                    (cylinder_x, side * 0.312, 0.120),
+                    (cylinder_x + 0.045, side * 0.285, 0.165),
+                    0.016,
+                    ROTAX_RUBBER,
+                    vertices=24,
+                )
+            )
+
+    for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
+        parent_engine(
+            cylinder_between(
+                f"Rotax 916 {side_name} fuel rail",
+                (-3.475, side * 0.334, 0.150),
+                (-3.015, side * 0.334, 0.150),
+                0.011,
+                ROTAX_STEEL,
+                vertices=28,
+            )
+        )
+        for cylinder_x in (-3.385, -3.105):
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 {side_name} injector feed",
+                    (cylinder_x, side * 0.332, 0.150),
+                    (cylinder_x, side * 0.270, 0.108),
+                    0.008,
+                    ROTAX_RUBBER,
+                    vertices=20,
+                )
+            )
+
+            # Stainless exhaust primaries sweep inward to compact collectors.
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 {side_name} exhaust primary",
+                    (cylinder_x, side * 0.305, -0.040),
+                    (cylinder_x + 0.075, side * 0.190, -0.175),
+                    0.021,
+                    ROTAX_STEEL,
+                    vertices=28,
+                )
+            )
+        parent_engine(
+            cylinder_between(
+                f"Rotax 916 {side_name} exhaust collector",
+                (-3.420, side * 0.190, -0.175),
+                (-2.875, side * 0.190, -0.175),
+                0.027,
+                ROTAX_STEEL,
+                vertices=32,
+            )
+        )
+
+        # Two-piece coolant hoses imply a molded elbow while keeping the GLB
+        # lightweight and stable in model-viewer.
+        coolant_midpoint = (-3.220, side * 0.245, 0.205)
+        parent_engine(
+            cylinder_between(
+                f"Rotax 916 {side_name} coolant hose aft",
+                (-3.385, side * 0.305, 0.090),
+                coolant_midpoint,
+                0.018,
+                ROTAX_RUBBER,
+                vertices=28,
+            )
+        )
+        parent_engine(
+            cylinder_between(
+                f"Rotax 916 {side_name} coolant hose forward",
+                coolant_midpoint,
+                (-2.815, side * 0.185, 0.165),
+                0.018,
+                ROTAX_RUBBER,
+                vertices=28,
+            )
+        )
 
     parent_engine(
         cube(
@@ -1279,16 +1562,16 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                     (cylinder_x, side * 0.080, 0.155),
                     (cylinder_x, side * 0.245, 0.095),
                     0.018,
-                    ROTAX_DARK,
-                    vertices=12,
+                    ROTAX_RUBBER,
+                    vertices=24,
                 )
             )
 
     # A side-facing compressor scroll makes the turbo unmistakable through the
     # port cutaway without increasing polygon count excessively.
     bpy.ops.mesh.primitive_torus_add(
-        major_segments=24,
-        minor_segments=10,
+        major_segments=48,
+        minor_segments=18,
         location=(-2.870, 0.205, -0.070),
         major_radius=0.092,
         minor_radius=0.032,
@@ -1307,7 +1590,37 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
             (-2.870, 0.275, -0.070),
             0.050,
             ROTAX_DARK,
-            vertices=20,
+            vertices=40,
+        )
+    )
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 turbocharger machined inlet",
+            (-2.870, 0.270, -0.070),
+            (-2.870, 0.338, -0.070),
+            0.067,
+            ROTAX_ALLOY,
+            vertices=48,
+        )
+    )
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 turbocharger compressor eye",
+            (-2.870, 0.337, -0.070),
+            (-2.870, 0.346, -0.070),
+            0.039,
+            ROTAX_DARK,
+            vertices=48,
+        )
+    )
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 turbocharger exhaust transition",
+            (-2.875, 0.190, -0.175),
+            (-2.870, 0.200, -0.112),
+            0.030,
+            ROTAX_STEEL,
+            vertices=32,
         )
     )
     parent_engine(
@@ -1317,7 +1630,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
             (-3.035, 0.120, 0.150),
             0.024,
             ROTAX_ALLOY,
-            vertices=14,
+            vertices=32,
         )
     )
 
@@ -1330,7 +1643,7 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
             edge=0.018,
         )
     )
-    for z in (-0.015, 0.030, 0.075, 0.120, 0.165):
+    for z in (-0.030, -0.010, 0.010, 0.030, 0.050, 0.070, 0.090, 0.110, 0.130, 0.150, 0.170, 0.190):
         parent_engine(
             cube(
                 f"Rotax 916 intercooler fin {z:+.3f}",
@@ -1338,6 +1651,16 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                 (0.008, 0.235, 0.007),
                 ROTAX_ALLOY,
                 edge=0.002,
+            )
+        )
+    for y in (-0.200, -0.150, -0.100, -0.050, 0.0, 0.050, 0.100, 0.150, 0.200):
+        parent_engine(
+            cube(
+                f"Rotax 916 intercooler vertical fin {y:+.3f}",
+                (-2.657, y, 0.080),
+                (0.007, 0.004, 0.135),
+                ROTAX_ALLOY,
+                edge=0.0015,
             )
         )
 
@@ -1350,15 +1673,15 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
                     (-3.300, side * 0.145, z * 0.72),
                     (-2.585, side * 0.255, z),
                     0.012,
-                    ROTAX_DARK,
-                    vertices=10,
+                    ROTAX_STEEL,
+                    vertices=20,
                 )
             )
 
     parent["engine_model"] = "Rotax 916 iS/iSc, turbo"
     parent["engine_takeoff_power_hp"] = 160
     parent["engine_continuous_power_hp"] = 137
-    parent["engine_visualization"] = "illustrative low-resolution cutaway, not manufacturing geometry"
+    parent["engine_visualization"] = "high-detail textured cutaway, illustrative and not manufacturing geometry"
 
 
 def radial_store_fin(

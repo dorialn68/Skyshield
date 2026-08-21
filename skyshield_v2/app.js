@@ -405,7 +405,7 @@ const modelFocusContent = {
       ["Layout", "Flat four, turbo"],
       ["Block 0 engine", "Rotax 914 F3"]
     ],
-    note: "הדמיית Cutaway קלת משקל להצגת הארכיטקטורה והמיקום במטוס"
+    note: "הדמיית Cutaway מפורטת עם חומרי PBR להצגת הארכיטקטורה והמיקום במטוס"
   },
   flightComputer: { station: "STA 03", title: "מחשב משימה / FCC", text: "ליבת מחשוב משימה לעיבוד חיישנים, מיזוג מידע, ניווט מסייע ואוטונומיה. בקרת הטיסה הקריטית נשמרת כשכבה מוגנת ונפרדת." },
   datalink: { station: "STA 04", title: "קישור נתונים", text: "אנטנה קונפורמית לתקשורת מאובטחת ולרציפות משימה מעבר לקו הראייה." },
@@ -556,10 +556,10 @@ function applyEngineReveal(progress) {
   (model?.model?.materials ?? []).forEach((material) => {
     if (!material.name.startsWith("Rotax 916")) return;
     if (typeof material.setEmissiveFactor === "function") {
-      material.setEmissiveFactor([0.035 * progress, 0.080 * progress, 0.105 * progress]);
+      material.setEmissiveFactor([0.010 * progress, 0.018 * progress, 0.022 * progress]);
     }
     if (typeof material.setEmissiveStrength === "function") {
-      material.setEmissiveStrength(0.72 * progress);
+      material.setEmissiveStrength(0.24 * progress);
     }
   });
 }
