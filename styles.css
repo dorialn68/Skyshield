@@ -800,6 +800,11 @@ button {
     radial-gradient(circle at 68% 24%, #637789 0, #273947 48%, #101b24 100%);
 }
 
+.hero-model[data-lighting="blackout"] model-viewer {
+  background:
+    radial-gradient(circle at 68% 22%, #263746 0, #101b25 46%, #03080d 100%);
+}
+
 .hero-model model-viewer::part(default-progress-bar) {
   display: none;
 }
@@ -1074,9 +1079,9 @@ html[dir="rtl"] .hotspot-label {
 
 .lighting-presets {
   display: inline-grid;
-  grid-template-columns: repeat(5, minmax(68px, 1fr));
+  grid-template-columns: repeat(6, minmax(68px, 1fr));
   align-items: center;
-  min-width: 420px;
+  min-width: 500px;
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 

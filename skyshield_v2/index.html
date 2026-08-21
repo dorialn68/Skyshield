@@ -24,10 +24,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="image" href="assets/opening-border-defense.png?v=1">
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=29">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="../styles.css?v=v2-aero-20260821-1300">
+  <link rel="stylesheet" href="styles.css?v=v2-aero-20260821-1300">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=5" defer></script>
+  <script src="app.js?v=v2-aero-20260821-1300" defer></script>
 </head>
 <body class="v2-page">
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -123,7 +123,7 @@
           <p>מודל תלת־ממד אינטראקטיבי של פלטפורמת AirShield: גררו לצפייה ב־360°, התקרבו ופתחו את תחנות המערכת.</p>
         </header>
         <figure class="hero-visual hero-model v2-model" id="modelFrame" data-lighting="studio" data-hotspot-density="overview" data-reveal>
-          <model-viewer id="aircraftModel" src="../airshield-ximango-direct-tanks-v29.glb" poster="../airshield-xmango-hero-v29.jpg" alt="מודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper המבוססת על Ximango" camera-controls touch-action="pan-y" interaction-prompt="auto" shadow-intensity="1.08" shadow-softness="0.82" exposure="1.04" tone-mapping="agx" environment-image="../environments/studio-softbox-1k.hdr" camera-orbit="-34deg 83deg 118%" interpolation-decay="160" field-of-view="33deg" min-field-of-view="12deg" max-field-of-view="45deg" min-camera-orbit="auto 12deg 1.5m" max-camera-orbit="auto 168deg 30m">
+          <model-viewer id="aircraftModel" src="../airshield-ximango-direct-tanks-v29.glb?v=v2-aero-20260821-1300" poster="../airshield-xmango-hero-v29.jpg?v=v2-aero-20260821-1300" alt="מודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper המבוססת על Ximango" camera-controls touch-action="pan-y" interaction-prompt="auto" shadow-intensity="1.08" shadow-softness="0.82" exposure="1.04" tone-mapping="agx" environment-image="../environments/studio-softbox-1k.hdr" camera-orbit="-34deg 83deg 118%" interpolation-decay="160" field-of-view="33deg" min-field-of-view="12deg" max-field-of-view="45deg" min-camera-orbit="auto 12deg 1.5m" max-camera-orbit="auto 168deg 30m">
             <div class="model-progress" slot="progress-bar"><span></span></div>
             <button class="model-hotspot" type="button" slot="hotspot-propeller" data-position="-3.99m 0.33m 0m" data-normal="-1m 0m 0m" data-target="-3.99m 0.33m 0m" data-orbit="-75deg 76deg 2.7m" data-component="propeller" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">01</span><span class="hotspot-label">מדחף</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-engine" data-position="-3.10m 0.52m 0.28m" data-normal="0m 1m 0.25m" data-target="-3.15m 0.22m 0m" data-orbit="-48deg 75deg 2.8m" data-component="engine" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">02</span><span class="hotspot-label">מנוע</span></button>
@@ -140,7 +140,7 @@
           </model-viewer>
           <div class="model-toolbar">
             <div class="model-toolbar-main"><span class="model-status"><i aria-hidden="true"></i><b>מודל תלת־ממד אינטראקטיבי</b></span><span class="model-instruction">גררו לצפייה ב־360° · קרבו כדי לחשוף תחנות מערכת</span><button class="model-overview-control" type="button" id="modelOverviewControl">סקירת 360°</button></div>
-            <div class="model-lighting" role="group" aria-labelledby="modelLightingLabel"><span class="model-lighting-label" id="modelLightingLabel">תאורה</span><div class="lighting-presets" role="group" aria-label="סביבת תאורה"><button class="active" type="button" data-lighting-preset="studio" aria-pressed="true">סטודיו</button><button type="button" data-lighting-preset="daylight" aria-pressed="false">אור יום</button><button type="button" data-lighting-preset="sky" aria-pressed="false">שמים</button><button type="button" data-lighting-preset="golden" aria-pressed="false">שעת זהב</button><button type="button" data-lighting-preset="night" aria-pressed="false">לילה</button></div><label class="model-exposure"><span>חשיפה</span><input id="modelExposure" type="range" min="0.72" max="1.34" step="0.02" value="1.04"></label></div>
+            <div class="model-lighting" role="group" aria-labelledby="modelLightingLabel"><span class="model-lighting-label" id="modelLightingLabel">תאורה</span><div class="lighting-presets" role="group" aria-label="סביבת תאורה"><button class="active" type="button" data-lighting-preset="studio" aria-pressed="true">סטודיו</button><button type="button" data-lighting-preset="daylight" aria-pressed="false">אור יום</button><button type="button" data-lighting-preset="sky" aria-pressed="false">שמים</button><button type="button" data-lighting-preset="golden" aria-pressed="false">שעת זהב</button><button type="button" data-lighting-preset="night" aria-pressed="false">לילה</button><button type="button" data-lighting-preset="blackout" aria-pressed="false">החשכה</button></div><label class="model-exposure"><span>עמעום</span><input id="modelExposure" type="range" min="0.18" max="1.34" step="0.02" value="1.04"></label></div>
           </div>
           <figcaption>מודל קונספט פרמטרי · משטחי PBR צבאיים · פרופורציות מבוססות Ximango</figcaption>
         </figure>
