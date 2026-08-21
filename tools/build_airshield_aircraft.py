@@ -1313,8 +1313,17 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     time in model-viewer.
     """
 
+    engine_scale = 0.82
+    engine_pivot = Vector((-3.235, 0.0, 0.0))
+    engine_group = bpy.data.objects.new("Rotax 916 fitted installation transform", None)
+    bpy.context.collection.objects.link(engine_group)
+    engine_group.parent = parent
+    engine_group["system_station"] = "STA 02"
+    engine_group["installation_scale"] = engine_scale
+    mark_export(engine_group)
+
     def parent_engine(obj: bpy.types.Object) -> bpy.types.Object:
-        obj.parent = parent
+        obj.parent = engine_group
         obj["system_station"] = "STA 02"
         obj["visualization_detail"] = "high-detail textured Rotax 916 iS/iSc cutaway"
         return obj
@@ -1682,6 +1691,11 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     parent["engine_takeoff_power_hp"] = 160
     parent["engine_continuous_power_hp"] = 137
     parent["engine_visualization"] = "high-detail textured cutaway, illustrative and not manufacturing geometry"
+    engine_group.matrix_local = (
+        Matrix.Translation(engine_pivot)
+        @ Matrix.Scale(engine_scale, 4)
+        @ Matrix.Translation(-engine_pivot)
+    )
 
 
 def radial_store_fin(
