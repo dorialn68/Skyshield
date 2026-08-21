@@ -378,19 +378,22 @@ const modelFocusText = document.getElementById("modelFocusText");
 const modelOverviewControl = document.getElementById("modelOverviewControl");
 const modelFocusOverview = document.getElementById("modelFocusOverview");
 let activeModelComponent = null;
+let activeLightingPreset = "studio";
+let navigationBlinkTimer = null;
+let navigationBlinkOn = false;
 
 const modelFocusContent = {
-  propeller: { station: "STA 01", title: "מערכת הנעה", text: "מדחף לבן בעל גאומטריה אווירודינמית, המשולב בחזית חיפוי המנוע." },
-  engine: { station: "STA 02", title: "יחידת הנעה", text: "מעטפת מנוע קונפורמית המשמרת את קווי הגוף ואת הזרימה לאורך הפלטפורמה." },
+  propeller: { station: "STA 01", title: "מערכת הנעה", text: "מדחף דו־להבי לבן בעל פיתול ופסיעה נראים; מישור הלהבים הוזז לאחור אל בסיס הכיפה הצמוד לבית המנוע." },
+  engine: { station: "STA 02", title: "יחידת הנעה", text: "בכל צד של מעטפת המנוע נגרע כונס NACA עדין, א־סימטרי ומדורג, המעמיק לאורך קימור החרטום ללא פתח עגול או שפה חיצונית בולטת." },
   flightComputer: { station: "STA 03", title: "מחשב טיסה FCC", text: "ליבת בקרת הטיסה, הניווט והאוטונומיה של הפלטפורמה." },
   datalink: { station: "STA 04", title: "קישור נתונים", text: "אנטנה קונפורמית לתקשורת מאובטחת ולרציפות משימה מעבר לקו הראייה." },
-  landingGear: { station: "STA 05", title: "כן נסע ראשי", text: "גלגל ראשי עם חיפוי אווירודינמי ותצורה התואמת לפלטפורמת Ximango." },
-  wing: { station: "STA 06", title: "כנף למינרית", text: "כנף נמוכה וארוכת־מוטה, המיועדת ליעילות אווירודינמית ולשהייה ממושכת." },
-  tail: { station: "STA 07", title: "מכלול זנב", text: "מכלול זנב עם כנפוני קצה וכּן זנב קצר, לשמירת קווי המתאר המקוריים." },
-  remoteWeapon: { station: "STA 08", title: "צריח קינטי EO/IR", text: "צריח מיוצב המשלב חיישני EO/IR ומטען קינטי במעטפת קומפקטית ואווירודינמית." },
-  forwardCamera: { station: "STA 09", title: "מצלמת VR קדמית", text: "מערך חישה קדמי קטן לתמונת מצב, הטסה מרחוק ותמיכה בתפיסת ההפעלה." },
-  fuselageBay: { station: "STA 10", title: "תא משימה", text: "נפח משימה מאחורי הכנף עבור רחפנים, חימושים משוטטים ומטענים ייעודיים." },
-  externalInterface: { station: "AUX 01", title: "בידוני דלק", text: "בידונים המחוברים ישירות לכנף ומרחיבים את מעטפת השהייה והטווח." }
+  landingGear: { station: "STA 05", title: "כן נסע ראשי", text: "כן נסע המחובר ברציפות לכנף עם חיפוי מוארך בצורת מגף, המסתיר את רוב הגלגל ומשאיר סהר קטן מהצמיג גלוי בתחתית." },
+  wing: { station: "STA 06", title: "כנף למינרית", text: "כנף נמוכה וארוכת־מוטה עם קצות מורמים ונקיים. עדשות ניווט אדומה וירוקה ממוקמות בפינות החיצוניות של קצות הכנף ומהבהבות במצבי לילה והחשכה." },
+  tail: { station: "STA 07", title: "מכלול זנב", text: "מכלול זנב T עם קווי ציר ברורים להגה הגובה ולהגה הכיוון וכן כן זנב קצר המחובר לגוף." },
+  remoteWeapon: { station: "STA 08", title: "צריח קינטי EO/IR", text: "צריח מיוצב עם חיפוי חיבור סגור המסתיר את הברגים, מערכת EO/IR, מעטפת קנה מחוררת וקנה חלול ושקוע." },
+  forwardCamera: { station: "STA 09", title: "מצלמת VR קדמית", text: "מערך חישה קדמי קטן וקונפורמי, הממוקם בגחון הקדמי לתמונת מצב ולהטסה מרחוק." },
+  fuselageBay: { station: "STA 10", title: "תא משימה", text: "נפח משימה שהוזז קדימה לעבר מרכז המסה ונסגר בחיפוי אורכי נמוך המיושר עם כיוון הזרימה." },
+  externalInterface: { station: "AUX 01", title: "בידוני דלק", text: "שני בידוני דלק חיצוניים יושבים מתחת לכנפיים על מתלים אווירודינמיים קצרים ואינם חלק ממעטפת הכנף." }
 };
 
 const lightingPresets = {
@@ -425,15 +428,59 @@ const lightingPresets = {
   night: {
     environment: "../environments/night-moonrise-1k.hdr",
     skybox: "../environments/night-moonrise-1k.hdr",
-    exposure: 1.12,
-    shadowIntensity: 1.04,
-    shadowSoftness: 0.7
+    exposure: 0.50,
+    shadowIntensity: 0.48,
+    shadowSoftness: 0.82
+  },
+  blackout: {
+    environment: "../environments/night-moonrise-1k.hdr",
+    skybox: "../environments/night-moonrise-1k.hdr",
+    exposure: 0.26,
+    shadowIntensity: 0.28,
+    shadowSoftness: 0.90
   }
 };
+
+function setNavigationLights(on) {
+  const materials = model?.model?.materials ?? [];
+  materials.forEach((material) => {
+    const isPort = material.name === "Port navigation lens";
+    const isStarboard = material.name === "Starboard navigation lens";
+    if (!isPort && !isStarboard) return;
+    const color = isPort ? [1.0, 0.002, 0.001] : [0.002, 1.0, 0.028];
+    material.setEmissiveFactor(on ? color : [0, 0, 0]);
+    if (typeof material.setEmissiveStrength === "function") {
+      material.setEmissiveStrength(on ? 10.0 : 0.0);
+    }
+  });
+}
+
+function syncNavigationBlinking() {
+  if (navigationBlinkTimer) {
+    window.clearInterval(navigationBlinkTimer);
+    navigationBlinkTimer = null;
+  }
+  const exposure = Number(model?.getAttribute("exposure") ?? 1);
+  const sceneIsDark = activeLightingPreset === "night"
+    || activeLightingPreset === "blackout"
+    || exposure <= 0.56;
+  if (!sceneIsDark || document.hidden) {
+    navigationBlinkOn = false;
+    setNavigationLights(false);
+    return;
+  }
+  navigationBlinkOn = true;
+  setNavigationLights(true);
+  navigationBlinkTimer = window.setInterval(() => {
+    navigationBlinkOn = !navigationBlinkOn;
+    setNavigationLights(navigationBlinkOn);
+  }, 680);
+}
 
 function applyLightingPreset(presetName) {
   if (!model || !lightingPresets[presetName]) return;
   const preset = lightingPresets[presetName];
+  activeLightingPreset = presetName;
   model.setAttribute("environment-image", preset.environment);
   if (preset.skybox) model.setAttribute("skybox-image", preset.skybox);
   else model.removeAttribute("skybox-image");
@@ -447,6 +494,7 @@ function applyLightingPreset(presetName) {
     button.classList.toggle("active", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
+  syncNavigationBlinking();
 }
 
 lightingButtons.forEach((button) => {
@@ -454,8 +502,12 @@ lightingButtons.forEach((button) => {
 });
 
 exposureControl?.addEventListener("input", () => {
-  model?.setAttribute("exposure", exposureControl.value);
+  if (!model) return;
+  model.setAttribute("exposure", exposureControl.value);
+  syncNavigationBlinking();
 });
+
+document.addEventListener("visibilitychange", syncNavigationBlinking);
 
 function updateModelFocusCard() {
   if (!activeModelComponent || !modelFocusCard || !modelFocusTitle || !modelFocusText) return;
@@ -543,6 +595,7 @@ if (model) {
     const progress = model.querySelector(".model-progress");
     if (progress) progress.hidden = true;
     resetModelOverview();
+    syncNavigationBlinking();
   });
 }
 
