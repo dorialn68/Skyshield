@@ -375,6 +375,8 @@ const modelFocusCard = document.getElementById("modelFocusCard");
 const modelFocusStation = document.getElementById("modelFocusStation");
 const modelFocusTitle = document.getElementById("modelFocusTitle");
 const modelFocusText = document.getElementById("modelFocusText");
+const modelFocusSpecs = document.getElementById("modelFocusSpecs");
+const modelFocusNote = document.getElementById("modelFocusNote");
 const modelOverviewControl = document.getElementById("modelOverviewControl");
 const modelFocusOverview = document.getElementById("modelFocusOverview");
 const modelStationsToggle = document.getElementById("modelStationsToggle");
@@ -384,19 +386,38 @@ let modelStationsVisible = true;
 let activeLightingPreset = "studio";
 let navigationBlinkTimer = null;
 let navigationBlinkOn = false;
+let engineRevealFrame = 0;
+let engineRevealProgress = 0;
+let cowlingBaseColorFactor = null;
 
 const modelFocusContent = {
   propeller: { station: "STA 01", title: "מערכת הנעה", text: "מדחף דו־להבי לבן בעל פיתול ופסיעה נראים; מישור הלהבים הוזז לאחור אל בסיס הכיפה הצמוד לבית המנוע." },
-  engine: { station: "STA 02", title: "יחידת הנעה", text: "בכל צד של מעטפת המנוע נגרע כונס NACA עדין, א־סימטרי ומדורג, המעמיק לאורך קימור החרטום ללא פתח עגול או שפה חיצונית בולטת." },
-  flightComputer: { station: "STA 03", title: "מחשב טיסה FCC", text: "ליבת בקרת הטיסה, הניווט והאוטונומיה של הפלטפורמה." },
+  engine: {
+    station: "STA 02",
+    title: "מנוע Rotax",
+    titleDirection: "rtl",
+    specsDirection: "ltr",
+    text: "מנוע Rotax 916 iS טורבו, ארבעה בוכנות שטוחות מאחורי החרטום, השומר על הספקו הנקוב גם באוויר דליל. בחרו בתחנה זו והמכסה נפתח: תיבת הפחתה, זוגות צילינדרים נגדיים והטורבו עצמו, בדיוק במקומם. מצערת, תערובת וקירור מנוהלים על ידי מחשב הטיסה, ולאורך קטעים שלמים של המשימה הוא פשוט נכבה ומניח לכנף לעבוד.",
+    secondaryText: "תחנה זו היא כלי הטיס Block 1. Block 0, אב הטיפוס, טס עם Rotax 914 F3.",
+    specs: [
+      ["Model", "Rotax 916 iS/iSc, turbo"],
+      ["Power", "160 hp / 137 hp cont."],
+      ["Layout", "Flat four, turbo"],
+      ["Block 0 engine", "Rotax 914 F3"]
+    ],
+    note: "הדמיית Cutaway קלת משקל להצגת הארכיטקטורה והמיקום במטוס"
+  },
+  flightComputer: { station: "STA 03", title: "מחשב משימה / FCC", text: "ליבת מחשוב משימה לעיבוד חיישנים, מיזוג מידע, ניווט מסייע ואוטונומיה. בקרת הטיסה הקריטית נשמרת כשכבה מוגנת ונפרדת." },
   datalink: { station: "STA 04", title: "קישור נתונים", text: "אנטנה קונפורמית לתקשורת מאובטחת ולרציפות משימה מעבר לקו הראייה." },
   landingGear: { station: "STA 05", title: "כן נסע ראשי", text: "כן נסע המחובר ברציפות לכנף עם חיפוי מוארך בצורת מגף, המסתיר את רוב הגלגל ומשאיר סהר קטן מהצמיג גלוי בתחתית." },
   wing: { station: "STA 06", title: "כנף למינרית", text: "כנף נמוכה וארוכת־מוטה עם קצות מורמים ונקיים. עדשות ניווט אדומה וירוקה ממוקמות בפינות החיצוניות של קצות הכנף ומהבהבות במצבי לילה והחשכה." },
   tail: { station: "STA 07", title: "מכלול זנב", text: "מכלול זנב T עם קווי ציר ברורים להגה הגובה ולהגה הכיוון וכן כן זנב קצר המחובר לגוף." },
-  remoteWeapon: { station: "STA 08", title: "צריח קינטי EO/IR", text: "צריח מיוצב עם חיפוי חיבור סגור המסתיר את הברגים, מערכת EO/IR, מעטפת קנה מחוררת וקנה חלול ושקוע." },
+  remoteWeapon: { station: "STA 08", title: "צריח קינטי EO/IR", text: "צריח מיוצב בקנה־מידה 0.75, הממוקם בשליש הקדמי של שורש הכנף. החיבור סגור, הברגים מוסתרים והקנה חלול ושקוע." },
   forwardCamera: { station: "STA 09", title: "מצלמת VR קדמית", text: "מערך חישה קדמי קטן וקונפורמי, הממוקם בגחון הקדמי לתמונת מצב ולהטסה מרחוק." },
-  fuselageBay: { station: "STA 10", title: "תא משימה", text: "נפח משימה שהוזז קדימה לעבר מרכז המסה ונסגר בחיפוי אורכי נמוך המיושר עם כיוון הזרימה." },
-  externalInterface: { station: "AUX 01", title: "בידוני דלק", text: "שני בידוני דלק חיצוניים יושבים מתחת לכנפיים על מתלים אווירודינמיים קצרים ואינם חלק ממעטפת הכנף." }
+  fuselageBay: { station: "STA 10", title: "תא שיגור רחפנים", text: "תא המשימה נסגר בחיפוי אליפטי נמוך המיושר עם הזרימה. פס אורך עדין מסמן את קו הפתיחה של דלת השיגור." },
+  externalInterface: { station: "AUX 01", title: "בידוני דלק", text: "שני בידוני הדלק הוקטנו לקנה־מידה 0.8 ונשארו מתחת לכנפיים על מתלים אווירודינמיים קצרים." },
+  navigationLights: { station: "NAV 01", title: "תאורת ניווט", text: "עדשה אדומה בקצה כנף שמאל, עדשה ירוקה בקצה כנף ימין ועדשה לבנה הפונה לאחור. התאורה מופעלת במצבי לילה והחשכה." },
+  ewResilience: { station: "EW 01", title: "שרידות בתנאי חסימה", text: "מצבי תגובה מוגדרים לאובדן קישור או חסימה: המשך מוגבל, חזרה בטוחה או המתנה, לצד הקלטה מקומית וניסיונות חידוש קשר." }
 };
 
 const lightingPresets = {
@@ -449,8 +470,13 @@ function setNavigationLights(on) {
   materials.forEach((material) => {
     const isPort = material.name === "Port navigation lens";
     const isStarboard = material.name === "Starboard navigation lens";
-    if (!isPort && !isStarboard) return;
-    const color = isPort ? [1.0, 0.002, 0.001] : [0.002, 1.0, 0.028];
+    const isAft = material.name === "Aft navigation lens";
+    if (!isPort && !isStarboard && !isAft) return;
+    const color = isPort
+      ? [1.0, 0.002, 0.001]
+      : isStarboard
+        ? [0.002, 1.0, 0.028]
+        : [1.0, 1.0, 1.0];
     material.setEmissiveFactor(on ? color : [0, 0, 0]);
     if (typeof material.setEmissiveStrength === "function") {
       material.setEmissiveStrength(on ? 10.0 : 0.0);
@@ -512,13 +538,91 @@ exposureControl?.addEventListener("input", () => {
 
 document.addEventListener("visibilitychange", syncNavigationBlinking);
 
+function findModelMaterial(name) {
+  return (model?.model?.materials ?? []).find((material) => material.name === name);
+}
+
+function applyEngineReveal(progress) {
+  const cowling = findModelMaterial("Engine cutaway cowling");
+  if (!cowling?.pbrMetallicRoughness) return;
+  if (!cowlingBaseColorFactor) {
+    cowlingBaseColorFactor = Array.from(cowling.pbrMetallicRoughness.baseColorFactor ?? [1, 1, 1, 1]);
+  }
+  const base = cowlingBaseColorFactor;
+  const alpha = 1 - progress * 0.86;
+  cowling.setAlphaMode(progress > 0 ? "BLEND" : "OPAQUE");
+  cowling.pbrMetallicRoughness.setBaseColorFactor([base[0], base[1], base[2], alpha]);
+
+  (model?.model?.materials ?? []).forEach((material) => {
+    if (!material.name.startsWith("Rotax 916")) return;
+    if (typeof material.setEmissiveFactor === "function") {
+      material.setEmissiveFactor([0.035 * progress, 0.080 * progress, 0.105 * progress]);
+    }
+    if (typeof material.setEmissiveStrength === "function") {
+      material.setEmissiveStrength(0.72 * progress);
+    }
+  });
+}
+
+function setEngineReveal(revealed) {
+  if (!model?.model) return;
+  const target = revealed ? 1 : 0;
+  if (modelStage) modelStage.dataset.cutaway = revealed ? "engine" : "closed";
+  if (engineRevealFrame) window.cancelAnimationFrame(engineRevealFrame);
+  const start = engineRevealProgress;
+  const distance = Math.abs(target - start);
+  if (!distance || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    engineRevealProgress = target;
+    applyEngineReveal(target);
+    return;
+  }
+  const startedAt = performance.now();
+  const duration = 780 * distance;
+  const animate = (time) => {
+    const elapsed = Math.min(1, (time - startedAt) / duration);
+    const eased = 1 - Math.pow(1 - elapsed, 3);
+    engineRevealProgress = start + (target - start) * eased;
+    applyEngineReveal(engineRevealProgress);
+    if (elapsed < 1) {
+      engineRevealFrame = window.requestAnimationFrame(animate);
+    } else {
+      engineRevealFrame = 0;
+      engineRevealProgress = target;
+      applyEngineReveal(target);
+    }
+  };
+  engineRevealFrame = window.requestAnimationFrame(animate);
+}
+
 function updateModelFocusCard() {
   if (!activeModelComponent || !modelFocusCard || !modelFocusTitle || !modelFocusText) return;
   const content = modelFocusContent[activeModelComponent];
   if (!content) return;
   if (modelFocusStation) modelFocusStation.textContent = content.station;
   modelFocusTitle.textContent = content.title;
+  modelFocusTitle.dir = content.titleDirection ?? (content.specs?.length ? "ltr" : "rtl");
   modelFocusText.textContent = content.text;
+  if (content.secondaryText) {
+    modelFocusText.append(document.createElement("br"), document.createElement("br"), content.secondaryText);
+  }
+  if (modelFocusSpecs) {
+    modelFocusSpecs.replaceChildren();
+    modelFocusSpecs.dir = content.specsDirection ?? "rtl";
+    (content.specs ?? []).forEach(([label, value]) => {
+      const term = document.createElement("dt");
+      const definition = document.createElement("dd");
+      term.textContent = label;
+      term.dir = /^[A-Za-z]/.test(label) ? "ltr" : "rtl";
+      definition.textContent = value;
+      definition.dir = "ltr";
+      modelFocusSpecs.append(term, definition);
+    });
+    modelFocusSpecs.hidden = !content.specs?.length;
+  }
+  if (modelFocusNote) {
+    modelFocusNote.textContent = content.note ?? "";
+    modelFocusNote.hidden = !content.note;
+  }
 }
 
 let hotspotDensityFrame = 0;
@@ -531,9 +635,23 @@ function updateHotspotDensity() {
   const visibleHalfHeight = orbit.radius * Math.tan(fieldOfView * Math.PI / 360);
   const maximumLevel = visibleHalfHeight > 3.2 ? 1 : visibleHalfHeight > 1.35 ? 2 : 3;
   modelStage.dataset.hotspotDensity = maximumLevel === 1 ? "overview" : maximumLevel === 2 ? "systems" : "detail";
-  modelHotspots.forEach((hotspot) => {
+  modelHotspots.forEach((hotspot, index) => {
+    const detailLevel = Number(hotspot.dataset.detailLevel ?? 1);
+    const shouldShow = modelStationsVisible;
+    hotspot.dataset.lod = detailLevel > maximumLevel ? "compact" : "full";
     const isActive = hotspot.dataset.component === activeModelComponent;
-    const shouldShow = modelStationsVisible && (isActive || Number(hotspot.dataset.detailLevel ?? 1) <= maximumLevel);
+    const offsetRadius = isActive || maximumLevel === 3
+      ? 0
+      : maximumLevel === 1
+        ? detailLevel === 1
+          ? 5
+          : detailLevel === 2
+            ? hotspot.dataset.component === "engine" ? 70 : 10
+            : 14
+        : detailLevel === 3 ? 8 : 3;
+    const offsetAngle = index * 2.3999632297;
+    hotspot.style.setProperty("--station-offset-x", `${Math.cos(offsetAngle) * offsetRadius}px`);
+    hotspot.style.setProperty("--station-offset-y", `${Math.sin(offsetAngle) * offsetRadius}px`);
     hotspot.hidden = !shouldShow;
     hotspot.setAttribute("aria-hidden", String(!shouldShow));
   });
@@ -547,6 +665,7 @@ function scheduleHotspotDensityUpdate() {
 function focusModelComponent(hotspot) {
   if (!model || !modelStationsVisible) return;
   activeModelComponent = hotspot.dataset.component;
+  setEngineReveal(activeModelComponent === "engine");
   hotspot.hidden = false;
   hotspot.setAttribute("aria-hidden", "false");
   model.removeAttribute("auto-rotate");
@@ -559,7 +678,12 @@ function focusModelComponent(hotspot) {
     button.setAttribute("aria-pressed", String(selected));
   });
   updateModelFocusCard();
-  if (modelFocusCard) modelFocusCard.hidden = false;
+  if (modelFocusCard) {
+    modelFocusCard.hidden = false;
+    modelFocusCard.classList.remove("is-entering");
+    void modelFocusCard.offsetWidth;
+    modelFocusCard.classList.add("is-entering");
+  }
   scheduleHotspotDensityUpdate();
 }
 
@@ -574,6 +698,7 @@ function setModelStationsVisibility(visible) {
 
   if (!visible) {
     activeModelComponent = null;
+    setEngineReveal(false);
     modelHotspots.forEach((hotspot) => {
       hotspot.hidden = true;
       hotspot.classList.remove("active");
@@ -589,6 +714,7 @@ function setModelStationsVisibility(visible) {
 function resetModelOverview() {
   if (!model) return;
   activeModelComponent = null;
+  setEngineReveal(false);
   model.removeAttribute("auto-rotate");
   model.cameraTarget = "auto auto auto";
   model.cameraOrbit = "-34deg 83deg 118%";

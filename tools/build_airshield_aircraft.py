@@ -16,12 +16,12 @@ from pathlib import Path
 
 import bpy
 import numpy as np
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_GLB = ROOT / "airshield-ximango-direct-tanks-v29.glb"
-OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v29.jpg"
+OUTPUT_GLB = ROOT / "airshield-ximango-direct-tanks-v30.glb"
+OUTPUT_RENDER = ROOT / "airshield-xmango-hero-v30.jpg"
 TEXTURE_DIR = ROOT / "textures"
 SKIN_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_skin_imagegen_source_v2.png"
 GIMBAL_IMAGEGEN_SOURCE = TEXTURE_DIR / "airshield_gimbal_imagegen_source_v2.png"
@@ -59,6 +59,7 @@ def material(
 
 
 IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
+ENGINE_COWLING = material("Engine cutaway cowling", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
 HARDWARE_GRAY = material("Dark gray external hardware", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
 GIMBAL_ALLOY = material("Bead-blasted kinetic gimbal alloy", (0.31, 0.33, 0.34, 1.0), 0.68, 0.32)
@@ -77,11 +78,17 @@ STEEL = material("Mechanism steel", (0.18, 0.20, 0.21, 1.0), 0.72, 0.24)
 ALLOY = material("Machined wheel alloy", (0.34, 0.355, 0.36, 1.0), 0.78, 0.20)
 RAIL = material("Empty launch rail anodized alloy", (0.075, 0.083, 0.086, 1.0), 0.62, 0.30)
 SEAM = material("Composite panel seam", (0.055, 0.062, 0.064, 1.0), 0.04, 0.58)
+ROTAX_ALLOY = material("Rotax 916 engine alloy", (0.235, 0.255, 0.265, 1.0), 0.72, 0.25)
+ROTAX_DARK = material("Rotax 916 engine dark hardware", (0.035, 0.045, 0.050, 1.0), 0.38, 0.30)
+ROTAX_HEAD = material("Rotax 916 cylinder-head finish", (0.105, 0.115, 0.118, 1.0), 0.60, 0.24)
+ROTAX_TURBO = material("Rotax 916 turbocharger", (0.30, 0.235, 0.165, 1.0), 0.76, 0.26)
 NAV_RED = material("Port navigation lens", (0.46, 0.004, 0.003, 1.0), 0.0, 0.14)
 NAV_GREEN = material("Starboard navigation lens", (0.003, 0.42, 0.045, 1.0), 0.0, 0.14)
+NAV_WHITE = material("Aft navigation lens", (0.72, 0.76, 0.78, 1.0), 0.0, 0.12)
 for navigation_material, emission_color in (
     (NAV_RED, (1.0, 0.002, 0.001, 1.0)),
     (NAV_GREEN, (0.002, 1.0, 0.028, 1.0)),
+    (NAV_WHITE, (1.0, 1.0, 1.0, 1.0)),
 ):
     navigation_bsdf = navigation_material.node_tree.nodes.get("Principled BSDF")
     if navigation_bsdf:
@@ -276,17 +283,18 @@ def build_pbr_materials() -> None:
         rgba_from_gray(skin_occlusion),
         "Non-Color",
     )
-    textured_principled_material(
-        IAF_GRAY,
-        skin_base,
-        skin_rough,
-        skin_normal,
-        metallic=0.015,
-        normal_strength=0.28,
-        coat_weight=0.12,
-        coat_roughness=0.40,
-    )
-    attach_gltf_occlusion(IAF_GRAY, skin_ao)
+    for skin_material in (IAF_GRAY, ENGINE_COWLING):
+        textured_principled_material(
+            skin_material,
+            skin_base,
+            skin_rough,
+            skin_normal,
+            metallic=0.015,
+            normal_strength=0.28,
+            coat_weight=0.12,
+            coat_roughness=0.40,
+        )
+        attach_gltf_occlusion(skin_material, skin_ao)
 
     # The EO/IR ball, stabilized weapon housing and axle caps share a dark,
     # fine-grain aerospace coating derived from a second image-generated scan.
@@ -442,6 +450,7 @@ def build_pbr_materials() -> None:
     for nav_material, color in (
         (NAV_RED, (0.62, 0.01, 0.006, 1.0)),
         (NAV_GREEN, (0.006, 0.55, 0.08, 1.0)),
+        (NAV_WHITE, (0.82, 0.88, 0.90, 1.0)),
     ):
         nav_bsdf = nav_material.node_tree.nodes.get("Principled BSDF")
         set_bsdf_input(nav_bsdf, "Coat Weight", 1.0)
@@ -993,17 +1002,28 @@ def propeller_blade(
     angle: float,
     parent: bpy.types.Object,
 ) -> bpy.types.Object:
-    """Tapered, twisted 0.85 m blade mounted at the spinner's aft plane."""
+    """Smooth tapered and twisted 0.87 m blade at the spinner's aft plane."""
+    # More radial stations and elliptical section loops prevent the propeller
+    # from collapsing into a long faceted bar when viewed edge-on.  The root is
+    # buried inside the spinner, the broad working section transitions gently,
+    # and the rounded tip closes without a bevel-induced spike.
     # radius, chord, geometric pitch, section thickness
     radial_sections = [
-        (0.11, 0.16, 34.0, 0.032),
-        (0.48, 0.12, 24.0, 0.026),
-        (0.85, 0.055, 15.0, 0.016),
+        (0.10, 0.130, 34.0, 0.030),
+        (0.18, 0.158, 32.0, 0.032),
+        (0.30, 0.164, 29.0, 0.031),
+        (0.43, 0.148, 26.0, 0.028),
+        (0.57, 0.124, 23.0, 0.025),
+        (0.69, 0.098, 20.0, 0.021),
+        (0.79, 0.070, 17.0, 0.017),
+        (0.855, 0.038, 15.0, 0.012),
+        (0.875, 0.010, 14.0, 0.006),
     ]
     blade_plane_x = -3.925
     radial_y, radial_z = math.sin(angle), math.cos(angle)
     chord_y, chord_z = math.cos(angle), -math.sin(angle)
     verts: list[tuple[float, float, float]] = []
+    section_segments = 12
     for radius, chord, pitch_deg, thickness in radial_sections:
         center_y = radial_y * radius
         center_z = radial_z * radius
@@ -1011,34 +1031,37 @@ def propeller_blade(
         chord_axis = Vector((math.sin(pitch), chord_y * math.cos(pitch), chord_z * math.cos(pitch)))
         thickness_axis = Vector((math.cos(pitch), -chord_y * math.sin(pitch), -chord_z * math.sin(pitch)))
         center = Vector((blade_plane_x, center_y, center_z))
-        for thickness_sign in (-1.0, 1.0):
-            for chord_sign in (-1.0, 1.0):
-                vertex = (
-                    center
-                    + chord_axis * chord_sign * chord * 0.5
-                    + thickness_axis * thickness_sign * thickness * 0.5
-                )
-                verts.append(tuple(vertex))
+        for segment in range(section_segments):
+            section_angle = 2.0 * math.pi * segment / section_segments
+            # A slightly fuller leading half and restrained trailing half read
+            # as an aerodynamic blade section without adding costly geometry.
+            chord_factor = math.cos(section_angle)
+            thickness_factor = math.sin(section_angle)
+            if chord_factor < 0.0:
+                chord_factor *= 0.90
+            vertex = (
+                center
+                + chord_axis * chord_factor * chord * 0.5
+                + thickness_axis * thickness_factor * thickness * 0.5
+            )
+            verts.append(tuple(vertex))
     faces: list[tuple[int, ...]] = []
     for section in range(len(radial_sections) - 1):
-        a = section * 4
-        b = (section + 1) * 4
-        faces.extend(
-            [
-                (a, b, b + 1, a + 1),
-                (a + 2, a + 3, b + 3, b + 2),
-                (a, a + 2, b + 2, b),
-                (a + 1, b + 1, b + 3, a + 3),
-            ]
-        )
-    faces.extend([(0, 1, 3, 2), (8, 10, 11, 9)])
+        first = section * section_segments
+        following = (section + 1) * section_segments
+        for segment in range(section_segments):
+            nxt = (segment + 1) % section_segments
+            faces.append((first + segment, following + segment, following + nxt, first + nxt))
+    faces.append(tuple(range(section_segments - 1, -1, -1)))
+    last = (len(radial_sections) - 1) * section_segments
+    faces.append(tuple(last + segment for segment in range(section_segments)))
     mesh = bpy.data.meshes.new(f"{name} mesh")
     mesh.from_pydata(verts, [], faces)
     mesh.update()
     blade = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(blade)
     assign(blade, PROP_WHITE)
-    bevel(blade, 0.018, 3)
+    bevel(blade, 0.004, 2)
     smooth(blade)
     mark_export(blade)
     blade.parent = parent
@@ -1144,6 +1167,198 @@ def create_asymmetric_fuselage(
     smooth(obj)
     mark_export(obj)
     return obj
+
+
+def assign_forward_material(
+    obj: bpy.types.Object,
+    mat: bpy.types.Material,
+    maximum_centroid_x: float,
+) -> None:
+    """Give the forward cowling its own runtime-fadeable material slot."""
+    material_index = len(obj.data.materials)
+    obj.data.materials.append(mat)
+    for polygon in obj.data.polygons:
+        centroid_x = sum(obj.data.vertices[index].co.x for index in polygon.vertices) / len(polygon.vertices)
+        if centroid_x <= maximum_centroid_x:
+            polygon.material_index = material_index
+
+
+def create_rotax_916_engine(parent: bpy.types.Object) -> None:
+    """Build a lightweight presentation cutaway of a Rotax 916 installation.
+
+    The assembly captures the readable signatures of the installation rather
+    than manufacturing detail: reduction gearbox, compact crankcase, two pairs
+    of opposed cylinders, intake plenum, turbocharger, intercooler and mount.
+    It remains inside the closed cowling until STA 02 fades that shell at run
+    time in model-viewer.
+    """
+
+    def parent_engine(obj: bpy.types.Object) -> bpy.types.Object:
+        obj.parent = parent
+        obj["system_station"] = "STA 02"
+        obj["visualization_detail"] = "low-resolution Rotax 916 iS/iSc cutaway"
+        return obj
+
+    parent_engine(
+        cube(
+            "Rotax 916 central crankcase",
+            (-3.235, 0.0, -0.005),
+            (0.285, 0.135, 0.125),
+            ROTAX_ALLOY,
+            edge=0.045,
+        )
+    )
+    parent_engine(
+        cube(
+            "Rotax 916 lower oil-sump case",
+            (-3.215, 0.0, -0.145),
+            (0.215, 0.115, 0.055),
+            ROTAX_DARK,
+            edge=0.026,
+        )
+    )
+
+    # Reduction gearbox and the short drive line sit immediately behind the
+    # spinner, making the front-to-back installation legible in the cutaway.
+    for name, start_x, end_x, radius, mat in (
+        ("Rotax 916 propeller drive shaft", -3.865, -3.690, 0.038, ROTAX_DARK),
+        ("Rotax 916 reduction gearbox forward stage", -3.710, -3.590, 0.155, ROTAX_ALLOY),
+        ("Rotax 916 reduction gearbox aft stage", -3.610, -3.490, 0.185, ROTAX_HEAD),
+        ("Rotax 916 gearbox collar", -3.505, -3.455, 0.128, ROTAX_DARK),
+    ):
+        parent_engine(cylinder_between(name, (start_x, 0.0, 0.0), (end_x, 0.0, 0.0), radius, mat, vertices=24))
+
+    # Two opposed cylinder pairs. Alternating fore/aft offsets keep the compact
+    # flat-four readable from either side instead of collapsing into one block.
+    for pair_index, cylinder_x in enumerate((-3.385, -3.105), start=1):
+        for side, side_name in ((1.0, "port"), (-1.0, "starboard")):
+            parent_engine(
+                cylinder_between(
+                    f"Rotax 916 cylinder {pair_index} {side_name}",
+                    (cylinder_x, side * 0.105, 0.025),
+                    (cylinder_x, side * 0.270, 0.025),
+                    0.080,
+                    ROTAX_HEAD,
+                    vertices=20,
+                )
+            )
+            parent_engine(
+                cube(
+                    f"Rotax 916 cylinder-head cover {pair_index} {side_name}",
+                    (cylinder_x, side * 0.305, 0.025),
+                    (0.105, 0.042, 0.095),
+                    ROTAX_ALLOY,
+                    edge=0.025,
+                )
+            )
+            for fin_offset in (-0.052, -0.026, 0.0, 0.026, 0.052):
+                parent_engine(
+                    cube(
+                        f"Rotax 916 cooling fin {pair_index} {side_name} {fin_offset:+.3f}",
+                        (cylinder_x + fin_offset, side * 0.235, 0.025),
+                        (0.006, 0.115, 0.092),
+                        ROTAX_DARK,
+                        edge=0.003,
+                    )
+                )
+
+    parent_engine(
+        cube(
+            "Rotax 916 intake plenum",
+            (-3.155, 0.0, 0.165),
+            (0.250, 0.120, 0.055),
+            ROTAX_DARK,
+            edge=0.035,
+        )
+    )
+    for cylinder_x in (-3.385, -3.105):
+        for side in (-1.0, 1.0):
+            parent_engine(
+                cylinder_between(
+                    "Rotax 916 intake runner",
+                    (cylinder_x, side * 0.080, 0.155),
+                    (cylinder_x, side * 0.245, 0.095),
+                    0.018,
+                    ROTAX_DARK,
+                    vertices=12,
+                )
+            )
+
+    # A side-facing compressor scroll makes the turbo unmistakable through the
+    # port cutaway without increasing polygon count excessively.
+    bpy.ops.mesh.primitive_torus_add(
+        major_segments=24,
+        minor_segments=10,
+        location=(-2.870, 0.205, -0.070),
+        major_radius=0.092,
+        minor_radius=0.032,
+        rotation=(math.radians(90), 0.0, 0.0),
+    )
+    turbo_scroll = bpy.context.object
+    turbo_scroll.name = "Rotax 916 turbocharger compressor scroll"
+    assign(turbo_scroll, ROTAX_TURBO)
+    smooth(turbo_scroll)
+    mark_export(turbo_scroll)
+    parent_engine(turbo_scroll)
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 turbocharger core",
+            (-2.870, 0.160, -0.070),
+            (-2.870, 0.275, -0.070),
+            0.050,
+            ROTAX_DARK,
+            vertices=20,
+        )
+    )
+    parent_engine(
+        cylinder_between(
+            "Rotax 916 charge pipe",
+            (-2.865, 0.205, 0.025),
+            (-3.035, 0.120, 0.150),
+            0.024,
+            ROTAX_ALLOY,
+            vertices=14,
+        )
+    )
+
+    parent_engine(
+        cube(
+            "Rotax 916 intercooler",
+            (-2.735, 0.0, 0.080),
+            (0.075, 0.245, 0.145),
+            ROTAX_HEAD,
+            edge=0.018,
+        )
+    )
+    for z in (-0.015, 0.030, 0.075, 0.120, 0.165):
+        parent_engine(
+            cube(
+                f"Rotax 916 intercooler fin {z:+.3f}",
+                (-2.660, 0.0, z),
+                (0.008, 0.235, 0.007),
+                ROTAX_ALLOY,
+                edge=0.002,
+            )
+        )
+
+    # A restrained four-point truss locates the powerplant inside the airframe.
+    for side in (-1.0, 1.0):
+        for z in (-0.135, 0.145):
+            parent_engine(
+                cylinder_between(
+                    "Rotax 916 tubular engine mount",
+                    (-3.300, side * 0.145, z * 0.72),
+                    (-2.585, side * 0.255, z),
+                    0.012,
+                    ROTAX_DARK,
+                    vertices=10,
+                )
+            )
+
+    parent["engine_model"] = "Rotax 916 iS/iSc, turbo"
+    parent["engine_takeoff_power_hp"] = 160
+    parent["engine_continuous_power_hp"] = 137
+    parent["engine_visualization"] = "illustrative low-resolution cutaway, not manufacturing geometry"
 
 
 def radial_store_fin(
@@ -1446,23 +1661,41 @@ def add_airframe_surface_details(root: bpy.types.Object) -> None:
             root,
         )
 
-        # Navigation lenses sit on the actual outermost upper winglet corners,
-        # not on the inboard end of the main wing tip. Their emission is driven
-        # by the web presentation so it can blink only when the scene is dimmed.
+        # Position lights sit at the outer forward corners of the winglets.
+        # Port/left is red and starboard/right is green. Placing the lenses at
+        # the maximum lateral extent keeps their arcs legible from ahead and
+        # from the side instead of floating above the middle of each winglet.
         bpy.ops.mesh.primitive_uv_sphere_add(
             segments=48,
             ring_count=24,
-            radius=0.044,
-            location=(-1.30, 9.000 * side, 0.785),
+            radius=0.028,
+            location=(-1.465, 8.986 * side, 0.752),
         )
         navigation_light = bpy.context.object
         navigation_light.name = f"{label} navigation lens"
-        navigation_light.scale = (1.05, 0.70, 0.78)
+        navigation_light.scale = (1.10, 0.75, 1.30)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         assign(navigation_light, NAV_RED if side > 0 else NAV_GREEN)
         smooth(navigation_light)
         mark_export(navigation_light)
         navigation_light.parent = root
+
+    # A white aft-facing position light completes the three-color navigation
+    # set without adding a protruding beacon or unrelated external hardware.
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=40,
+        ring_count=20,
+        radius=0.024,
+        location=(3.925, 0.0, -0.105),
+    )
+    aft_navigation_light = bpy.context.object
+    aft_navigation_light.name = "Aft navigation lens"
+    aft_navigation_light.scale = (1.18, 0.72, 0.72)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    assign(aft_navigation_light, NAV_WHITE)
+    smooth(aft_navigation_light)
+    mark_export(aft_navigation_light)
+    aft_navigation_light.parent = root
 
 def create_aircraft() -> bpy.types.Object:
     root = bpy.data.objects.new("AI.onSuper visualization model", None)
@@ -1476,6 +1709,9 @@ def create_aircraft() -> bpy.types.Object:
     root["reference_gear_axis_spacing_m"] = 5.35
     root["landing_gear_layout"] = "two wing-mounted main gears with extended aft-and-outboard-canted legs, asymmetric right-angle wedge covers and exposed tire contact sections, plus compact tail wheel; no nose wheel"
     root["external_store_visualization"] = "two symmetric nonfunctional external fuel-tank visualizations carried below the wing skins on short streamlined pylons"
+    root["external_fuel_tank_scale"] = 0.80
+    root["kinetic_gimbal_scale"] = 0.75
+    root["kinetic_gimbal_mount_x_m"] = -1.82
     root["mission_system_geometry"] = "illustrative external visualization only"
     # A compact tail assembly creates the characteristic tail-down ground
     # attitude while keeping all three tires on the same apron plane.
@@ -1511,7 +1747,13 @@ def create_aircraft() -> bpy.types.Object:
         ],
         IAF_GRAY,
     )
+    assign_forward_material(fuselage, ENGINE_COWLING, -2.46)
     fuselage.parent = root
+
+    # STA 02 now resolves to a real internal powerplant. It is hidden by the
+    # opaque cowling in overview and revealed by a dedicated material fade in
+    # the web experience, leaving the external aerodynamic model unchanged.
+    create_rotax_916_engine(root)
 
     # There is no cockpit, canopy or separate dorsal avionics cover. The
     # original fuselage loft is the uninterrupted closed upper surface.
@@ -1530,11 +1772,23 @@ def create_aircraft() -> bpy.types.Object:
         tip.parent = root
 
     # Two presentation-only external fuel tanks sit clearly below the wing skin
-    # on short, streamlined pylons.  The separation makes the removable stores
-    # legible without introducing exposed suspension pins or mounting blocks.
+    # on short, streamlined pylons. Their envelopes are reduced uniformly to
+    # 80 percent while their top contact remains captured by the pylons.
+    external_tank_scale = 0.80
+    external_tank_origin_x = -1.38
+    external_tank_sections = (
+        (-2.48, 0.020, 0.018),
+        (-2.39, 0.085, 0.078),
+        (-2.20, 0.158, 0.145),
+        (-1.92, 0.202, 0.184),
+        (-1.28, 0.212, 0.192),
+        (-0.82, 0.188, 0.170),
+        (-0.48, 0.116, 0.102),
+        (-0.28, 0.028, 0.024),
+    )
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         station_y = 2.68 * side
-        tank_center_z = -0.455
+        tank_center_z = -0.440
         tank_pylon = extruded_plate_y(
             f"{label} external fuel-tank streamlined pylon",
             [
@@ -1552,14 +1806,13 @@ def create_aircraft() -> bpy.types.Object:
         tank = create_loft(
             f"{label} external fuel tank",
             [
-                (-2.48, 0.020, 0.018, tank_center_z),
-                (-2.39, 0.085, 0.078, tank_center_z),
-                (-2.20, 0.158, 0.145, tank_center_z),
-                (-1.92, 0.202, 0.184, tank_center_z),
-                (-1.28, 0.212, 0.192, tank_center_z),
-                (-0.82, 0.188, 0.170, tank_center_z),
-                (-0.48, 0.116, 0.102, tank_center_z),
-                (-0.28, 0.028, 0.024, tank_center_z),
+                (
+                    external_tank_origin_x + (x - external_tank_origin_x) * external_tank_scale,
+                    radius_y * external_tank_scale,
+                    radius_z * external_tank_scale,
+                    tank_center_z,
+                )
+                for x, radius_y, radius_z in external_tank_sections
             ],
             IAF_GRAY,
             ring_segments=56,
@@ -1574,11 +1827,11 @@ def create_aircraft() -> bpy.types.Object:
         ):
             elliptical_ring(
                 f"{label} fuel-tank shell joint",
-                x,
-                radius_y,
-                radius_z,
+                external_tank_origin_x + (x - external_tank_origin_x) * external_tank_scale,
+                radius_y * external_tank_scale,
+                radius_z * external_tank_scale,
                 tank_center_z,
-                0.0036,
+                0.0032,
                 SEAM,
                 root,
                 segments=56,
@@ -1941,6 +2194,21 @@ def create_aircraft() -> bpy.types.Object:
         ring_segments=48,
     )
     mission_bay_fairing.parent = root
+
+    # A restrained longitudinal split line identifies the drone-deployment
+    # hatch without opening the bay or adding a broad cross-flow door edge.
+    surface_detail_line(
+        "Drone deployment hatch longitudinal seam",
+        [
+            (-0.64, 0.0, -0.226),
+            (-0.50, 0.0, -0.251),
+            (-0.08, 0.0, -0.251),
+            (0.06, 0.0, -0.226),
+        ],
+        0.0055,
+        SEAM,
+        root,
+    )
 
     # The former aft EO/IR ball is removed. A much smaller conformal VR/visual
     # navigation camera is integrated farther aft on the forward belly, away
@@ -2436,6 +2704,7 @@ def create_aircraft() -> bpy.types.Object:
         vertices=48,
     )
     shroud_liner.parent = root
+    vent_insets: list[bpy.types.Object] = []
     for ring_index, x_pos in enumerate((-1.335, -1.410, -1.485, -1.560, -1.635)):
         angle_offset = (ring_index % 2) * math.pi / 8.0
         for aperture_index in range(8):
@@ -2451,6 +2720,21 @@ def create_aircraft() -> bpy.types.Object:
                 vertices=16,
             )
             vent_inset.parent = root
+            vent_insets.append(vent_inset)
+
+    # Export the perforation pattern as one mesh. Keeping forty identically
+    # named, separately transformed nodes caused the final vent to lose its
+    # local rotation in the GLB and appear as a detached black ring. Joining
+    # them before the shared gimbal transform preserves every recess in place.
+    primary_vent = vent_insets[0]
+    for vent_inset in vent_insets[1:]:
+        EXPORT_OBJECTS.remove(vent_inset)
+    bpy.ops.object.select_all(action="DESELECT")
+    for vent_inset in vent_insets:
+        vent_inset.select_set(True)
+    bpy.context.view_layer.objects.active = primary_vent
+    bpy.ops.object.join()
+    primary_vent.name = "Integrated gimbal shroud recessed vent array"
     barrel = hollow_cylinder_between(
         "Integrated gimbal exposed precision barrel",
         (-1.635, gun_y, gun_z),
@@ -2497,35 +2781,34 @@ def create_aircraft() -> bpy.types.Object:
         vertices=40,
     )
     muzzle_face.parent = root
-    bore_liner = open_tube_between(
-        "Integrated gimbal dark hollow-bore inner wall",
-        (-1.994, gun_y, gun_z),
-        (-1.625, gun_y, gun_z),
-        0.0150,
-        BORE_VOID,
-        vertices=40,
-    )
-    bore_liner.parent = root
-    bore_termination = cylinder_between(
-        "Integrated gimbal non-reflective deep bore termination",
-        (-1.615, gun_y, gun_z),
-        (-1.625, gun_y, gun_z),
-        0.0145,
-        BORE_VOID,
-        vertices=40,
-    )
-    for polygon in bore_termination.data.polygons:
-        if len(polygon.vertices) > 4:
-            polygon.use_smooth = False
-    bore_termination.parent = root
+    # The barrel, collars, muzzle body and muzzle face are authored as hollow
+    # cylinders and already provide the visible recessed opening. A separate
+    # inner tube and rear cap became detached by the shared gimbal transform,
+    # so both redundant internal pieces are intentionally omitted.
 
-    # Move the complete mounted assembly forward to the rear third of the wing
-    # root chord. All components shift together, preserving every mechanical
-    # connection while clearing the center-of-mass-adjacent mission bay.
-    gimbal_forward_shift = -0.34
+    # Scale the complete kinetic gimbal to 75 percent and move its mounting
+    # axis into the forward third of the root chord. A shared transform keeps
+    # the barrel, optics, yoke, shroud and aircraft interface mechanically
+    # continuous instead of shifting individual pieces independently.
+    gimbal_scale = 0.75
+    gimbal_source_pivot = Vector((turret_x, turret_y, -0.350))
+    gimbal_target_pivot = Vector((-1.82, turret_y, -0.350))
+    gimbal_group = bpy.data.objects.new("Kinetic gimbal 0.75 forward-third transform", None)
+    bpy.context.collection.objects.link(gimbal_group)
+    gimbal_group.parent = root
+    mark_export(gimbal_group)
     for component in tuple(EXPORT_OBJECTS):
-        if component.name.startswith("Integrated gimbal"):
-            component.location.x += gimbal_forward_shift
+        if not component.name.startswith("Integrated gimbal"):
+            continue
+        component_local = component.matrix_local.copy()
+        component.parent = gimbal_group
+        component.matrix_parent_inverse = Matrix.Identity(4)
+        component.matrix_basis = component_local
+    gimbal_group.matrix_local = (
+        Matrix.Translation(gimbal_target_pivot)
+        @ Matrix.Scale(gimbal_scale, 4)
+        @ Matrix.Translation(-gimbal_source_pivot)
+    )
 
     # Replace the dorsal hump with a flush conformal communications panel.
     datalink_panel = cube(

@@ -343,6 +343,155 @@ body.v2-page {
 }
 .model-stations-toggle.is-active > b { color: var(--v2-blue-bright); }
 .hero-model[data-stations-visible="false"] .model-hotspot { pointer-events: none; }
+.model-station-register {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 13px;
+  overflow-x: auto;
+  color: #7f8b91;
+  background: rgba(255,255,255,.018);
+  border-block-start: 1px solid rgba(255,255,255,.09);
+  direction: rtl;
+  font-family: "Inter Tight", "Heebo", sans-serif;
+  font-size: 9px;
+  letter-spacing: .055em;
+  scrollbar-width: thin;
+}
+.model-station-register strong {
+  margin-inline-end: 4px;
+  color: #c7d0d3;
+  font-family: "Heebo", Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.model-station-register span {
+  padding: 4px 7px;
+  color: #aeb9bd;
+  border: 1px solid rgba(255,255,255,.13);
+  white-space: nowrap;
+}
+.model-hotspot[data-lod="compact"] { opacity: .72; }
+.v2-model .model-hotspot {
+  translate: var(--station-offset-x, 0px) var(--station-offset-y, 0px);
+  transition: opacity 180ms ease, filter 180ms ease, transform 180ms ease, translate 180ms ease;
+}
+.model-hotspot[data-lod="compact"] .hotspot-index::after { display: none; }
+.hero-model[data-hotspot-density="overview"] .model-hotspot[data-lod="compact"] .hotspot-index {
+  width: 17px;
+  height: 17px;
+  flex-basis: 17px;
+  font-size: 6px;
+  border-color: rgba(255,255,255,.65);
+  box-shadow: 0 0 0 3px rgba(23,101,143,.13), 0 3px 10px rgba(0,0,0,.2);
+}
+.hero-model[data-hotspot-density="systems"] .model-hotspot[data-lod="compact"] .hotspot-index {
+  width: 21px;
+  height: 21px;
+  flex-basis: 21px;
+  font-size: 7px;
+}
+.hero-model[data-hotspot-density="overview"] .model-hotspot:not([data-lod="compact"]) .hotspot-index {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+}
+.v2-model .model-hotspot:not([data-visible]) { opacity: .12; }
+.v2-model .model-focus-card {
+  width: min(392px, calc(100% - 36px));
+  max-height: calc(100% - 36px);
+  padding: 20px 22px 18px;
+  overflow: auto;
+  color: #f1f5f6;
+  border-color: rgba(170,218,236,.30);
+  background:
+    linear-gradient(145deg, rgba(18,35,43,.96), rgba(5,10,13,.94)),
+    rgba(5,10,13,.94);
+  box-shadow: 0 24px 64px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.06);
+  direction: rtl;
+  scrollbar-width: thin;
+}
+.v2-model .model-focus-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  content: "";
+  background: linear-gradient(90deg, transparent, var(--v2-blue-bright), transparent);
+  transform: scaleX(0);
+  transform-origin: right;
+}
+.v2-model[data-cutaway="engine"] .model-focus-card::before { animation: cutawayTrace 780ms var(--v2-ease) forwards; }
+.v2-model .model-focus-card.is-entering { animation: modelFocusEnter 560ms var(--v2-ease) both; }
+.v2-model .model-focus-kicker {
+  margin-block-end: 9px;
+  color: var(--v2-blue-bright);
+  font-family: "Inter Tight", "Heebo", sans-serif;
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+.v2-model .model-focus-card > strong {
+  color: #fff;
+  font-family: "Inter Tight", "Heebo", sans-serif;
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.v2-model .model-focus-card > strong[dir="ltr"] { text-align: right; }
+.v2-model .model-focus-card > p {
+  margin: 10px 0 15px;
+  color: rgba(226,235,238,.78);
+  font-size: 12px;
+  line-height: 1.68;
+}
+.model-focus-specs {
+  display: grid;
+  grid-template-columns: minmax(105px,.72fr) minmax(150px,1fr);
+  margin: 0 0 14px;
+  border-block-start: 1px solid rgba(255,255,255,.14);
+  direction: rtl;
+}
+.model-focus-specs[dir="ltr"] { direction: ltr; }
+.model-focus-specs[hidden],
+.model-focus-note[hidden] { display: none; }
+.model-focus-specs dt,
+.model-focus-specs dd {
+  min-width: 0;
+  margin: 0;
+  padding: 8px 0;
+  border-block-end: 1px solid rgba(255,255,255,.11);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.model-focus-specs dt {
+  color: #88a9b7;
+  font-weight: 500;
+}
+.model-focus-specs dd {
+  color: #f4f7f8;
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
+  text-align: left;
+}
+.model-focus-specs[dir="ltr"] dt { text-align: left; }
+.model-focus-specs[dir="ltr"] dd { text-align: right; }
+.model-focus-note {
+  display: block;
+  margin: 0 0 14px;
+  color: rgba(190,208,215,.58);
+  font-size: 9px;
+  line-height: 1.5;
+}
+.v2-model .model-focus-card button { transition: color .25s ease, background .25s ease, border-color .25s ease; }
+@keyframes modelFocusEnter {
+  from { opacity: 0; filter: blur(8px); transform: translateY(15px) scale(.985); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+}
+@keyframes cutawayTrace {
+  from { transform: scaleX(0); opacity: .25; }
+  to { transform: scaleX(1); opacity: 1; }
+}
 .v2-model figcaption { position: relative; z-index: 4; padding: .85rem 1.1rem; border-block-start: 1px solid var(--v2-line); background: rgba(5,7,8,.94); font-size: .72rem; text-align: right; }
 
 .hero-investment-rail {

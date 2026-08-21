@@ -9,8 +9,8 @@ from mathutils import Vector
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL = ROOT / "airshield-ximango-direct-tanks-v29.glb"
-OUTPUT_DIR = ROOT / "qa-airframe-v29"
+MODEL = ROOT / "airshield-ximango-direct-tanks-v30.glb"
+OUTPUT_DIR = ROOT / "qa-airframe-v30"
 
 
 def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
@@ -75,8 +75,14 @@ views = {
     "port-clean-gear-root": ((-2.65, -3.20, -1.30), (-1.62, -1.29, -0.30), 94),
     "starboard-clean-gear-root": ((-2.65, 3.20, -1.30), (-1.62, 1.29, -0.30), 94),
     "forward-vr-camera": ((-3.72, -0.82, -0.42), (-2.60, 0.0, -0.15), 94),
-    "gimbal-fuel-and-bay": ((-4.65, -6.40, -2.20), (-0.76, -0.40, -0.43), 72),
+    "gimbal-fuel-and-bay": ((-4.95, -6.40, -2.20), (-1.30, -0.40, -0.40), 72),
+    "gimbal-forward-third": ((-4.45, -3.85, -1.55), (-1.82, 0.0, -0.52), 82),
+    "drone-bay-hatch-seam": ((-1.20, -2.20, -1.25), (-0.28, 0.0, -0.23), 94),
+    "port-navigation-light": ((-3.30, 10.70, 1.70), (-1.46, 8.98, 0.75), 105),
+    "starboard-navigation-light": ((-3.30, -10.70, 1.70), (-1.46, -8.98, 0.75), 105),
     "aft-fuselage": ((4.90, -7.10, 1.15), (1.80, 0.0, 0.06), 70),
+    "gimbal-barrel-cleanup": ((-3.55, -2.35, -1.05), (-2.42, 0.0, -0.42), 102),
+    "propeller-smooth-profile": ((-5.35, -2.35, 0.32), (-3.95, 0.0, 0.0), 98),
 }
 for label, (location, target, lens) in views.items():
     camera.location = location
