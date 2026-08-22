@@ -9,7 +9,7 @@
   <meta property="og:description" content="נוכחות רציפה, זיהוי מוקדם ונטרול מבוקר באמצעות פלטפורמה אווירית רב־משימתית.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="assets/opening-border-defense.png">
-  <title>AirShield.AI | V2 | מערכת מגן תוקף להגנת גבולות</title>
+  <title>AirShield.AI | V1 | מערכת מגן תוקף להגנת גבולות</title>
   <script>
     document.documentElement.classList.add("access-pending");
     try {
@@ -25,9 +25,9 @@
   <link rel="preload" as="image" href="assets/opening-border-defense.png?v=1">
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css?v=v2-aero-20260821-1300">
-  <link rel="stylesheet" href="styles.css?v=v2-classic-nav-clean-model-20260822-2050">
+  <link rel="stylesheet" href="styles.css?v=v1-rtl-nav-clean-model-20260822-2050">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=v2-classic-nav-clean-model-20260822-2050" defer></script>
+  <script src="app.js?v=v1-rtl-nav-clean-model-20260822-2050" defer></script>
 </head>
 <body class="v2-page">
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -38,7 +38,7 @@
         <span>Controlled investor briefing</span>
       </div>
       <div class="access-copy">
-        <p class="access-eyebrow">AIRSHIELD / INVESTOR BRIEFING / V2</p>
+        <p class="access-eyebrow">AIRSHIELD / INVESTOR BRIEFING / V1</p>
         <h1 id="accessTitle">כניסה לתקציר המנהלים</h1>
         <p class="access-hebrew">המצגת מוגנת. יש להזין את קוד הגישה בן ארבע הספרות כדי להמשיך.</p>
       </div>
@@ -68,14 +68,15 @@
         <span>AIRSHIELD<span>.AI</span></span>
       </a>
       <nav class="desktop-nav v2-desktop-nav" aria-label="ניווט ראשי">
-        <a href="#investment" data-menu-key="investment">פתיחה</a>
-        <a href="#platform" data-menu-key="platform">פלטפורמה</a>
-        <a href="#system" data-menu-key="system">המערכת</a>
-        <a href="#architecture" data-menu-key="architecture">ארכיטקטורה</a>
-        <a href="#planning" data-menu-key="planning">בסיס תכנון</a>
-        <a href="#roadmap" data-menu-key="roadmap">תוכנית</a>
-        <a href="investment-plan.html?v=v2-finance-20260821-1510">תוכנית השקעה</a>
-        <a href="#leadership" data-menu-key="leadership">הצוות</a>
+        <a href="#investment" data-menu-key="home">דף הבית</a>
+        <a href="#leadership" data-menu-key="team">צוות</a>
+        <a href="#system" data-menu-key="whyNow">למה עכשיו</a>
+        <a href="#platform" data-menu-key="alons">AlonS</a>
+        <a href="#block-0" data-menu-key="block0">Block 0</a>
+        <a href="#block-1" data-menu-key="block1">Block 1</a>
+        <a href="#roadmap" data-menu-key="progress">התקדמות</a>
+        <a href="investment-plan.html?v=v2-finance-20260821-1510">השקעה</a>
+        <a href="#arit" data-menu-key="whyArith">למה ארית</a>
       </nav>
       <div class="header-actions">
         <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav">
@@ -91,7 +92,7 @@
       </div>
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="ניווט בנייד" hidden>
-      <a href="#investment">פתיחה</a><a href="#platform">פלטפורמה</a><a href="#system">המערכת</a><a href="#architecture">ארכיטקטורה</a><a href="#planning">בסיס תכנון</a><a href="#roadmap">תוכנית</a><a href="investment-plan.html?v=v2-finance-20260821-1510">תוכנית השקעה</a><a href="#leadership">הצוות</a>
+      <a href="#investment">דף הבית</a><a href="#leadership">צוות</a><a href="#system">למה עכשיו</a><a href="#platform">AlonS</a><a href="#block-0">Block 0</a><a href="#block-1">Block 1</a><a href="#roadmap">התקדמות</a><a href="investment-plan.html?v=v2-finance-20260821-1510">השקעה</a><a href="#arit">למה ארית</a>
     </nav>
   </header>
 
@@ -238,8 +239,8 @@
 
         <div class="planning-comparison" data-reveal>
           <div class="planning-column-head planning-label-head">פרמטר הנדסי</div>
-          <div class="planning-column-head"><span>BASELINE</span><strong>Block 0</strong></div>
-          <div class="planning-column-head is-objective"><span>OBJECTIVE</span><strong>Block 1</strong></div>
+          <div class="planning-column-head" id="block-0"><span>BASELINE</span><strong>Block 0</strong></div>
+          <div class="planning-column-head is-objective" id="block-1"><span>OBJECTIVE</span><strong>Block 1</strong></div>
 
           <div class="planning-label">מנוע</div><div><strong>Rotax 914 F3</strong><small>115 hp בהמראה</small></div><div><strong>Rotax 916 iS/iSc</strong><small>יעד 160 hp</small></div>
           <div class="planning-label">משקל המראה מרבי</div><div><strong>1,000 ק״ג</strong><small>בסיס תכנון</small></div><div><strong>1,200 ק״ג</strong><small>יעד תכן</small></div>
