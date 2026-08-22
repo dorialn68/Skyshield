@@ -377,11 +377,20 @@ const modelFocusTitle = document.getElementById("modelFocusTitle");
 const modelFocusText = document.getElementById("modelFocusText");
 const modelFocusSpecs = document.getElementById("modelFocusSpecs");
 const modelFocusNote = document.getElementById("modelFocusNote");
+const modelFocusDemo = document.getElementById("modelFocusDemo");
+const modelDemoSequence = document.getElementById("modelDemoSequence");
+const modelDemoSteps = Array.from(modelDemoSequence?.querySelectorAll("[data-demo-step]") ?? []);
+const modelDemoStop = document.getElementById("modelDemoStop");
+const modelDroneFocus = document.getElementById("modelDroneFocus");
+const modelDroneInspect = document.getElementById("modelDroneInspect");
+const modelDroneReplay = document.getElementById("modelDroneReplay");
+const modelDroneOverview = document.getElementById("modelDroneOverview");
 const modelOverviewControl = document.getElementById("modelOverviewControl");
 const modelFocusOverview = document.getElementById("modelFocusOverview");
 const modelStationsToggle = document.getElementById("modelStationsToggle");
 const modelStationsToggleState = document.getElementById("modelStationsToggleState");
 let activeModelComponent = null;
+let modelFocusClickStage = 0;
 let modelStationsVisible = true;
 let activeLightingPreset = "studio";
 let navigationBlinkTimer = null;
@@ -389,6 +398,17 @@ let navigationBlinkOn = false;
 let engineRevealFrame = 0;
 let engineRevealProgress = 0;
 let cowlingBaseColorFactor = null;
+let missionComputerRevealFrame = 0;
+let missionComputerRevealProgress = 0;
+let missionComputerSkinBaseColorFactor = null;
+let droneBayRevealFrame = 0;
+let droneBayRevealProgress = 0;
+let droneBaySkinBaseColorFactor = null;
+const droneBayDoorBaseColorFactors = new Map();
+let droneDeploymentActive = false;
+let lightingBeforeDroneDeployment = "studio";
+let droneCameraPhase = "launch";
+const droneDeploymentAnimation = "STA10_DEPLOYMENT_DEMO";
 
 const modelFocusContent = {
   propeller: { station: "STA 01", title: "מערכת הנעה", text: "מדחף דו־להבי לבן בעל פיתול ופסיעה נראים; מישור הלהבים הוזז לאחור אל בסיס הכיפה הצמוד לבית המנוע." },
@@ -408,15 +428,66 @@ const modelFocusContent = {
     ],
     note: "הדמיית Cutaway מפורטת עם חומרי PBR להצגת הארכיטקטורה והמיקום במטוס"
   },
-  flightComputer: { station: "STA 03", title: "מחשב משימה / FCC", text: "ליבת מחשוב משימה לעיבוד חיישנים, מיזוג מידע, ניווט מסייע ואוטונומיה. בקרת הטיסה הקריטית נשמרת כשכבה מוגנת ונפרדת." },
+  flightComputer: {
+    station: "STA 03",
+    title: "מחשב משימה / NVIDIA Jetson Thor T5000",
+    titleDirection: "rtl",
+    specsDirection: "ltr",
+    lead: "עיבוד AI על הסיפון · NVIDIA Jetson Thor T5000 · 2070 FP4 TFLOPS בקצה",
+    bullets: [
+      ["ההחלטות מתקבלות על הסיפון", "הזנות החיישנים מאוחות ומופעלות על כלי הטיס עצמו, כך שהמשימה נמשכת גם כשהקישור נפסק."],
+      ["גילוי ומעקב בזמן אמת", "מודלים על הסיפון מסווגים כלי רכב, אנשים וכטב״ם עוינים מהזנות EO/IR, מכ״ם ואקוסטיקה עם קליטתן."],
+      ["תובנות למטה, לא נתונים גולמיים", "רק תוצרים מתועדפים עוזבים את כלי הטיס: התרעות איום, עקבות מטרה ותובנות משימה. רוחב הפס נשאר פנוי לתעבורת פיקוד."],
+      ["ניווט ללא GPS", "מודעות לשטח, התחמקות ממכשולים וניווט חישובי INS/IMU שומרים על כלי הטיס באוויר בתנאי שלילת GPS או שלילת Starlink."],
+      ["מחשב אחד, מטענים רבים", "EO/IR, LiDAR, מכ״ם ו־SIGINT פועלים במקביל על מודול אחד, וה־GPU מחולק כך שכל שרשרת חיישנים שומרת על הנתח שלה."]
+    ],
+    closingText: "העיבוד מתרחש על כלי הטיס. הקרקע מקבלת מסקנות, לא הזנות.",
+    specs: [
+      ["Model", "NVIDIA Jetson T5000"],
+      ["AI compute", "Up to 2070 FP4 TFLOPS"],
+      ["GPU", "Blackwell · 2560 CUDA · 96 Tensor"],
+      ["CPU", "14-core Arm Neoverse V3AE"],
+      ["Memory", "128 GB LPDDR5X · 273 GB/s"],
+      ["Module", "100 × 87 mm"],
+      ["Power", "40–130 W"]
+    ],
+    note: "מחשב המשימה מבצע AI ועיבוד חיישנים. בקרת הטיסה הקריטית נשמרת בשכבה מוגנת ונפרדת."
+  },
   datalink: { station: "STA 04", title: "קישור נתונים", text: "אנטנה קונפורמית לתקשורת מאובטחת ולרציפות משימה מעבר לקו הראייה." },
   landingGear: { station: "STA 05", title: "כן נסע ראשי", text: "כן נסע המחובר ברציפות לכנף עם חיפוי מוארך בצורת מגף, המסתיר את רוב הגלגל ומשאיר סהר קטן מהצמיג גלוי בתחתית." },
-  wing: { station: "STA 06", title: "כנף למינרית", text: "כנף נמוכה וארוכת־מוטה עם קצות מורמים ונקיים. עדשות ניווט אדומה וירוקה ממוקמות בפינות החיצוניות של קצות הכנף ומהבהבות במצבי לילה והחשכה." },
+  wing: { station: "STA 06", title: "כנף למינרית", text: "כנף נמוכה וארוכת־מוטה. פרופיל רציף אחד ממשיך מקצה הכנף למעבר טרפזי העולה בכ־25 מעלות ומתעגל אל ה־winglet הטרפזי, ללא חפיפה, מכסה פנימי או שבירה במשטח. קווי המדפים והמאזנות מוטמעים במעטפת ואינם אלמנטים מוגבהים. עדשות הניווט ממוקמות בפינות החיצוניות ומהבהבות במצבי לילה והחשכה." },
   tail: { station: "STA 07", title: "מכלול זנב", text: "מכלול זנב T עם קווי ציר ברורים להגה הגובה ולהגה הכיוון וכן כן זנב קצר המחובר לגוף." },
   remoteWeapon: { station: "STA 08", title: "צריח קינטי EO/IR", text: "צריח מיוצב בקנה־מידה 0.75, הממוקם בשליש הקדמי של שורש הכנף. החיבור סגור, הברגים מוסתרים והקנה חלול ושקוע." },
   forwardCamera: { station: "STA 09", title: "מצלמת VR קדמית", text: "מערך חישה קדמי קטן וקונפורמי, הממוקם בגחון הקדמי לתמונת מצב ולהטסה מרחוק." },
-  fuselageBay: { station: "STA 10", title: "תא שיגור רחפנים", text: "תא המשימה נסגר בחיפוי אליפטי נמוך המיושר עם הזרימה. פס אורך עדין מסמן את קו הפתיחה של דלת השיגור." },
-  externalInterface: { station: "AUX 01", title: "בידוני דלק", text: "שני בידוני הדלק הוקטנו לקנה־מידה 0.8 ונשארו מתחת לכנפיים על מתלים אווירודינמיים קצרים." },
+  fuselageBay: {
+    station: "STA 10",
+    title: "תא שחרור Point Blank",
+    titleDirection: "rtl",
+    lead: "מגזין פנימי לשני כלי Point Blank בתצורת X, המבוססים על המעטפת והמידות הציבוריות שמפרסמת התעשייה האווירית",
+    bullets: [
+      ["אכלוס מסודר", "שני כלים מוקטנים באופן אחיד לקנה מידה 0.65 ויושבים זה לצד זה על עריסות מדורגות. הגוף נשאר צר וארוך, וכל כלי שומר בתוך התא על תצורת X מלאה המחוברת אליו."],
+      ["הנעה בקצות הכנף", "ארבע יחידות מנוע ומדחף קבועות בקצות תצורת ה־X. הלהבים מתחילים בסל״ד נמוך ומאיצים ברציפות לקראת השחרור."],
+      ["רצף אווירי", "מצב ההדגמה עובר לסביבת שמים, מקפל את כני הנסע הראשיים ב־90 מעלות ורק לאחר מכן פותח שתי דלתות גחון קונפורמיות."],
+      ["שחרור עם נעילת בטיחות", "רק לאחר ששתי דלתות הגחון מגיעות למעצור פתוח, הכלי הראשון יורד אנכית דרך מסדרון פנוי ומתרחק מן המטוס. הכלי השני משתחרר אחריו באותו סדר ובמסלול חזותי נפרד."],
+      ["טיסה ומיקוד", "שני הכלים עוברים לטיסת מבנה בתצורת X מלאה וקבועה. בסיום ניתן לבחור את הכלי הראשון ולפתוח כרטיס נתונים טכניים המבוסס על המידע הציבורי של התעשייה האווירית."]
+    ],
+    closingText: "הדמיית קונספט חזותית המציגה את הארכיטקטורה ואת סדר הפעולות.",
+    specs: [
+      ["Reference", "IAI Point Blank public product page"],
+      ["Configuration", "Cruciform X-wing VTOL"],
+      ["Public length", "Approx. 1 m"],
+      ["Public weight", "Approx. 10 kg"],
+      ["Public maximum speed", "80 m/s"],
+      ["Propulsion", "4 wingtip motor-propeller units"],
+      ["Loaded vehicles", "2"],
+      ["Main gear", "90° inboard retraction"],
+      ["Sequence", "Gear · hatch · release 01 · release 02 · flight · focus"]
+    ],
+    specsDirection: "ltr",
+    note: "המודלים, התא ומנגנון השחרור מיועדים להמחשה בלבד ואינם גאומטריית ייצור.",
+    demoAnimation: droneDeploymentAnimation
+  },
+  externalInterface: { station: "AUX 01", title: "בידוני דלק", text: "שני בידוני הדלק בקנה־מידה 0.8 מחוברים מתחת לכנפיים באמצעות פיילונים סגורים וצרים בעלי חתך אווירודינמי, שפת תקיפה מעוגלת ושורשים מתרחבים. הפיילונים חופפים מעט למעטפת הכנף והבידון כאובייקטים נפרדים ואינם משנים את ה־mesh של הכנף." },
   navigationLights: { station: "NAV 01", title: "תאורת ניווט", text: "עדשה אדומה בקצה כנף שמאל, עדשה ירוקה בקצה כנף ימין ועדשה לבנה הפונה לאחור. התאורה מופעלת במצבי לילה והחשכה." },
   ewResilience: { station: "EW 01", title: "שרידות בתנאי חסימה", text: "מצבי תגובה מוגדרים לאובדן קישור או חסימה: המשך מוגבל, חזרה בטוחה או המתנה, לצד הקלטה מקומית וניסיונות חידוש קשר." }
 };
@@ -595,6 +666,318 @@ function setEngineReveal(revealed) {
   engineRevealFrame = window.requestAnimationFrame(animate);
 }
 
+
+function applyMissionComputerReveal(progress) {
+  const accessSkin = findModelMaterial("Mission computer cutaway skin");
+  if (!accessSkin?.pbrMetallicRoughness) return;
+  if (!missionComputerSkinBaseColorFactor) {
+    missionComputerSkinBaseColorFactor = Array.from(
+      accessSkin.pbrMetallicRoughness.baseColorFactor ?? [1, 1, 1, 1]
+    );
+  }
+  const base = missionComputerSkinBaseColorFactor;
+  const alpha = 1 - progress * 0.92;
+  accessSkin.setAlphaMode(progress > 0 ? "BLEND" : "OPAQUE");
+  accessSkin.pbrMetallicRoughness.setBaseColorFactor([base[0], base[1], base[2], alpha]);
+
+  (model?.model?.materials ?? []).forEach((material) => {
+    if (!material.name.startsWith("NVIDIA Jetson T5000")) return;
+    const isGreenIdentifier = material.name.includes("green") || material.name.includes("die");
+    if (typeof material.setEmissiveFactor === "function") {
+      material.setEmissiveFactor(
+        isGreenIdentifier
+          ? [0.025 * progress, 0.18 * progress, 0.035 * progress]
+          : [0.006 * progress, 0.012 * progress, 0.010 * progress]
+      );
+    }
+    if (typeof material.setEmissiveStrength === "function") {
+      material.setEmissiveStrength((isGreenIdentifier ? 0.62 : 0.18) * progress);
+    }
+  });
+}
+
+function setMissionComputerReveal(revealed) {
+  if (!model?.model) return;
+  const target = revealed ? 1 : 0;
+  if (missionComputerRevealFrame) window.cancelAnimationFrame(missionComputerRevealFrame);
+  const start = missionComputerRevealProgress;
+  const distance = Math.abs(target - start);
+  if (!distance || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    missionComputerRevealProgress = target;
+    applyMissionComputerReveal(target);
+    return;
+  }
+  const startedAt = performance.now();
+  const duration = 860 * distance;
+  const animate = (time) => {
+    const elapsed = Math.min(1, (time - startedAt) / duration);
+    const eased = 1 - Math.pow(1 - elapsed, 3);
+    missionComputerRevealProgress = start + (target - start) * eased;
+    applyMissionComputerReveal(missionComputerRevealProgress);
+    if (elapsed < 1) {
+      missionComputerRevealFrame = window.requestAnimationFrame(animate);
+    } else {
+      missionComputerRevealFrame = 0;
+      missionComputerRevealProgress = target;
+      applyMissionComputerReveal(target);
+    }
+  };
+  missionComputerRevealFrame = window.requestAnimationFrame(animate);
+}
+
+function applyDroneBayReveal(progress) {
+  const baySkin = findModelMaterial("Drone bay deployment skin");
+  if (baySkin?.pbrMetallicRoughness) {
+    if (!droneBaySkinBaseColorFactor) {
+      droneBaySkinBaseColorFactor = Array.from(
+        baySkin.pbrMetallicRoughness.baseColorFactor ?? [1, 1, 1, 1]
+      );
+    }
+    const base = droneBaySkinBaseColorFactor;
+    // At full deployment the complete door footprint must be a real opening.
+    const alpha = 1 - progress;
+    baySkin.setAlphaMode(progress > 0 ? "BLEND" : "OPAQUE");
+    baySkin.pbrMetallicRoughness.setBaseColorFactor([base[0], base[1], base[2], alpha]);
+  }
+
+  (model?.model?.materials ?? []).forEach((material) => {
+    if (material.name.startsWith("STA 10 physical deployment door")) {
+      if (!material.pbrMetallicRoughness) return;
+      if (!droneBayDoorBaseColorFactors.has(material.name)) {
+        droneBayDoorBaseColorFactors.set(
+          material.name,
+          Array.from(material.pbrMetallicRoughness.baseColorFactor ?? [1, 1, 1, 1])
+        );
+      }
+      const doorBase = droneBayDoorBaseColorFactors.get(material.name);
+      // The doors are real opaque geometry, seated below the intact fuselage
+      // skin while closed.  Keeping them opaque guarantees that both panels are
+      // visible as soon as they rotate downward, even if the fadeable skin
+      // material is unavailable for a frame during model loading.
+      const doorAlpha = 1;
+      material.setAlphaMode("OPAQUE");
+      material.pbrMetallicRoughness.setBaseColorFactor([
+        doorBase[0],
+        doorBase[1],
+        doorBase[2],
+        doorAlpha,
+      ]);
+      return;
+    }
+    if (!material.name.startsWith("STA 10 Point Blank")) return;
+    const isMarking = material.name.includes("red safety marking");
+    if (typeof material.setEmissiveFactor === "function") {
+      material.setEmissiveFactor(
+        isMarking
+          ? [0.12 * progress, 0.020 * progress, 0.004 * progress]
+          : [0.008 * progress, 0.010 * progress, 0.010 * progress]
+      );
+    }
+    if (typeof material.setEmissiveStrength === "function") {
+      material.setEmissiveStrength((isMarking ? 0.34 : 0.10) * progress);
+    }
+  });
+}
+
+function setDroneBayReveal(revealed) {
+  if (!model?.model) return;
+  const target = revealed ? 1 : 0;
+  if (droneBayRevealFrame) window.cancelAnimationFrame(droneBayRevealFrame);
+  const start = droneBayRevealProgress;
+  const distance = Math.abs(target - start);
+  if (!distance || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    droneBayRevealProgress = target;
+    applyDroneBayReveal(target);
+    return;
+  }
+  const startedAt = performance.now();
+  const duration = 720 * distance;
+  const animate = (time) => {
+    const elapsed = Math.min(1, (time - startedAt) / duration);
+    const eased = 1 - Math.pow(1 - elapsed, 3);
+    droneBayRevealProgress = start + (target - start) * eased;
+    applyDroneBayReveal(droneBayRevealProgress);
+    if (elapsed < 1) {
+      droneBayRevealFrame = window.requestAnimationFrame(animate);
+    } else {
+      droneBayRevealFrame = 0;
+      droneBayRevealProgress = target;
+      applyDroneBayReveal(target);
+    }
+  };
+  droneBayRevealFrame = window.requestAnimationFrame(animate);
+}
+
+function syncDroneBayRevealToDemo(currentTime = 0) {
+  // Gear retraction occupies the opening seconds. The fuselage patch must stay
+  // completely opaque until the physical doors have actually started moving.
+  const revealStart = 2.45;
+  const revealEnd = 3.85;
+  const linear = Math.max(0, Math.min(1, (currentTime - revealStart) / (revealEnd - revealStart)));
+  const eased = linear * linear * (3 - 2 * linear);
+  if (droneBayRevealFrame) {
+    window.cancelAnimationFrame(droneBayRevealFrame);
+    droneBayRevealFrame = 0;
+  }
+  droneBayRevealProgress = eased;
+  applyDroneBayReveal(eased);
+}
+
+function updateDroneDemoSequence(currentTime = 0, completed = false) {
+  if (!modelDemoSequence) return;
+  modelDemoSequence.hidden = false;
+  const activeStep = completed
+    ? modelDemoSteps.length
+    : currentTime < 2.35
+      ? 0
+      : currentTime < 4.20
+        ? 1
+        : currentTime < 6.70
+          ? 2
+          : currentTime < 9.10
+            ? 3
+            : currentTime < 11.35
+              ? 4
+              : 5;
+  modelDemoSteps.forEach((step, index) => {
+    step.classList.toggle("is-active", !completed && index === activeStep);
+    step.classList.toggle("is-complete", completed || index < activeStep);
+  });
+}
+
+function showDroneFocusCard(visible) {
+  if (!modelDroneFocus) return;
+  modelDroneFocus.hidden = !visible;
+  if (modelDroneInspect) modelDroneInspect.setAttribute("aria-expanded", String(visible));
+  if (!visible) {
+    modelDroneFocus.classList.remove("is-entering");
+    return;
+  }
+  modelDroneFocus.classList.remove("is-entering");
+  void modelDroneFocus.offsetWidth;
+  modelDroneFocus.classList.add("is-entering");
+}
+
+function showDroneInspectControl(visible) {
+  if (!modelDroneInspect) return;
+  modelDroneInspect.hidden = !visible;
+  if (!visible) modelDroneInspect.setAttribute("aria-expanded", "false");
+}
+
+function updateDroneCinematicCamera(currentTime = 0) {
+  if (!model || !droneDeploymentActive) return;
+  if (currentTime >= 12.65 && droneCameraPhase !== "focus-final") {
+    droneCameraPhase = "focus-final";
+    if (modelFocusCard) modelFocusCard.hidden = true;
+    showDroneFocusCard(false);
+    showDroneInspectControl(true);
+    model.setAttribute("camera-target", "2.955m -1.508m 2.15m");
+    model.setAttribute("camera-orbit", "-32deg 60deg 1.70m");
+    model.setAttribute("field-of-view", "16deg");
+    return;
+  }
+  if (currentTime >= 11.35 && droneCameraPhase !== "focus" && droneCameraPhase !== "focus-final") {
+    droneCameraPhase = "focus";
+    if (modelFocusCard) modelFocusCard.hidden = true;
+    showDroneFocusCard(false);
+    showDroneInspectControl(true);
+    model.setAttribute("camera-target", "2.55m -1.96m 2.10m");
+    model.setAttribute("camera-orbit", "-36deg 66deg 2.05m");
+    model.setAttribute("field-of-view", "18deg");
+    return;
+  }
+  if (currentTime >= 9.10 && droneCameraPhase === "launch") {
+    droneCameraPhase = "flight";
+    if (modelFocusCard) modelFocusCard.hidden = true;
+    showDroneFocusCard(false);
+    showDroneInspectControl(false);
+    model.setAttribute("camera-target", "2.19m -1.69m 0.30m");
+    model.setAttribute("camera-orbit", "-28deg 86deg 4.80m");
+    model.setAttribute("field-of-view", "22deg");
+  }
+}
+
+function resetDroneDemoSequence() {
+  if (modelDemoSequence) modelDemoSequence.hidden = true;
+  modelDemoSteps.forEach((step) => step.classList.remove("is-active", "is-complete"));
+}
+
+function stopDroneDeploymentDemo({ restoreLighting = true } = {}) {
+  if (!model) return;
+  if (typeof model.pause === "function") model.pause();
+  if (model.animationName === droneDeploymentAnimation) model.currentTime = 0;
+  setDroneBayReveal(false);
+  droneDeploymentActive = false;
+  droneCameraPhase = "launch";
+  showDroneFocusCard(false);
+  showDroneInspectControl(false);
+  resetDroneDemoSequence();
+  if (modelFocusDemo) {
+    modelFocusDemo.disabled = false;
+    modelFocusDemo.textContent = "הפעל הדגמת שחרור";
+    modelFocusDemo.classList.remove("is-running");
+  }
+  if (modelDroneReplay) modelDroneReplay.textContent = "הפעל שוב";
+  if (modelDemoStop) modelDemoStop.textContent = "עצור וחזור למצב רגיל";
+  if (restoreLighting && lightingPresets[lightingBeforeDroneDeployment]) {
+    applyLightingPreset(lightingBeforeDroneDeployment);
+  }
+  if (activeModelComponent === "fuselageBay") {
+    modelFocusClickStage = 2;
+    if (modelStage) modelStage.dataset.cutaway = "closed";
+    const stationHotspot = modelHotspots.find((hotspot) => hotspot.dataset.component === "fuselageBay");
+    if (stationHotspot) {
+      model.setAttribute("camera-target", stationHotspot.dataset.target);
+      model.setAttribute("camera-orbit", stationHotspot.dataset.orbit);
+      model.setAttribute("field-of-view", "18deg");
+    }
+    updateModelFocusCard();
+    if (modelFocusCard) modelFocusCard.hidden = false;
+  }
+}
+
+function startDroneDeploymentDemo() {
+  if (!model || activeModelComponent !== "fuselageBay") return;
+  if (!(model.availableAnimations ?? []).includes(droneDeploymentAnimation)) {
+    if (modelFocusDemo) modelFocusDemo.textContent = "האנימציה עדיין נטענת";
+    return;
+  }
+  if (droneDeploymentActive) stopDroneDeploymentDemo({ restoreLighting: false });
+  if (activeLightingPreset !== "sky") lightingBeforeDroneDeployment = activeLightingPreset;
+  droneDeploymentActive = true;
+  droneCameraPhase = "launch";
+  showDroneFocusCard(false);
+  showDroneInspectControl(false);
+  if (modelFocusCard) modelFocusCard.hidden = true;
+  applyLightingPreset("sky");
+  syncDroneBayRevealToDemo(0);
+  if (modelStage) modelStage.dataset.cutaway = "payload";
+  model.removeAttribute("auto-rotate");
+  model.setAttribute("camera-target", "-0.28m -0.30m 0m");
+  model.setAttribute("camera-orbit", "-157deg 113deg 5.50m");
+  model.setAttribute("field-of-view", "24deg");
+  model.animationName = droneDeploymentAnimation;
+  model.currentTime = 0;
+  model.timeScale = 1;
+  updateDroneDemoSequence(0);
+  if (modelDemoStop) modelDemoStop.textContent = "עצור וחזור למצב רגיל";
+  if (modelDroneReplay) modelDroneReplay.textContent = "עצור הדמיה";
+  if (modelFocusDemo) {
+    modelFocusDemo.disabled = false;
+    modelFocusDemo.textContent = "עצור הדמיה";
+    modelFocusDemo.classList.add("is-running");
+  }
+  model.play({ repetitions: 1 });
+}
+
+function toggleDroneDeploymentDemo() {
+  if (droneDeploymentActive) {
+    stopDroneDeploymentDemo();
+    return;
+  }
+  startDroneDeploymentDemo();
+}
+
 function updateModelFocusCard() {
   if (!activeModelComponent || !modelFocusCard || !modelFocusTitle || !modelFocusText) return;
   const content = modelFocusContent[activeModelComponent];
@@ -602,9 +985,36 @@ function updateModelFocusCard() {
   if (modelFocusStation) modelFocusStation.textContent = content.station;
   modelFocusTitle.textContent = content.title;
   modelFocusTitle.dir = content.titleDirection ?? (content.specs?.length ? "ltr" : "rtl");
-  modelFocusText.textContent = content.text;
-  if (content.secondaryText) {
-    modelFocusText.append(document.createElement("br"), document.createElement("br"), content.secondaryText);
+  modelFocusText.replaceChildren();
+  modelFocusText.classList.toggle("has-rich-copy", Boolean(content.lead || content.bullets?.length));
+  if (content.lead || content.bullets?.length) {
+    if (content.lead) {
+      const lead = document.createElement("span");
+      lead.className = "model-focus-lead";
+      lead.textContent = content.lead;
+      modelFocusText.append(lead);
+    }
+    (content.bullets ?? []).forEach(([title, text]) => {
+      const bullet = document.createElement("span");
+      bullet.className = "model-focus-bullet";
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      const body = document.createElement("span");
+      body.textContent = text;
+      bullet.append(heading, body);
+      modelFocusText.append(bullet);
+    });
+    if (content.closingText) {
+      const closing = document.createElement("span");
+      closing.className = "model-focus-closing";
+      closing.textContent = content.closingText;
+      modelFocusText.append(closing);
+    }
+  } else {
+    modelFocusText.textContent = content.text ?? "";
+    if (content.secondaryText) {
+      modelFocusText.append(document.createElement("br"), document.createElement("br"), content.secondaryText);
+    }
   }
   if (modelFocusSpecs) {
     modelFocusSpecs.replaceChildren();
@@ -623,6 +1033,14 @@ function updateModelFocusCard() {
   if (modelFocusNote) {
     modelFocusNote.textContent = content.note ?? "";
     modelFocusNote.hidden = !content.note;
+  }
+  if (modelFocusDemo) {
+    modelFocusDemo.hidden = !content.demoAnimation;
+    modelFocusDemo.disabled = false;
+    modelFocusDemo.textContent = droneDeploymentActive
+      ? "עצור הדמיה"
+      : "הפעל הדגמת שחרור";
+    modelFocusDemo.classList.toggle("is-running", droneDeploymentActive);
   }
 }
 
@@ -665,14 +1083,56 @@ function scheduleHotspotDensityUpdate() {
 
 function focusModelComponent(hotspot) {
   if (!model || !modelStationsVisible) return;
-  activeModelComponent = hotspot.dataset.component;
+  const nextComponent = hotspot.dataset.component;
+  const isRepeatedSelection = activeModelComponent === nextComponent;
+  if (isRepeatedSelection && modelFocusClickStage === 1) {
+    modelFocusClickStage = 2;
+    updateModelFocusCard();
+    if (modelFocusCard) {
+      modelFocusCard.hidden = false;
+      modelFocusCard.classList.remove("is-entering");
+      void modelFocusCard.offsetWidth;
+      modelFocusCard.classList.add("is-entering");
+    }
+    return;
+  }
+  if (isRepeatedSelection && modelFocusClickStage === 2) {
+    resetModelOverview();
+    return;
+  }
+  if (droneDeploymentActive && nextComponent !== "fuselageBay") {
+    stopDroneDeploymentDemo();
+  }
+  activeModelComponent = nextComponent;
+  modelFocusClickStage = 1;
   setEngineReveal(activeModelComponent === "engine");
+  setMissionComputerReveal(activeModelComponent === "flightComputer");
+  if (activeModelComponent !== "fuselageBay") {
+    if (model.animationName === droneDeploymentAnimation) {
+      if (typeof model.pause === "function") model.pause();
+      model.currentTime = 0;
+    }
+    droneCameraPhase = "launch";
+    showDroneFocusCard(false);
+    showDroneInspectControl(false);
+    setDroneBayReveal(false);
+    resetDroneDemoSequence();
+  }
+  if (modelStage) {
+    modelStage.dataset.cutaway = activeModelComponent === "fuselageBay" && droneDeploymentActive
+      ? "payload"
+      : activeModelComponent === "engine"
+      ? "engine"
+      : activeModelComponent === "flightComputer"
+        ? "compute"
+        : "closed";
+  }
   hotspot.hidden = false;
   hotspot.setAttribute("aria-hidden", "false");
   model.removeAttribute("auto-rotate");
-  model.cameraTarget = hotspot.dataset.target;
-  model.cameraOrbit = hotspot.dataset.orbit;
-  model.fieldOfView = "18deg";
+  model.setAttribute("camera-target", hotspot.dataset.target);
+  model.setAttribute("camera-orbit", hotspot.dataset.orbit);
+  model.setAttribute("field-of-view", "18deg");
   modelHotspots.forEach((button) => {
     const selected = button === hotspot;
     button.classList.toggle("active", selected);
@@ -680,10 +1140,8 @@ function focusModelComponent(hotspot) {
   });
   updateModelFocusCard();
   if (modelFocusCard) {
-    modelFocusCard.hidden = false;
+    modelFocusCard.hidden = true;
     modelFocusCard.classList.remove("is-entering");
-    void modelFocusCard.offsetWidth;
-    modelFocusCard.classList.add("is-entering");
   }
   scheduleHotspotDensityUpdate();
 }
@@ -699,7 +1157,11 @@ function setModelStationsVisibility(visible) {
 
   if (!visible) {
     activeModelComponent = null;
+    modelFocusClickStage = 0;
+    stopDroneDeploymentDemo();
     setEngineReveal(false);
+    setMissionComputerReveal(false);
+    if (modelStage) modelStage.dataset.cutaway = "closed";
     modelHotspots.forEach((hotspot) => {
       hotspot.hidden = true;
       hotspot.classList.remove("active");
@@ -715,11 +1177,15 @@ function setModelStationsVisibility(visible) {
 function resetModelOverview() {
   if (!model) return;
   activeModelComponent = null;
+  modelFocusClickStage = 0;
+  stopDroneDeploymentDemo();
   setEngineReveal(false);
+  setMissionComputerReveal(false);
+  if (modelStage) modelStage.dataset.cutaway = "closed";
   model.removeAttribute("auto-rotate");
-  model.cameraTarget = "auto auto auto";
-  model.cameraOrbit = "-34deg 83deg 118%";
-  model.fieldOfView = "33deg";
+  model.setAttribute("camera-target", "auto auto auto");
+  model.setAttribute("camera-orbit", "-34deg 83deg 118%");
+  model.setAttribute("field-of-view", "33deg");
   modelHotspots.forEach((button) => {
     button.classList.remove("active");
     button.setAttribute("aria-pressed", "false");
@@ -741,10 +1207,38 @@ modelHotspots.forEach((hotspot) => {
 
 modelOverviewControl?.addEventListener("click", resetModelOverview);
 modelFocusOverview?.addEventListener("click", resetModelOverview);
+modelFocusDemo?.addEventListener("click", toggleDroneDeploymentDemo);
+modelDroneInspect?.addEventListener("click", () => {
+  showDroneFocusCard(Boolean(modelDroneFocus?.hidden));
+});
+modelDroneReplay?.addEventListener("click", toggleDroneDeploymentDemo);
+modelDroneOverview?.addEventListener("click", resetModelOverview);
+modelDemoStop?.addEventListener("click", () => stopDroneDeploymentDemo());
 modelStationsToggle?.addEventListener("click", () => setModelStationsVisibility(!modelStationsVisible));
 
 if (model) {
   model.addEventListener("camera-change", scheduleHotspotDensityUpdate);
+  model.addEventListener("timeupdate", () => {
+    if (droneDeploymentActive && model.animationName === droneDeploymentAnimation) {
+      syncDroneBayRevealToDemo(model.currentTime);
+      updateDroneDemoSequence(model.currentTime);
+      updateDroneCinematicCamera(model.currentTime);
+    }
+  });
+  model.addEventListener("finished", () => {
+    if (model.animationName !== droneDeploymentAnimation) return;
+    updateDroneCinematicCamera(model.currentTime);
+    droneDeploymentActive = false;
+    showDroneInspectControl(true);
+    if (modelFocusDemo) {
+      modelFocusDemo.disabled = false;
+      modelFocusDemo.textContent = "הפעל שוב";
+      modelFocusDemo.classList.remove("is-running");
+    }
+    if (modelDroneReplay) modelDroneReplay.textContent = "הפעל שוב";
+    if (modelDemoStop) modelDemoStop.textContent = "חזרה למצב רגיל";
+    updateDroneDemoSequence(model.currentTime, true);
+  });
   model.addEventListener("load", () => {
     const progress = model.querySelector(".model-progress");
     if (progress) progress.hidden = true;

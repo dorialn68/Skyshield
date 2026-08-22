@@ -61,6 +61,13 @@ def material(
 
 IAF_GRAY = material("IAF ghost-gray composite skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
 ENGINE_COWLING = material("Engine cutaway cowling", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
+MISSION_COMPUTER_SKIN = material("Mission computer cutaway skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
+DRONE_BAY_SKIN = material("Drone bay deployment skin", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
+STA10_DOOR_OUTER = material("STA 10 physical deployment door outer", (0.37, 0.39, 0.405, 1.0), 0.02, 0.48)
+STA10_DOOR_INNER = material("STA 10 physical deployment door inner", (0.004, 0.007, 0.009, 1.0), 0.04, 0.84)
+# The two physical doors are exported opaque.  Their closed geometry is seated
+# below the intact fuselage outer mold line, which hides them naturally without
+# making their visibility dependent on a browser-side material animation.
 HARDWARE_GRAY = material("Dark gray external hardware", (0.22, 0.235, 0.24, 1.0), 0.02, 0.34)
 GRAPHITE = material("Graphite", (0.035, 0.045, 0.052, 1.0), 0.28, 0.28)
 GIMBAL_ALLOY = material("Bead-blasted kinetic gimbal alloy", (0.31, 0.33, 0.34, 1.0), 0.68, 0.32)
@@ -89,6 +96,33 @@ ROTAX_ACCENT = material("Rotax 916 service accent", (0.42, 0.065, 0.025, 1.0), 0
 ROTAX_COVER = material("Rotax 916 pearl-gray branded covers", (0.63, 0.66, 0.67, 1.0), 0.44, 0.22)
 ROTAX_LABEL = material("Rotax 916 recessed cover lettering", (0.095, 0.105, 0.108, 1.0), 0.32, 0.30)
 ROTAX_HEAT_WRAP = material("Rotax 916 exhaust heat wrap", (0.30, 0.285, 0.255, 1.0), 0.08, 0.84)
+JETSON_PCB = material("NVIDIA Jetson T5000 matte black PCB", (0.012, 0.018, 0.019, 1.0), 0.16, 0.42)
+JETSON_PACKAGE = material("NVIDIA Jetson T5000 Blackwell package", (0.035, 0.040, 0.042, 1.0), 0.42, 0.24)
+JETSON_DIE = material("NVIDIA Jetson T5000 exposed Blackwell die", (0.075, 0.34, 0.15, 1.0), 0.30, 0.12)
+JETSON_MEMORY = material("NVIDIA Jetson T5000 LPDDR5X packages", (0.022, 0.025, 0.027, 1.0), 0.18, 0.34)
+JETSON_CONTACT = material("NVIDIA Jetson T5000 gold contacts", (0.55, 0.31, 0.055, 1.0), 0.88, 0.18)
+JETSON_HEATSINK = material("NVIDIA Jetson T5000 black finned heatsink", (0.018, 0.022, 0.024, 1.0), 0.66, 0.27)
+JETSON_CARRIER = material("NVIDIA Jetson T5000 aerospace carrier", (0.105, 0.118, 0.122, 1.0), 0.58, 0.30)
+JETSON_CONNECTOR = material("NVIDIA Jetson T5000 carrier connectors", (0.018, 0.022, 0.024, 1.0), 0.08, 0.44)
+JETSON_LABEL = material("NVIDIA Jetson T5000 white identification", (0.78, 0.82, 0.83, 1.0), 0.12, 0.28)
+JETSON_GREEN = material("NVIDIA Jetson T5000 green identification", (0.16, 0.58, 0.045, 1.0), 0.05, 0.24)
+DRONE_BAY_VOID = material("STA 10 drone bay non-reflective interior", (0.004, 0.007, 0.009, 1.0), 0.04, 0.84)
+DRONE_RACK = material("STA 10 drone magazine anodized rack", (0.075, 0.085, 0.090, 1.0), 0.64, 0.29)
+DRONE_BAY_LIGHT = material("STA 10 magazine low-level guide light", (0.015, 0.16, 0.19, 1.0), 0.0, 0.22)
+POINT_BLANK_BODY = material("STA 10 Point Blank warm composite body", (0.68, 0.63, 0.50, 1.0), 0.02, 0.44)
+POINT_BLANK_DARK = material("STA 10 Point Blank dark motor mechanisms", (0.012, 0.017, 0.020, 1.0), 0.30, 0.28)
+POINT_BLANK_BLADE = material("STA 10 Point Blank propeller blades", (0.11, 0.13, 0.14, 1.0), 0.14, 0.34)
+POINT_BLANK_RED = material("STA 10 Point Blank red safety marking", (0.56, 0.025, 0.012, 1.0), 0.06, 0.30)
+POINT_BLANK_PAYLOAD = material("STA 10 Point Blank external mission payload shell", (0.52, 0.48, 0.37, 1.0), 0.08, 0.38)
+POINT_BLANK_MOTOR_BAND = material("STA 10 Point Blank motor identification bands", (0.34, 0.36, 0.36, 1.0), 0.72, 0.22)
+_drone_bay_light_bsdf = DRONE_BAY_LIGHT.node_tree.nodes.get("Principled BSDF")
+if _drone_bay_light_bsdf:
+    _drone_bay_light_emission = _drone_bay_light_bsdf.inputs.get("Emission Color") or _drone_bay_light_bsdf.inputs.get("Emission")
+    _drone_bay_light_strength = _drone_bay_light_bsdf.inputs.get("Emission Strength")
+    if _drone_bay_light_emission:
+        _drone_bay_light_emission.default_value = (0.025, 0.54, 0.66, 1.0)
+    if _drone_bay_light_strength:
+        _drone_bay_light_strength.default_value = 1.35
 NAV_RED = material("Port navigation lens", (0.46, 0.004, 0.003, 1.0), 0.0, 0.14)
 NAV_GREEN = material("Starboard navigation lens", (0.003, 0.42, 0.045, 1.0), 0.0, 0.14)
 NAV_WHITE = material("Aft navigation lens", (0.72, 0.76, 0.78, 1.0), 0.0, 0.12)
@@ -290,7 +324,7 @@ def build_pbr_materials() -> None:
         rgba_from_gray(skin_occlusion),
         "Non-Color",
     )
-    for skin_material in (IAF_GRAY, ENGINE_COWLING):
+    for skin_material in (IAF_GRAY, ENGINE_COWLING, MISSION_COMPUTER_SKIN, DRONE_BAY_SKIN, STA10_DOOR_OUTER):
         textured_principled_material(
             skin_material,
             skin_base,
@@ -804,6 +838,7 @@ def raised_cover_text(
     location: tuple[float, float, float],
     side: float,
     size: float,
+    mat: bpy.types.Material = ROTAX_LABEL,
 ) -> bpy.types.Object:
     """Convert compact cover lettering to mesh so it survives GLB export."""
     bpy.ops.object.text_add(location=location, rotation=(math.radians(-90.0 * side), 0.0, 0.0))
@@ -816,7 +851,7 @@ def raised_cover_text(
     obj.data.extrude = 0.0012
     obj.data.bevel_depth = 0.0004
     obj.data.bevel_resolution = 2
-    assign(obj, ROTAX_LABEL)
+    assign(obj, mat)
     bpy.ops.object.convert(target="MESH")
     obj = bpy.context.object
     obj.name = name
@@ -1128,6 +1163,105 @@ def surface_detail_line(
             vertices=10,
         )
         detail.parent = parent
+
+
+def wing_upper_surface_z(x: float, span: float) -> float:
+    """Evaluate the main-wing upper skin at one chord/span coordinate."""
+    dihedral = math.tan(math.radians(2.5))
+    root_z = -0.25
+    sections = (
+        (0.00, -2.22, 1.48, root_z, 0.16, 2.0),
+        (1.40, -2.18, 1.38, root_z + 1.40 * dihedral, 0.16, 1.7),
+        (4.80, -1.98, 1.04, root_z + 4.80 * dihedral, 0.15, 0.8),
+        (8.735, -1.73, 0.58, root_z + 8.735 * dihedral, 0.13, 0.0),
+    )
+    absolute_span = max(0.0, min(abs(span), sections[-1][0]))
+    lower = sections[0]
+    upper = sections[-1]
+    for first, second in zip(sections, sections[1:]):
+        if first[0] <= absolute_span <= second[0]:
+            lower, upper = first, second
+            break
+    blend = (absolute_span - lower[0]) / max(upper[0] - lower[0], 1e-6)
+    lead, chord, z_base, thickness_ratio, incidence_deg = (
+        lower[index] + (upper[index] - lower[index]) * blend
+        for index in range(1, 6)
+    )
+    u = max(0.0, min(1.0, (x - lead) / max(chord, 1e-6)))
+    thickness = 5.0 * thickness_ratio * chord * (
+        0.2969 * math.sqrt(max(u, 0.0))
+        - 0.1260 * u
+        - 0.3516 * u**2
+        + 0.2843 * u**3
+        - 0.1036 * u**4
+    )
+    camber = 0.012 * chord * math.sin(math.pi * u)
+    incidence = math.radians(incidence_deg)
+    quarter_chord = lead + chord * 0.25
+    profile_x = lead + chord * u - quarter_chord
+    return z_base - profile_x * math.sin(incidence) + (camber + thickness) * math.cos(incidence)
+
+
+def wing_surface_seam(
+    name: str,
+    control_points: list[tuple[float, float, float]],
+    width: float,
+    mat: bpy.types.Material,
+    parent: bpy.types.Object,
+    samples_per_segment: int = 14,
+) -> bpy.types.Object:
+    """Lay a flat hinge-line ribbon directly on the wing upper skin.
+
+    The previous round cylinders were visually acceptable at overview scale
+    but revealed an air gap in close-up.  This zero-thickness ribbon samples
+    the analytic airfoil and sits only 0.35 mm above it to avoid z-fighting.
+    """
+    sampled: list[Vector] = []
+    for start, end in zip(control_points, control_points[1:]):
+        for sample in range(samples_per_segment):
+            blend = sample / samples_per_segment
+            sampled.append(
+                Vector(
+                    (
+                        start[0] + (end[0] - start[0]) * blend,
+                        start[1] + (end[1] - start[1]) * blend,
+                        0.0,
+                    )
+                )
+            )
+    sampled.append(Vector((control_points[-1][0], control_points[-1][1], 0.0)))
+
+    vertices: list[tuple[float, float, float]] = []
+    for index, center in enumerate(sampled):
+        previous = sampled[max(index - 1, 0)]
+        following = sampled[min(index + 1, len(sampled) - 1)]
+        tangent = Vector((following.x - previous.x, following.y - previous.y, 0.0))
+        if tangent.length < 1e-8:
+            tangent = Vector((0.0, 1.0, 0.0))
+        tangent.normalize()
+        lateral = Vector((-tangent.y, tangent.x, 0.0)) * (width * 0.5)
+        for point in (center + lateral, center - lateral):
+            vertices.append(
+                (
+                    point.x,
+                    point.y,
+                    wing_upper_surface_z(point.x, point.y) + 0.00035,
+                )
+            )
+
+    faces = [
+        (index * 2, index * 2 + 1, index * 2 + 3, index * 2 + 2)
+        for index in range(len(sampled) - 1)
+    ]
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    seam = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(seam)
+    assign(seam, mat)
+    mark_export(seam)
+    seam.parent = parent
+    return seam
 
 
 def landing_wheel(
@@ -1486,7 +1620,7 @@ def surface_conforming_seam(
                     point_2d.x,
                     point_2d.y,
                     sections,
-                    outward_offset=0.00075,
+                    outward_offset=0.00018,
                 )
             )
 
@@ -1561,6 +1695,62 @@ def assign_forward_material(
     for polygon in obj.data.polygons:
         centroid_x = sum(obj.data.vertices[index].co.x for index in polygon.vertices) / len(polygon.vertices)
         if centroid_x <= maximum_centroid_x:
+            polygon.material_index = material_index
+
+
+def assign_mission_computer_cutaway_material(
+    obj: bpy.types.Object,
+    mat: bpy.types.Material,
+) -> None:
+    """Create a flush, runtime-fadeable avionics window in the starboard skin.
+
+    The material uses the same PBR maps as the surrounding composite, so the
+    closed aircraft remains visually continuous. STA 03 only fades this local
+    polygon band, revealing the correctly scaled T5000 module without making
+    the complete fuselage transparent.
+    """
+    material_index = len(obj.data.materials)
+    obj.data.materials.append(mat)
+    for polygon in obj.data.polygons:
+        coordinates = [obj.data.vertices[index].co for index in polygon.vertices]
+        centroid_x = sum(vertex.x for vertex in coordinates) / len(coordinates)
+        centroid_y = sum(vertex.y for vertex in coordinates) / len(coordinates)
+        centroid_z = sum(vertex.z for vertex in coordinates) / len(coordinates)
+        if (
+            -1.74 <= centroid_x <= -1.08
+            and centroid_y <= -0.24
+            and -0.10 <= centroid_z <= 0.245
+        ):
+            polygon.material_index = material_index
+
+
+def assign_drone_bay_cutaway_material(
+    obj: bpy.types.Object,
+    mat: bpy.types.Material,
+) -> None:
+    """Give the flush STA 10 belly hatch a dedicated runtime-fadeable skin.
+
+    The same coating maps remain visible in the closed condition. During the
+    deployment demonstration, the local polygon patch fades while the physical
+    hatch rotates away, revealing the magazine without making the complete
+    fuselage transparent.
+    """
+    material_index = len(obj.data.materials)
+    obj.data.materials.append(mat)
+    for polygon in obj.data.polygons:
+        coordinates = [obj.data.vertices[index].co for index in polygon.vertices]
+        centroid_x = sum(vertex.x for vertex in coordinates) / len(coordinates)
+        centroid_y = sum(vertex.y for vertex in coordinates) / len(coordinates)
+        centroid_z = sum(vertex.z for vertex in coordinates) / len(coordinates)
+        # Match the complete physical-door footprint, including the tapered
+        # forward and aft rows.  The earlier, smaller material window left a
+        # strip of opaque fuselage above the rotating doors, so the doors moved
+        # but the opening still looked sealed in model-viewer.
+        if (
+            -0.81 <= centroid_x <= 0.25
+            and abs(centroid_y) <= 0.215
+            and centroid_z <= -0.105
+        ):
             polygon.material_index = material_index
 
 
@@ -2128,6 +2318,1054 @@ def create_rotax_916_engine(parent: bpy.types.Object) -> None:
     )
 
 
+def create_jetson_thor_mission_computer(parent: bpy.types.Object) -> None:
+    """Build the STA 03 NVIDIA Jetson T5000 airborne-compute cutaway.
+
+    NVIDIA's T5000 system-on-module is represented at its published 100 x 87 mm
+    envelope. The surrounding cold plate, carrier, shock mounts and aircraft
+    harness are integration geometry rather than a claim that the desktop
+    developer-kit enclosure flies in the aircraft. The visible hierarchy follows
+    NVIDIA's official exploded reference: T5000 PCB and Blackwell package,
+    heatsink/fan, carrier I/O and structural outer frame.
+    """
+    mission_group = bpy.data.objects.new("NVIDIA Jetson T5000 mission computer assembly", None)
+    bpy.context.collection.objects.link(mission_group)
+    mission_group.parent = parent
+    mark_export(mission_group)
+
+    def mission_component(obj: bpy.types.Object) -> bpy.types.Object:
+        obj.parent = mission_group
+        obj["station"] = "STA 03"
+        obj["visualization_detail"] = "official-reference NVIDIA Jetson T5000 mission-compute cutaway"
+        return obj
+
+    carrier_x = -1.40
+    carrier_y = -0.325
+    carrier_z = 0.065
+
+    # Rugged aircraft carrier and shock-isolated mounting tray. This is the
+    # integration structure around the published module, not a copy of the
+    # desk-oriented developer-kit enclosure.
+    mission_component(
+        cube(
+            "NVIDIA Jetson T5000 aerospace carrier backplane",
+            (carrier_x, carrier_y, carrier_z),
+            (0.285, 0.012, 0.145),
+            JETSON_CARRIER,
+            edge=0.012,
+        )
+    )
+    for z_offset, label in ((0.132, "upper"), (-0.132, "lower")):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 {label} structural frame rail",
+                (carrier_x, carrier_y - 0.030, carrier_z + z_offset),
+                (0.285, 0.022, 0.012),
+                ROTAX_STEEL,
+                edge=0.006,
+            )
+        )
+    for x_offset, label in ((-0.272, "forward"), (0.272, "aft")):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 {label} structural frame rail",
+                (carrier_x + x_offset, carrier_y - 0.030, carrier_z),
+                (0.012, 0.022, 0.122),
+                ROTAX_STEEL,
+                edge=0.006,
+            )
+        )
+    for x_offset in (-0.245, 0.245):
+        for z_offset in (-0.105, 0.105):
+            mission_component(
+                cylinder_between(
+                    "NVIDIA Jetson T5000 vibration isolator",
+                    (carrier_x + x_offset, carrier_y + 0.018, carrier_z + z_offset),
+                    (carrier_x + x_offset, carrier_y - 0.060, carrier_z + z_offset),
+                    0.016,
+                    ROTAX_RUBBER,
+                    vertices=28,
+                )
+            )
+            mission_component(
+                cylinder_between(
+                    "NVIDIA Jetson T5000 captive mount fastener",
+                    (carrier_x + x_offset, carrier_y - 0.062, carrier_z + z_offset),
+                    (carrier_x + x_offset, carrier_y - 0.068, carrier_z + z_offset),
+                    0.0065,
+                    JETSON_CONTACT,
+                    vertices=20,
+                )
+            )
+
+    # The T5000 board itself stays at the official 100 x 87 mm module envelope.
+    # It is displayed slightly proud of the cold plate so the package, memory,
+    # power stages and edge contacts remain legible through the side cutaway.
+    module_x = -1.305
+    module_y = -0.407
+    module_z = 0.028
+    module_board = mission_component(
+        cube(
+            "NVIDIA Jetson T5000 100x87mm system-on-module PCB",
+            (module_x, module_y, module_z),
+            (0.050, 0.0032, 0.0435),
+            JETSON_PCB,
+            edge=0.0025,
+        )
+    )
+    module_board["module_width_mm"] = 100
+    module_board["module_height_mm"] = 87
+    module_board["module_memory_gb"] = 128
+    module_board["memory_bandwidth_gbps"] = 273
+
+    package_y = module_y - 0.0055
+    mission_component(
+        cube(
+            "NVIDIA Jetson T5000 Blackwell multi-chip package",
+            (module_x - 0.006, package_y, module_z - 0.004),
+            (0.0155, 0.0030, 0.0155),
+            JETSON_PACKAGE,
+            edge=0.0018,
+        )
+    )
+    mission_component(
+        cube(
+            "NVIDIA Jetson T5000 exposed Blackwell GPU die",
+            (module_x - 0.006, package_y - 0.0033, module_z - 0.004),
+            (0.0088, 0.0012, 0.0088),
+            JETSON_DIE,
+            edge=0.0008,
+        )
+    )
+
+    memory_positions = (
+        (-0.032, -0.024), (-0.032, 0.018),
+        (0.021, -0.024), (0.021, 0.018),
+        (-0.006, -0.032), (-0.006, 0.026),
+        (-0.040, -0.003), (0.030, -0.003),
+    )
+    for memory_index, (x_offset, z_offset) in enumerate(memory_positions, start=1):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 LPDDR5X package {memory_index:02d}",
+                (module_x + x_offset, package_y - 0.0015, module_z + z_offset),
+                (0.0070, 0.0018, 0.0048),
+                JETSON_MEMORY,
+                edge=0.0009,
+            )
+        )
+
+    for stage_index, x_offset in enumerate((-0.039, -0.026, -0.013, 0.0, 0.013, 0.026, 0.039), start=1):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 power stage {stage_index:02d}",
+                (module_x + x_offset, package_y - 0.0012, module_z + 0.036),
+                (0.0044, 0.0016, 0.0035),
+                JETSON_PACKAGE,
+                edge=0.0007,
+            )
+        )
+
+    # Gold landing pads and high-density board-to-board connector blocks hint at
+    # the real 699-pin interface without drawing hundreds of web-heavy objects.
+    for pad_index, x_offset in enumerate(
+        (-0.044, -0.036, -0.028, -0.020, -0.012, -0.004, 0.004, 0.012, 0.020, 0.028, 0.036, 0.044),
+        start=1,
+    ):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 representative gold contact {pad_index:02d}",
+                (module_x + x_offset, module_y - 0.0043, module_z - 0.039),
+                (0.0021, 0.0007, 0.0012),
+                JETSON_CONTACT,
+                edge=0.0003,
+            )
+        )
+    for z_offset, label in ((-0.018, "lower"), (0.018, "upper")):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 {label} 699-pin interface block",
+                (module_x + 0.057, module_y + 0.003, module_z + z_offset),
+                (0.007, 0.006, 0.012),
+                JETSON_CONNECTOR,
+                edge=0.0015,
+            )
+        )
+
+    # The official architecture pairs the module with a black finned thermal
+    # assembly. A compact cold plate and fan sit beside the exposed board in the
+    # presentation cutaway so both identifiers remain visible at once.
+    heatsink_x = -1.515
+    heatsink_z = 0.105
+    mission_component(
+        cube(
+            "NVIDIA Jetson T5000 heatsink cold plate",
+            (heatsink_x, -0.372, heatsink_z),
+            (0.078, 0.020, 0.066),
+            JETSON_HEATSINK,
+            edge=0.006,
+        )
+    )
+    for fin_index, x_offset in enumerate(
+        (-0.070, -0.060, -0.050, -0.040, -0.030, -0.020, -0.010, 0.0, 0.010, 0.020, 0.030, 0.040, 0.050, 0.060, 0.070),
+        start=1,
+    ):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 heatsink fin {fin_index:02d}",
+                (heatsink_x + x_offset, -0.403, heatsink_z),
+                (0.0024, 0.012, 0.062),
+                JETSON_HEATSINK,
+                edge=0.0008,
+            )
+        )
+    mission_component(
+        cylinder_between(
+            "NVIDIA Jetson T5000 cooling fan hub",
+            (heatsink_x, -0.414, heatsink_z),
+            (heatsink_x, -0.427, heatsink_z),
+            0.025,
+            JETSON_CONNECTOR,
+            vertices=40,
+        )
+    )
+    for blade_index in range(7):
+        angle = blade_index * math.tau / 7.0
+        blade = mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 cooling fan blade {blade_index + 1:02d}",
+                (
+                    heatsink_x + math.cos(angle) * 0.038,
+                    -0.422,
+                    heatsink_z + math.sin(angle) * 0.038,
+                ),
+                (0.021, 0.003, 0.006),
+                JETSON_HEATSINK,
+                edge=0.002,
+            )
+        )
+        blade.rotation_euler[1] = -angle
+    mission_component(
+        cylinder_between(
+            "NVIDIA Jetson T5000 fan NVIDIA green badge",
+            (heatsink_x, -0.428, heatsink_z),
+            (heatsink_x, -0.431, heatsink_z),
+            0.011,
+            JETSON_GREEN,
+            vertices=36,
+        )
+    )
+
+    # Carrier I/O is reduced to the interfaces relevant to an airborne mission
+    # computer: high-speed sensor ingest, Ethernet, CAN and protected power.
+    for connector_index, (z_offset, width, label) in enumerate(
+        ((0.074, 0.030, "sensor QSFP"), (0.018, 0.026, "5GbE"), (-0.038, 0.022, "CAN"), (-0.088, 0.020, "protected power")),
+        start=1,
+    ):
+        mission_component(
+            cube(
+                f"NVIDIA Jetson T5000 carrier {label} connector",
+                (-1.145, -0.392, carrier_z + z_offset),
+                (0.020, 0.025, width * 0.5),
+                JETSON_CONNECTOR,
+                edge=0.003,
+            )
+        )
+        for contact_index in range(3):
+            mission_component(
+                cube(
+                    f"NVIDIA Jetson T5000 carrier connector contact {connector_index:02d}-{contact_index + 1:02d}",
+                    (-1.166 + contact_index * 0.012, -0.418, carrier_z + z_offset),
+                    (0.003, 0.0015, width * 0.26),
+                    JETSON_CONTACT,
+                    edge=0.0007,
+                )
+            )
+
+    for harness_index, (z_offset, material_value) in enumerate(
+        ((0.074, JETSON_CONNECTOR), (0.018, JETSON_CONNECTOR), (-0.088, ROTAX_ACCENT)),
+        start=1,
+    ):
+        harness = curved_tube(
+            f"NVIDIA Jetson T5000 aircraft harness {harness_index:02d}",
+            [
+                (-1.120, -0.365, carrier_z + z_offset),
+                (-1.050, -0.300, carrier_z + z_offset * 0.80),
+                (-0.965, -0.245, carrier_z + z_offset * 0.60),
+            ],
+            0.006 if harness_index < 3 else 0.008,
+            material_value,
+            resolution=3,
+        )
+        mission_component(harness)
+
+    mission_component(
+        raised_cover_text(
+            "NVIDIA Jetson T5000 NVIDIA identification",
+            "NVIDIA",
+            (-1.535, -0.430, -0.030),
+            -1.0,
+            0.026,
+            JETSON_GREEN,
+        )
+    )
+    mission_component(
+        raised_cover_text(
+            "NVIDIA Jetson T5000 model identification",
+            "JETSON T5000",
+            (-1.360, -0.430, -0.030),
+            -1.0,
+            0.018,
+            JETSON_LABEL,
+        )
+    )
+
+    mission_group["official_reference"] = "NVIDIA Jetson Thor T5000 module"
+    mission_group["module_dimensions_mm"] = [100, 87]
+    mission_group["ai_performance"] = "up to 2070 FP4 TFLOPS sparse at 130 W"
+    mission_group["gpu"] = "NVIDIA Blackwell, 2560 CUDA cores, 96 fifth-generation Tensor cores"
+    mission_group["cpu"] = "14-core Arm Neoverse V3AE"
+    mission_group["memory"] = "128 GB LPDDR5X, 273 GB/s"
+    mission_group["installed_architecture"] = "T5000 SoM on illustrative rugged aerospace carrier, cold plate and shock mounts"
+    parent["mission_computer_model"] = "NVIDIA Jetson Thor T5000"
+    parent["flight_control_separation"] = "mission AI compute is distinct from the safety-critical flight-control layer"
+
+
+def create_surface_hatch_panel(
+    name: str,
+    control_loop: list[tuple[float, float]],
+    sections: list[tuple[float, float, float, float, float, float]],
+    mat: bpy.types.Material,
+    thickness: float = 0.012,
+    inner_mat: bpy.types.Material | None = None,
+    lateral_fraction_range: tuple[float, float] = (1.0, -1.0),
+) -> bpy.types.Object:
+    """Create a tessellated hatch that follows the curved fuselage belly.
+
+    A single non-planar n-gon can be triangulated differently by Blender and
+    the browser renderer, leaving parts of the physical hatch inside the skin.
+    This ruled surface samples every longitudinal row across the belly so the
+    closed panel remains continuous and flush in both renderers.
+    """
+    width_by_x: dict[float, float] = {}
+    for x, y in control_loop:
+        width_by_x[x] = max(width_by_x.get(x, 0.0), abs(y))
+    control_rows = sorted(width_by_x.items())
+    longitudinal_rows: list[tuple[float, float]] = []
+    subdivisions_per_span = 4
+    for row_index in range(len(control_rows) - 1):
+        start_x, start_width = control_rows[row_index]
+        end_x, end_width = control_rows[row_index + 1]
+        for subdivision in range(subdivisions_per_span):
+            blend = subdivision / subdivisions_per_span
+            longitudinal_rows.append(
+                (
+                    start_x + (end_x - start_x) * blend,
+                    start_width + (end_width - start_width) * blend,
+                )
+            )
+    longitudinal_rows.append(control_rows[-1])
+    lateral_samples = 13
+    outer: list[Vector] = []
+    lateral_start, lateral_end = lateral_fraction_range
+    for x, half_width in longitudinal_rows:
+        for sample in range(lateral_samples):
+            fraction = sample / (lateral_samples - 1)
+            lateral_fraction = lateral_start + (lateral_end - lateral_start) * fraction
+            y = half_width * lateral_fraction
+            outer.append(
+                # The fuselage skin remains intact in the closed/default state.
+                # Seat the physical door just below that outer mold line so its
+                # dark inner wall can never peek through as a tapered belly gap.
+                Vector(fuselage_lower_surface_point(x, y, sections, outward_offset=-0.0400))
+            )
+    inner = [Vector((point.x, point.y, point.z + thickness)) for point in outer]
+    vertices = [tuple(point) for point in outer + inner]
+    surface_count = len(outer)
+    faces: list[tuple[int, ...]] = []
+    inner_face_indices: list[int] = []
+    row_count = len(longitudinal_rows)
+    for row in range(row_count - 1):
+        for sample in range(lateral_samples - 1):
+            a = row * lateral_samples + sample
+            b = a + 1
+            d = (row + 1) * lateral_samples + sample
+            c = d + 1
+            faces.append((a, d, c, b))
+            faces.append((surface_count + a, surface_count + b, surface_count + c, surface_count + d))
+            inner_face_indices.append(len(faces) - 1)
+
+    perimeter: list[int] = []
+    perimeter.extend(range(lateral_samples))
+    perimeter.extend(row * lateral_samples + lateral_samples - 1 for row in range(1, row_count))
+    perimeter.extend(
+        range((row_count - 1) * lateral_samples + lateral_samples - 2, (row_count - 1) * lateral_samples - 1, -1)
+    )
+    perimeter.extend(row * lateral_samples for row in range(row_count - 2, 0, -1))
+    side_face_start = len(faces)
+    for index, vertex_index in enumerate(perimeter):
+        following = perimeter[(index + 1) % len(perimeter)]
+        faces.append(
+            (vertex_index, following, surface_count + following, surface_count + vertex_index)
+        )
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    panel = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(panel)
+    assign(panel, mat)
+    if inner_mat:
+        panel.data.materials.append(inner_mat)
+        dark_face_indices = set(inner_face_indices)
+        dark_face_indices.update(range(side_face_start, len(faces)))
+        for polygon_index in dark_face_indices:
+            panel.data.polygons[polygon_index].material_index = 1
+    # Keep the aerodynamic outer and inner skins smooth, while the thin edge
+    # remains flat. A perimeter bevel used here previously rolled the door skin
+    # away from the fuselage and exposed the dark inner material when closed.
+    for polygon_index, polygon in enumerate(panel.data.polygons):
+        polygon.use_smooth = polygon_index < side_face_start
+    mark_export(panel)
+    panel["outer_mold_line"] = "sub-skin seated and visually flush when closed"
+    panel["closed_surface_offset_m"] = -0.0400
+    return panel
+
+
+def create_point_blank_vtol(
+    name: str,
+    center: tuple[float, float, float],
+    parent: bpy.types.Object,
+    featured_payload: bool = False,
+    visual_scale: float = 1.0,
+    stowed_wing_scale: float = 1.0,
+) -> tuple[
+    bpy.types.Object,
+    list[tuple[str, tuple[float, float, float], list[bpy.types.Object], str]],
+    list[tuple[str, tuple[float, float, float], tuple[float, float, float], list[bpy.types.Object]]],
+]:
+    """Create a public-reference Point Blank external presentation model.
+
+    The proportions follow IAI's public product imagery and published approximate
+    one-metre length. Four cruciform wings terminate in compact motor nacelles.
+    Only public external features are represented; internal, energetic and
+    manufacturing details are intentionally omitted.
+    """
+    center_x, center_y, center_z = center
+    group = bpy.data.objects.new(name, None)
+    bpy.context.collection.objects.link(group)
+    group.parent = parent
+    group["station"] = "STA 10"
+    group["reference"] = "IAI Point Blank public product page and supplied external reference image"
+    group["visualization_only"] = True
+    group["featured_terminal_guidance_presentation"] = featured_payload
+    group["approximate_public_length_m"] = 1.0
+    group["approximate_public_weight_kg"] = 10.0
+    group["propulsion_layout"] = "four wingtip motor-propeller units on a cruciform X-wing"
+    group["presentation_scale"] = visual_scale
+    group["magazine_wing_scale"] = stowed_wing_scale
+    mark_export(group)
+
+    def drone_component(obj: bpy.types.Object) -> bpy.types.Object:
+        obj.parent = group
+        obj["station"] = "STA 10"
+        return obj
+
+    drone_component(create_loft(
+        f"{name} one metre composite fuselage",
+        [
+            (center_x - 0.500, 0.010, 0.010, center_z),
+            (center_x - 0.470, 0.027, 0.025, center_z),
+            (center_x - 0.405, 0.035, 0.033, center_z),
+            (center_x - 0.285, 0.039, 0.036, center_z),
+            (center_x + 0.300, 0.038, 0.035, center_z),
+            (center_x + 0.420, 0.032, 0.030, center_z),
+            (center_x + 0.485, 0.024, 0.022, center_z),
+            (center_x + 0.500, 0.014, 0.013, center_z),
+        ],
+        POINT_BLANK_BODY,
+        ring_segments=40,
+        y_offset=center_y,
+    ))
+    drone_component(
+        cylinder_between(
+            f"{name} recessed EO day-night aperture",
+            (center_x - 0.487, center_y, center_z),
+            (center_x - 0.500, center_y, center_z),
+            0.013,
+            LENS_DARK,
+            vertices=32,
+        )
+    )
+    drone_component(cylinder_between(
+        f"{name} aft red safety cap",
+        (center_x + 0.470, center_y, center_z),
+        (center_x + 0.500, center_y, center_z),
+        0.011,
+        POINT_BLANK_RED,
+        vertices=32,
+    ))
+    if featured_payload:
+        drone_component(
+            create_loft(
+                f"{name} external mission payload fairing",
+                [
+                    (center_x - 0.405, 0.031, 0.029, center_z),
+                    (center_x - 0.380, 0.036, 0.034, center_z),
+                    (center_x - 0.245, 0.036, 0.034, center_z),
+                    (center_x - 0.220, 0.033, 0.031, center_z),
+                ],
+                POINT_BLANK_PAYLOAD,
+                ring_segments=36,
+                y_offset=center_y,
+            )
+        )
+        for payload_edge_x, payload_edge_label in (
+            (center_x - 0.380, "forward"),
+            (center_x - 0.245, "aft"),
+        ):
+            drone_component(
+                elliptical_ring(
+                    f"{name} {payload_edge_label} mission payload interface ring",
+                    payload_edge_x,
+                    0.0365,
+                    0.0345,
+                    center_z,
+                    0.0014,
+                    POINT_BLANK_DARK,
+                    group,
+                    segments=32,
+                    tube_segments=6,
+                    y_offset=center_y,
+                )
+            )
+    for ring_x, ring_label in ((center_x - 0.175, "forward"), (center_x + 0.315, "aft")):
+        drone_component(
+            elliptical_ring(
+                f"{name} {ring_label} safety band",
+                ring_x,
+                0.0355,
+                0.0335,
+                center_z,
+                0.0013,
+                POINT_BLANK_DARK,
+                group,
+                segments=32,
+                tube_segments=6,
+                y_offset=center_y,
+            )
+        )
+
+    rotor_blade_sets: list[tuple[str, tuple[float, float, float], list[bpy.types.Object], str]] = []
+    wing_bone_sets: list[
+        tuple[str, tuple[float, float, float], tuple[float, float, float], list[bpy.types.Object]]
+    ] = []
+
+    def create_x_wing_panel(wing_name: str, angle: float) -> bpy.types.Object:
+        radial_y, radial_z = math.sin(angle), math.cos(angle)
+        tangent_y, tangent_z = math.cos(angle), -math.sin(angle)
+        profile = [
+            # The root deliberately overlaps the slim fuselage envelope.  It
+            # remains a single fixed X configuration in the magazine, during
+            # release and in flight; no panel grows out of the body.
+            (center_x - 0.100, 0.018),
+            (center_x - 0.058, 0.230),
+            (center_x + 0.068, 0.230),
+            (center_x + 0.105, 0.018),
+        ]
+        half_thickness = 0.0035
+        vertices: list[tuple[float, float, float]] = []
+        for tangent in (-half_thickness, half_thickness):
+            for x, radius in profile:
+                vertices.append((
+                    x,
+                    center_y + radial_y * radius + tangent_y * tangent,
+                    center_z + radial_z * radius + tangent_z * tangent,
+                ))
+        count = len(profile)
+        faces = [tuple(range(count - 1, -1, -1)), tuple(range(count, count * 2))]
+        for index in range(count):
+            following = (index + 1) % count
+            faces.append((index, following, count + following, count + index))
+        mesh = bpy.data.meshes.new(f"{wing_name} mesh")
+        mesh.from_pydata(vertices, [], faces)
+        mesh.update()
+        wing = bpy.data.objects.new(wing_name, mesh)
+        bpy.context.collection.objects.link(wing)
+        assign(wing, POINT_BLANK_BODY)
+        bevel(wing, 0.003, 2)
+        smooth(wing)
+        mark_export(wing)
+        return wing
+
+    for wing_index, wing_angle_degrees in enumerate((45.0, 135.0, 225.0, 315.0), start=1):
+        wing_angle = math.radians(wing_angle_degrees)
+        radial_y, radial_z = math.sin(wing_angle), math.cos(wing_angle)
+        wing_label = f"X-wing {wing_index:02d}"
+        wing_components: list[bpy.types.Object] = []
+        wing = drone_component(create_x_wing_panel(f"{name} {wing_label} aerodynamic panel", wing_angle))
+        wing_components.append(wing)
+
+        tip_y = center_y + radial_y * 0.230
+        tip_z = center_z + radial_z * 0.230
+        motor_center_x = center_x + 0.035
+        motor = drone_component(cylinder_between(
+            f"{name} {wing_label} wingtip motor nacelle",
+            (motor_center_x - 0.055, tip_y, tip_z),
+            (motor_center_x + 0.055, tip_y, tip_z),
+            0.030,
+            POINT_BLANK_DARK,
+            vertices=32,
+        ))
+        wing_components.append(motor)
+        motor_band = drone_component(cylinder_between(
+            f"{name} {wing_label} motor identification band",
+            (motor_center_x - 0.012, tip_y, tip_z),
+            (motor_center_x + 0.004, tip_y, tip_z),
+            0.0315,
+            POINT_BLANK_MOTOR_BAND,
+            vertices=32,
+        ))
+        wing_components.append(motor_band)
+
+        rotor_hub = (motor_center_x - 0.063, tip_y, tip_z)
+        rotor_cap = drone_component(cylinder_between(
+            f"{name} {wing_label} propeller hub",
+            (rotor_hub[0] - 0.010, tip_y, tip_z),
+            (rotor_hub[0] + 0.010, tip_y, tip_z),
+            0.010,
+            POINT_BLANK_DARK,
+            vertices=28,
+        ))
+        wing_components.append(rotor_cap)
+        rotor_blades: list[bpy.types.Object] = []
+        for blade_index in range(4):
+            blade_angle = blade_index * math.tau / 4.0
+            blade_radius = 0.052
+            blade = drone_component(cube(
+                f"{name} {wing_label} propeller blade {blade_index + 1:02d}",
+                (
+                    rotor_hub[0] - 0.012,
+                    tip_y + math.cos(blade_angle) * blade_radius * 0.52,
+                    tip_z + math.sin(blade_angle) * blade_radius * 0.52,
+                ),
+                (0.0025, blade_radius * 0.54, 0.0035),
+                POINT_BLANK_BLADE,
+                edge=0.002,
+            ))
+            blade.rotation_euler[0] = blade_angle
+            rotor_blades.append(blade)
+
+        hinge_head = (
+            center_x + 0.010,
+            center_y + radial_y * 0.030,
+            center_z + radial_z * 0.030,
+        )
+        hinge_tail = (
+            center_x + 0.010,
+            center_y + radial_y * 0.230,
+            center_z + radial_z * 0.230,
+        )
+        wing_bone_sets.append((wing_label, hinge_head, hinge_tail, wing_components))
+        rotor_blade_sets.append((wing_label, rotor_hub, rotor_blades, wing_label))
+
+    # Scale the complete public-reference silhouette uniformly.  The four fixed
+    # X-wing assemblies remain attached at their true relative span in both the
+    # magazine and flight poses.  ``stowed_wing_scale`` is retained only as a
+    # compatibility hook for earlier files and is 1.0 in the production scene;
+    # no wing grows out of the body during release.
+    center_point = Vector(center)
+    vehicle_scale_matrix = (
+        Matrix.Translation(center_point)
+        @ Matrix.Scale(visual_scale, 4)
+        @ Matrix.Translation(-center_point)
+    )
+    for component in tuple(group.children):
+        component.matrix_world = vehicle_scale_matrix @ component.matrix_world
+
+    scaled_rotor_sets: list[
+        tuple[str, tuple[float, float, float], list[bpy.types.Object], str]
+    ] = []
+    scaled_wing_sets: list[
+        tuple[str, tuple[float, float, float], tuple[float, float, float], list[bpy.types.Object]]
+    ] = []
+    for wing_set, rotor_set in zip(wing_bone_sets, rotor_blade_sets):
+        wing_label, hinge_head, hinge_tail, wing_components = wing_set
+        rotor_label, rotor_hub, rotor_blades, rotor_wing_label = rotor_set
+        scaled_hinge_head = center_point + (Vector(hinge_head) - center_point) * visual_scale
+        scaled_hinge_tail = center_point + (Vector(hinge_tail) - center_point) * visual_scale
+        scaled_rotor_hub = center_point + (Vector(rotor_hub) - center_point) * visual_scale
+        compact_matrix = (
+            Matrix.Translation(scaled_hinge_head)
+            @ Matrix.Scale(stowed_wing_scale, 4)
+            @ Matrix.Translation(-scaled_hinge_head)
+        )
+        for component in (*wing_components, *rotor_blades):
+            component.matrix_world = compact_matrix @ component.matrix_world
+        compact_hinge_tail = scaled_hinge_head + (
+            scaled_hinge_tail - scaled_hinge_head
+        ) * stowed_wing_scale
+        compact_rotor_hub = scaled_hinge_head + (
+            scaled_rotor_hub - scaled_hinge_head
+        ) * stowed_wing_scale
+        scaled_wing_sets.append(
+            (
+                wing_label,
+                tuple(scaled_hinge_head),
+                tuple(compact_hinge_tail),
+                wing_components,
+            )
+        )
+        scaled_rotor_sets.append(
+            (
+                rotor_label,
+                tuple(compact_rotor_hub),
+                rotor_blades,
+                rotor_wing_label,
+            )
+        )
+
+    return group, scaled_rotor_sets, scaled_wing_sets
+
+
+def create_sta10_deployment_system(
+    root: bpy.types.Object,
+    fuselage_sections: list[tuple[float, float, float, float, float, float]],
+    hatch_control_loop: list[tuple[float, float]],
+    gear_assemblies: list[tuple[str, float, tuple[float, float, float], list[bpy.types.Object]]],
+) -> None:
+    """Build and animate the complete STA 10 airborne release presentation."""
+    # Open-bottom bay volume and an orderly two-cell magazine. The cavity sits
+    # behind the runtime-fadeable fuselage patch and is invisible in overview.
+    bay_center_x = -0.28
+    bay_half_length = 0.55
+    bay_half_width = 0.205
+    bay_cell_y = 0.070
+    bay_parts = [
+        cube("STA 10 magazine ceiling", (bay_center_x, 0.0, 0.145), (bay_half_length, bay_half_width, 0.010), DRONE_BAY_VOID, 0.008),
+        cube("STA 10 port magazine wall", (bay_center_x, bay_half_width, 0.000), (bay_half_length, 0.010, 0.135), DRONE_BAY_VOID, 0.006),
+        cube("STA 10 starboard magazine wall", (bay_center_x, -bay_half_width, 0.000), (bay_half_length, 0.010, 0.135), DRONE_BAY_VOID, 0.006),
+        cube("STA 10 forward magazine bulkhead", (bay_center_x - bay_half_length, 0.0, 0.000), (0.010, bay_half_width, 0.135), DRONE_BAY_VOID, 0.006),
+        cube("STA 10 aft magazine bulkhead", (bay_center_x + bay_half_length, 0.0, 0.000), (0.010, bay_half_width, 0.135), DRONE_BAY_VOID, 0.006),
+        cube("STA 10 port deployment rail", (bay_center_x, bay_cell_y, -0.070), (0.515, 0.010, 0.008), DRONE_RACK, 0.004),
+        cube("STA 10 starboard deployment rail", (bay_center_x, -bay_cell_y, -0.070), (0.515, 0.010, 0.008), DRONE_RACK, 0.004),
+        cube("STA 10 port recessed aperture frame", (bay_center_x, 0.187, -0.137), (0.520, 0.006, 0.007), DRONE_RACK, 0.003),
+        cube("STA 10 starboard recessed aperture frame", (bay_center_x, -0.187, -0.137), (0.520, 0.006, 0.007), DRONE_RACK, 0.003),
+        cube("STA 10 forward recessed aperture frame", (bay_center_x - 0.520, 0.0, -0.137), (0.008, 0.180, 0.007), DRONE_RACK, 0.003),
+        cube("STA 10 aft recessed aperture frame", (bay_center_x + 0.520, 0.0, -0.137), (0.008, 0.145, 0.007), DRONE_RACK, 0.003),
+        cube("STA 10 port low-level magazine guide light", (bay_center_x, 0.193, -0.080), (0.470, 0.003, 0.003), DRONE_BAY_LIGHT, 0.002),
+        cube("STA 10 starboard low-level magazine guide light", (bay_center_x, -0.193, -0.080), (0.470, 0.003, 0.003), DRONE_BAY_LIGHT, 0.002),
+    ]
+    for bay_part in bay_parts:
+        bay_part.parent = root
+        bay_part["station"] = "STA 10"
+
+    for cradle_y, cradle_label in ((bay_cell_y, "port"), (-bay_cell_y, "starboard")):
+        cradle = cube(
+            f"STA 10 {cradle_label} shock-isolated launch cradle",
+            (bay_center_x, cradle_y, -0.062),
+            (0.505, 0.032, 0.008),
+            DRONE_RACK,
+            edge=0.006,
+        )
+        cradle.parent = root
+        for x_offset, side_name in ((-0.405, "forward"), (0.405, "aft")):
+            restraint = cube(
+                f"STA 10 {cradle_label} {side_name} restraint shoe",
+                (bay_center_x + x_offset, cradle_y, -0.035),
+                (0.030, 0.032, 0.026),
+                DRONE_RACK,
+                edge=0.006,
+            )
+            restraint.parent = root
+
+    hatch_panels: list[tuple[str, float, bpy.types.Object]] = []
+    for side_label, side, lateral_range in (
+        ("port", 1.0, (1.0, 0.0)),
+        ("starboard", -1.0, (0.0, -1.0)),
+    ):
+        hatch_panel = create_surface_hatch_panel(
+            f"STA 10 flush animated {side_label} deployment door",
+            hatch_control_loop,
+            fuselage_sections,
+            STA10_DOOR_OUTER,
+            thickness=0.010,
+            inner_mat=STA10_DOOR_INNER,
+            lateral_fraction_range=lateral_range,
+        )
+        hatch_panel.parent = root
+        hatch_panel["station"] = "STA 10"
+        hatch_panel["door_layout"] = "paired conformal outward-opening longitudinal doors"
+        hatch_panels.append((side_label, side, hatch_panel))
+
+    # Two faithful, uniformly reduced vehicles sit laterally side-by-side on
+    # separate rails.  A small longitudinal stagger prevents the fixed X-wing
+    # assemblies from intersecting while preserving the public silhouette.
+    # Nothing changes scale or grows after release.
+    stowed_drone_scale = 0.65
+    stowed_wing_scale = 1.0
+    drone_origins = [
+        (bay_center_x - 0.140, bay_cell_y, -0.010),
+        (bay_center_x + 0.140, -bay_cell_y, -0.010),
+    ]
+    created_drones = [
+        create_point_blank_vtol(
+            "STA 10 Point Blank vehicle 01",
+            drone_origins[0],
+            root,
+            featured_payload=True,
+            visual_scale=stowed_drone_scale,
+            stowed_wing_scale=stowed_wing_scale,
+        ),
+        create_point_blank_vtol(
+            "STA 10 Point Blank vehicle 02",
+            drone_origins[1],
+            root,
+            visual_scale=stowed_drone_scale,
+            stowed_wing_scale=stowed_wing_scale,
+        ),
+    ]
+    released_drones = [created_drone[0] for created_drone in created_drones]
+    rotor_sets_by_drone = [created_drone[1] for created_drone in created_drones]
+    wing_sets_by_drone = [created_drone[2] for created_drone in created_drones]
+
+    armature_data = bpy.data.armatures.new("STA 10 deployment animation rig data")
+    armature = bpy.data.objects.new("STA 10 deployment animation rig", armature_data)
+    bpy.context.collection.objects.link(armature)
+    armature.parent = root
+    armature["animation"] = "airborne gear retraction, hatch opening and sequential VTOL release"
+    mark_export(armature)
+
+    bpy.context.view_layer.objects.active = armature
+    armature.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+
+    bone_specs: list[tuple[str, tuple[float, float, float], tuple[float, float, float]]] = []
+    for label, _side, pivot, _parts in gear_assemblies:
+        bone_specs.append((f"{label} main gear retract", pivot, (pivot[0] + 0.24, pivot[1], pivot[2])))
+    for side_label, side, _hatch_panel in hatch_panels:
+        door_head = (bay_center_x - 0.520, side * 0.190, -0.150)
+        door_tail = (bay_center_x + 0.520, side * 0.190, -0.150)
+        bone_specs.append((f"STA 10 {side_label} hatch hinge", door_head, door_tail))
+    for drone_index, origin in enumerate(drone_origins, start=1):
+        bone_specs.append(
+            (
+                f"STA 10 vehicle {drone_index:02d} release",
+                origin,
+                (origin[0], origin[1], origin[2] + 0.12),
+            )
+        )
+    edit_bones_by_name: dict[str, bpy.types.EditBone] = {}
+    for bone_name, head, tail in bone_specs:
+        edit_bone = armature.data.edit_bones.new(bone_name)
+        edit_bone.head = head
+        edit_bone.tail = tail
+        edit_bone.use_deform = False
+        edit_bones_by_name[bone_name] = edit_bone
+
+    wing_bone_bindings: list[tuple[str, list[bpy.types.Object], int]] = []
+    rotor_bone_bindings: list[tuple[str, list[bpy.types.Object], float]] = []
+    for drone_index, wing_sets in enumerate(wing_sets_by_drone, start=1):
+        release_bone_name = f"STA 10 vehicle {drone_index:02d} release"
+        for wing_label, hinge_head, hinge_tail, wing_components in wing_sets:
+            wing_bone_name = f"STA 10 vehicle {drone_index:02d} {wing_label} deploy"
+            wing_bone = armature.data.edit_bones.new(wing_bone_name)
+            wing_bone.head = hinge_head
+            wing_bone.tail = hinge_tail
+            wing_bone.parent = edit_bones_by_name[release_bone_name]
+            wing_bone.use_deform = False
+            wing_bone_bindings.append((wing_bone_name, wing_components, drone_index))
+    for drone_index, rotor_sets in enumerate(rotor_sets_by_drone, start=1):
+        for rotor_index, (rotor_label, hub, rotor_blades, wing_label) in enumerate(rotor_sets, start=1):
+            rotor_bone_name = f"STA 10 vehicle {drone_index:02d} {rotor_label} rotor spin"
+            rotor_bone = armature.data.edit_bones.new(rotor_bone_name)
+            rotor_bone.head = (hub[0] - 0.030, hub[1], hub[2])
+            rotor_bone.tail = (hub[0] + 0.030, hub[1], hub[2])
+            rotor_bone.parent = armature.data.edit_bones[f"STA 10 vehicle {drone_index:02d} {wing_label} deploy"]
+            rotor_bone.use_deform = False
+            spin_direction = 1.0 if rotor_index % 2 else -1.0
+            rotor_bone_bindings.append((rotor_bone_name, rotor_blades, spin_direction))
+    bpy.ops.object.mode_set(mode="POSE")
+
+    def parent_to_bone_keep_world(obj: bpy.types.Object, bone_name: str) -> None:
+        world_matrix = obj.matrix_world.copy()
+        obj.parent = armature
+        obj.parent_type = "BONE"
+        obj.parent_bone = bone_name
+        obj.matrix_world = world_matrix
+
+    for label, _side, _pivot, parts in gear_assemblies:
+        for part in parts:
+            parent_to_bone_keep_world(part, f"{label} main gear retract")
+    for side_label, _side, hatch_panel in hatch_panels:
+        parent_to_bone_keep_world(hatch_panel, f"STA 10 {side_label} hatch hinge")
+    for drone_index, drone in enumerate(released_drones, start=1):
+        parent_to_bone_keep_world(drone, f"STA 10 vehicle {drone_index:02d} release")
+    for wing_bone_name, wing_components, _drone_index in wing_bone_bindings:
+        for wing_component in wing_components:
+            parent_to_bone_keep_world(wing_component, wing_bone_name)
+    for rotor_bone_name, rotor_blades, _spin_direction in rotor_bone_bindings:
+        for rotor_blade in rotor_blades:
+            parent_to_bone_keep_world(rotor_blade, rotor_bone_name)
+
+    action = bpy.data.actions.new("STA10_DEPLOYMENT_DEMO")
+    armature.animation_data_create()
+    armature.animation_data.action = action
+
+    def keyframe_pose_rotation(pose_bone: bpy.types.PoseBone, frame: int, y_rotation: float) -> None:
+        pose_bone.rotation_mode = "XYZ"
+        pose_bone.rotation_euler = (0.0, y_rotation, 0.0)
+        pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame, group=pose_bone.name)
+
+    def keyframe_rotor_spin(pose_bone: bpy.types.PoseBone, frame: int, rotor_rotation: float) -> None:
+        pose_bone.rotation_mode = "XYZ"
+        # Blender bones use local Y along head-to-tail. Point Blank rotor bones
+        # run along the nacelle/vehicle X axis, matching the public X-wing view.
+        pose_bone.rotation_euler = (0.0, rotor_rotation, 0.0)
+        pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame, group=pose_bone.name)
+
+    def keyframe_wing_extension(pose_bone: bpy.types.PoseBone, frame: int, extension: float) -> None:
+        # The compact magazine state draws the four radial assemblies toward the
+        # fuselage. After the vehicle clears the bay they extend to the public
+        # cruciform silhouette. This is a visual stow/deploy treatment only.
+        pose_bone.scale = (extension, extension, extension)
+        pose_bone.keyframe_insert(data_path="scale", frame=frame, group=pose_bone.name)
+
+    def keyframe_pose_translation(
+        pose_bone: bpy.types.PoseBone,
+        frame: int,
+        aircraft_delta: tuple[float, float, float],
+    ) -> None:
+        rest_rotation = pose_bone.bone.matrix_local.to_3x3()
+        pose_bone.location = rest_rotation.inverted() @ Vector(aircraft_delta)
+        pose_bone.keyframe_insert(data_path="location", frame=frame, group=pose_bone.name)
+
+    def keyframe_drone_attitude(
+        pose_bone: bpy.types.PoseBone,
+        frame: int,
+        aircraft_rotation_degrees: tuple[float, float, float],
+    ) -> None:
+        pose_bone.rotation_mode = "XYZ"
+        pose_bone.rotation_euler = tuple(
+            math.radians(value) for value in aircraft_rotation_degrees
+        )
+        pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame, group=pose_bone.name)
+
+    # Both main gears fold inboard by a true 90 degrees before the hatch opens.
+    for label, side, _pivot, _parts in gear_assemblies:
+        pose_bone = armature.pose.bones[f"{label} main gear retract"]
+        for frame in (1, 10):
+            keyframe_pose_rotation(pose_bone, frame, 0.0)
+        for frame in (58, 330):
+            keyframe_pose_rotation(pose_bone, frame, math.radians(-90.0 * side))
+
+    for side_label, side, _hatch_panel in hatch_panels:
+        hatch_bone = armature.pose.bones[f"STA 10 {side_label} hatch hinge"]
+        for frame in (1, 56):
+            keyframe_pose_rotation(hatch_bone, frame, 0.0)
+        for frame in (96, 330):
+            keyframe_pose_rotation(hatch_bone, frame, math.radians(128.0 * side))
+
+    # The release paths include a positive clearance hold after both doors have
+    # reached their fully open stops at frame 96.  Each vehicle first translates
+    # vertically through the unobstructed centre corridor before beginning its
+    # lateral flight path, so no part of the X-wing or rotor envelope intersects
+    # either door.
+    release_paths = (
+        (
+            (1, (0.0, 0.0, 0.0)),
+            (120, (0.0, 0.0, 0.0)),
+            (150, (0.0, 0.0, -0.44)),
+            (185, (1.25, -0.82, -1.24)),
+            (220, (2.15, -1.40, -2.10)),
+            (275, (3.25, -2.10, -1.55)),
+            (330, (3.60, -2.15, -1.05)),
+        ),
+        (
+            (1, (0.0, 0.0, 0.0)),
+            (165, (0.0, 0.0, 0.0)),
+            (195, (0.0, 0.0, -0.42)),
+            (220, (1.28, 0.96, -1.52)),
+            (275, (2.10, 1.50, -1.10)),
+            (330, (3.05, 1.90, -0.70)),
+        ),
+    )
+    flight_attitudes = (
+        (
+            (1, (0.0, 0.0, 0.0)),
+            (150, (0.0, 0.0, 0.0)),
+            (185, (-6.0, 4.0, -10.0)),
+            (220, (-14.0, 8.0, -16.0)),
+            (275, (10.0, -5.0, -8.0)),
+            (330, (0.0, 0.0, 0.0)),
+        ),
+        (
+            (1, (0.0, 0.0, 0.0)),
+            (195, (0.0, 0.0, 0.0)),
+            (220, (12.0, -7.0, 14.0)),
+            (275, (-9.0, 5.0, 7.0)),
+            (330, (0.0, 0.0, 0.0)),
+        ),
+    )
+    for drone_index, path in enumerate(release_paths, start=1):
+        pose_bone = armature.pose.bones[f"STA 10 vehicle {drone_index:02d} release"]
+        for frame, delta in path:
+            keyframe_pose_translation(pose_bone, frame, delta)
+        for frame, rotation in flight_attitudes[drone_index - 1]:
+            keyframe_drone_attitude(pose_bone, frame, rotation)
+
+    deployed_wing_extension = 1.0
+    for wing_bone_name, _wing_components, drone_index in wing_bone_bindings:
+        pose_bone = armature.pose.bones[wing_bone_name]
+        if drone_index == 1:
+            keyframe_wing_extension(pose_bone, 1, 1.0)
+            keyframe_wing_extension(pose_bone, 126, deployed_wing_extension)
+            keyframe_wing_extension(pose_bone, 154, deployed_wing_extension)
+            keyframe_wing_extension(pose_bone, 330, deployed_wing_extension)
+        else:
+            keyframe_wing_extension(pose_bone, 1, 1.0)
+            keyframe_wing_extension(pose_bone, 162, deployed_wing_extension)
+            keyframe_wing_extension(pose_bone, 190, deployed_wing_extension)
+            keyframe_wing_extension(pose_bone, 330, deployed_wing_extension)
+
+    # Counter-rotating blades start slowly and accelerate smoothly.  Dense
+    # per-frame keys keep every angular step below pi, preventing glTF quaternion
+    # interpolation from appearing to reverse, hesitate or rotate off-axis.
+    for rotor_bone_name, _rotor_blades, spin_direction in rotor_bone_bindings:
+        pose_bone = armature.pose.bones[rotor_bone_name]
+        keyframe_rotor_spin(pose_bone, 1, 0.0)
+        keyframe_rotor_spin(pose_bone, 86, 0.0)
+        spool_frames = 42.0
+        maximum_radians_per_frame = math.tau * 4.5 / 24.0
+        for frame in range(87, 331):
+            elapsed = float(frame - 86)
+            if elapsed <= spool_frames:
+                rotor_rotation = (
+                    maximum_radians_per_frame
+                    * elapsed**3
+                    / (3.0 * spool_frames**2)
+                )
+            else:
+                spool_rotation = maximum_radians_per_frame * spool_frames / 3.0
+                rotor_rotation = spool_rotation + maximum_radians_per_frame * (
+                    elapsed - spool_frames
+                )
+            keyframe_rotor_spin(pose_bone, frame, spin_direction * rotor_rotation)
+
+    bpy.ops.object.mode_set(mode="OBJECT")
+    root["sta10_payload_reference"] = "IAI Point Blank public product page and supplied external imagery"
+    root["sta10_loaded_vehicle_count"] = 2
+    root["sta10_magazine_layout"] = "two laterally adjacent fixed X-wing vehicles on staggered independent rails"
+    root["sta10_vehicle_presentation_scale"] = stowed_drone_scale
+    root["sta10_vehicle_public_length_m"] = 1.0
+    root["sta10_vehicle_public_weight_kg"] = 10.0
+    root["sta10_vehicle_public_max_speed_mps"] = 80.0
+    root["sta10_demo_animation"] = "STA10_DEPLOYMENT_DEMO"
+    root["sta10_release_interlock"] = "both doors fully open at frame 96; first release held to frame 120; second release held to frame 165"
+    root["sta10_clearance_corridor"] = "vertical centreline extraction before lateral departure"
+    root["sta10_flight_segment"] = "formation flight followed by featured vehicle close-up"
+    root["sta10_demo_scope"] = "visual concept only, not production or release-system geometry"
+
+
 def radial_store_fin(
     name: str,
     center_y: float,
@@ -2232,18 +3470,105 @@ def airfoil_half(
     return obj
 
 
+def bent_airfoil_half(
+    name: str,
+    side: float,
+    stations: list[tuple[float, float, float, float, float, float, float]],
+    mat: bpy.types.Material,
+    chord_points: int = 52,
+) -> bpy.types.Object:
+    """Create one continuous lifting surface through a bent wingtip.
+
+    Each station is ``(span, z, leading_x, chord, thickness_ratio,
+    incidence_deg, section_roll_deg)``.  Rotating the airfoil section from
+    horizontal to vertical within one loft removes the overlapping end caps
+    that previously produced a step and a lower-surface bulge at the winglet
+    transition.
+    """
+    vertices: list[tuple[float, float, float]] = []
+    faces: list[tuple[int, ...]] = []
+    perimeter_size = chord_points * 2
+
+    for span, z_base, lead, chord, thickness_ratio, incidence_deg, roll_deg in stations:
+        incidence = math.radians(incidence_deg)
+        roll = math.radians(roll_deg)
+        quarter_chord = lead + chord * 0.25
+        perimeter: list[tuple[float, float, float]] = []
+        for reverse, upper in ((False, True), (True, False)):
+            indices = range(chord_points - 1, -1, -1) if reverse else range(chord_points)
+            for index in indices:
+                u = 0.5 * (1.0 - math.cos(math.pi * index / (chord_points - 1)))
+                thickness = 5.0 * thickness_ratio * chord * (
+                    0.2969 * math.sqrt(max(u, 0.0))
+                    - 0.1260 * u
+                    - 0.3516 * u**2
+                    + 0.2843 * u**3
+                    - 0.1036 * u**4
+                )
+                camber = 0.012 * chord * math.sin(math.pi * u)
+                profile_z = camber + (thickness if upper else -thickness)
+                profile_x = lead + chord * u - quarter_chord
+                x = quarter_chord + profile_x * math.cos(incidence) + profile_z * math.sin(incidence)
+                section_z = -profile_x * math.sin(incidence) + profile_z * math.cos(incidence)
+                y = span * side - section_z * math.sin(roll) * side
+                z = z_base + section_z * math.cos(roll)
+                perimeter.append((x, y, z))
+        vertices.extend(perimeter)
+
+    for station in range(len(stations) - 1):
+        current = station * perimeter_size
+        following = (station + 1) * perimeter_size
+        for index in range(perimeter_size):
+            next_index = (index + 1) % perimeter_size
+            faces.append(
+                (
+                    current + index,
+                    following + index,
+                    following + next_index,
+                    current + next_index,
+                )
+            )
+    faces.append(tuple(range(perimeter_size - 1, -1, -1)))
+    last = (len(stations) - 1) * perimeter_size
+    faces.append(tuple(last + index for index in range(perimeter_size)))
+
+    mesh = bpy.data.meshes.new(f"{name} mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    assign(obj, mat)
+    smooth(obj)
+    mark_export(obj)
+    return obj
+
+
 def wing_half(name: str, side: float) -> bpy.types.Object:
-    """AMT-200S planform without an artificially swollen center section."""
+    """AMT-200S planform with a single continuous 25-degree winglet loft."""
     dihedral = math.tan(math.radians(2.5))
     root_z = -0.25
+    wing_tip_z = root_z + 8.735 * dihedral
     stations = [
-        # span, leading x, chord, z, NACA thickness ratio, incidence
-        (0.00, -2.22, 1.48, root_z, 0.16, 2.0),
-        (1.40, -2.18, 1.38, root_z + 1.40 * dihedral, 0.16, 1.7),
-        (4.80, -1.98, 1.04, root_z + 4.80 * dihedral, 0.15, 0.8),
-        (8.735, -1.73, 0.58, root_z + 8.735 * dihedral, 0.13, 0.0),
+        # span, z, leading x, chord, NACA thickness ratio, incidence, section roll
+        (0.00, root_z, -2.22, 1.48, 0.16, 2.0, 0.0),
+        (1.40, root_z + 1.40 * dihedral, -2.18, 1.38, 0.16, 1.7, 0.0),
+        (4.80, root_z + 4.80 * dihedral, -1.98, 1.04, 0.15, 0.8, 0.0),
+        (8.735, wing_tip_z, -1.730, 0.580, 0.130, 0.0, 0.0),
+        # The first three tip stations follow one clean 25-degree trapezoidal
+        # plane.  The next two roll the section through a compact fillet into
+        # the vertical winglet without adding a second capped mesh.
+        (8.840, wing_tip_z + 0.048, -1.710, 0.540, 0.128, 0.0, 8.0),
+        (8.960, wing_tip_z + 0.104, -1.670, 0.490, 0.125, 0.0, 18.0),
+        (9.055, wing_tip_z + 0.148, -1.645, 0.455, 0.130, 0.0, 35.0),
+        (9.085, wing_tip_z + 0.205, -1.625, 0.430, 0.125, 0.0, 68.0),
+        (9.090, wing_tip_z + 0.255, -1.610, 0.405, 0.120, 0.0, 90.0),
+        (9.090, wing_tip_z + 0.605, -1.485, 0.285, 0.110, 0.0, 90.0),
     ]
-    return airfoil_half(name, side, stations, IAF_GRAY, chord_points=52)
+    wing = bent_airfoil_half(name, side, stations, IAF_GRAY, chord_points=52)
+    wing["tip_transition_angle_deg"] = 25.0
+    wing["winglet_height_scale"] = 0.75
+    wing["construction"] = "single continuous bent airfoil loft; no overlap, boolean, or internal cap"
+    return wing
 
 
 def wing_root_fillet(name: str, side: float) -> bpy.types.Object:
@@ -2408,66 +3733,92 @@ def canted_fin_mesh(
     return obj
 
 
-def canted_winglet(name: str, side: float) -> bpy.types.Object:
-    """Tapered winglet reduced to 75 percent height about its fixed wing root."""
-    base_y = 8.71 * side
-    winglet_scale = 0.75
-    top_y = (8.71 + (8.96 - 8.71) * winglet_scale) * side
-    base_z = 0.12
-    top_z = base_z + (0.83 - base_z) * winglet_scale
-    forward_top_z = base_z + (0.73 - base_z) * winglet_scale
-    half_thickness = 0.022
-    profile = [
-        (-1.73, base_y, base_z),
-        (-1.15, base_y, base_z),
-        # Correct installed orientation: the aft/trailing edge is vertical and
-        # the forward/leading edge sweeps aft toward the tip. Nose is negative X.
-        (-1.15, top_y, top_z),
-        (-1.45, top_y, forward_top_z),
-    ]
-    verts = [(x, y - half_thickness, z) for x, y, z in profile] + [
-        (x, y + half_thickness, z) for x, y, z in profile
-    ]
-    faces = [(3, 2, 1, 0), (4, 5, 6, 7)]
-    for idx in range(4):
-        nxt = (idx + 1) % 4
-        faces.append((idx, nxt, 4 + nxt, 4 + idx))
+def vertical_pylon_airfoil(
+    name: str,
+    y_offset: float,
+    stations: list[tuple[float, float, float, float]],
+    mat: bpy.types.Material,
+    chord_points: int = 36,
+) -> bpy.types.Object:
+    """Create a short tapered NACA-like pylon with rounded leading edges.
+
+    Each station is ``(z, leading_x, chord, thickness_ratio)``.  This avoids
+    the slab-sided external-store bracket that previously met the wing and
+    tank with abrupt corners.
+    """
+    vertices: list[tuple[float, float, float]] = []
+    faces: list[tuple[int, ...]] = []
+    perimeter_size = chord_points * 2
+    for z, leading_x, chord, thickness_ratio in stations:
+        perimeter: list[tuple[float, float, float]] = []
+        for lateral_sign, indices in (
+            (1.0, range(chord_points)),
+            (-1.0, range(chord_points - 1, -1, -1)),
+        ):
+            for index in indices:
+                u = 0.5 * (1.0 - math.cos(math.pi * index / (chord_points - 1)))
+                half_thickness = 5.0 * thickness_ratio * chord * (
+                    0.2969 * math.sqrt(max(u, 0.0))
+                    - 0.1260 * u
+                    - 0.3516 * u**2
+                    + 0.2843 * u**3
+                    - 0.1036 * u**4
+                )
+                perimeter.append(
+                    (leading_x + chord * u, y_offset + lateral_sign * half_thickness, z)
+                )
+        vertices.extend(perimeter)
+
+    for station in range(len(stations) - 1):
+        current = station * perimeter_size
+        following = (station + 1) * perimeter_size
+        for index in range(perimeter_size):
+            next_index = (index + 1) % perimeter_size
+            faces.append(
+                (
+                    current + index,
+                    following + index,
+                    following + next_index,
+                    current + next_index,
+                )
+            )
+    faces.append(tuple(range(perimeter_size - 1, -1, -1)))
+    last = (len(stations) - 1) * perimeter_size
+    faces.append(tuple(last + index for index in range(perimeter_size)))
     mesh = bpy.data.meshes.new(f"{name} mesh")
-    mesh.from_pydata(verts, [], faces)
+    mesh.from_pydata(vertices, [], faces)
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
-    assign(obj, IAF_GRAY)
-    bevel(obj, 0.018, 3)
+    assign(obj, mat)
     smooth(obj)
-    obj["visual_scale"] = winglet_scale
     mark_export(obj)
     return obj
 
 
 def add_airframe_surface_details(root: bpy.types.Object) -> None:
     """Add restrained scale cues found on a composite production airframe."""
-    # Flap and aileron hinge lines sit just above the lifting-surface skin.
+    # Flap and aileron hinge lines are surface-conforming, zero-thickness ribbons.
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
-        surface_detail_line(
+        wing_surface_seam(
             f"{label} flap hinge",
             [
                 (-1.09, 1.48 * side, -0.120),
                 (-1.10, 3.18 * side, -0.055),
                 (-1.13, 4.70 * side, 0.010),
             ],
-            0.0055,
+            0.0080,
             SEAM,
             root,
         )
-        surface_detail_line(
+        wing_surface_seam(
             f"{label} aileron hinge",
             [
                 (-1.14, 4.84 * side, 0.018),
                 (-1.20, 6.62 * side, 0.095),
                 (-1.28, 8.46 * side, 0.170),
             ],
-            0.0050,
+            0.0070,
             SEAM,
             root,
         )
@@ -2504,7 +3855,7 @@ def add_airframe_surface_details(root: bpy.types.Object) -> None:
             segments=48,
             ring_count=24,
             radius=0.012,
-            location=(-1.450, 8.918 * side, 0.586),
+            location=(-1.455, 9.090 * side, 0.690),
         )
         navigation_light = bpy.context.object
         navigation_light.name = f"{label} navigation lens"
@@ -2588,12 +3939,19 @@ def create_aircraft() -> bpy.types.Object:
         IAF_GRAY,
     )
     assign_forward_material(fuselage, ENGINE_COWLING, -2.46)
+    assign_mission_computer_cutaway_material(fuselage, MISSION_COMPUTER_SKIN)
+    assign_drone_bay_cutaway_material(fuselage, DRONE_BAY_SKIN)
     fuselage.parent = root
 
     # STA 02 now resolves to a real internal powerplant. It is hidden by the
     # opaque cowling in overview and revealed by a dedicated material fade in
     # the web experience, leaving the external aerodynamic model unchanged.
     create_rotax_916_engine(root)
+
+    # STA 03 reveals the published-size NVIDIA T5000 module and its illustrative
+    # airborne carrier through a local material fade in the starboard fuselage.
+    # Mission AI compute remains explicitly separate from the critical FCC.
+    create_jetson_thor_mission_computer(root)
 
     # There is no cockpit, canopy or separate dorsal avionics cover. The
     # original fuselage loft is the uninterrupted closed upper surface.
@@ -2606,10 +3964,8 @@ def create_aircraft() -> bpy.types.Object:
     # The airfoil halves already penetrate the lower fuselage. Avoiding an
     # additional saddle removes the false thickened center-wing hump.
 
-    # Compact upturned tips consistent with later Super Ximango examples.
-    for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
-        tip = canted_winglet(f"{label} winglet", side)
-        tip.parent = root
+    # Each wing, its 25-degree transition and the vertical winglet now share
+    # one continuous loft.  No overlapping cap or separate tip mesh remains.
 
     # Two presentation-only external fuel tanks sit clearly below the wing skin
     # on short, streamlined pylons. Their envelopes are reduced uniformly to
@@ -2629,53 +3985,23 @@ def create_aircraft() -> bpy.types.Object:
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         station_y = 2.68 * side
         tank_center_z = -0.440
-        tank_pylon = extruded_plate_y(
+        # One closed hard-surface pylon carries its own widened end stations.
+        # It overlaps the wing and tank skins slightly but never modifies either
+        # source mesh, so their tessellation and aerodynamic surfaces stay clean.
+        tank_pylon = vertical_pylon_airfoil(
             f"{label} external fuel-tank streamlined pylon",
-            [
-                (-1.78, -0.205),
-                (-1.10, -0.165),
-                (-1.00, -0.285),
-                (-1.69, -0.300),
-            ],
             station_y,
-            0.110,
+            [
+                (-0.122, -1.610, 0.380, 0.140),
+                (-0.145, -1.590, 0.340, 0.110),
+                (-0.215, -1.560, 0.300, 0.100),
+                (-0.284, -1.540, 0.310, 0.110),
+                (-0.307, -1.550, 0.350, 0.140),
+            ],
             IAF_GRAY,
-            0.018,
+            chord_points=40,
         )
         tank_pylon.parent = root
-
-        # Overlapping upper and lower fillets make both pylon interfaces read
-        # as continuous composite fairings.  They deliberately penetrate the
-        # wing skin and tank shell, so no daylight gap survives at oblique or
-        # underside presentation angles.
-        upper_pylon_blend = create_loft(
-            f"{label} fuel-tank pylon upper aerodynamic blend",
-            [
-                (-1.88, 0.020, 0.012, -0.205),
-                (-1.76, 0.145, 0.047, -0.218),
-                (-1.38, 0.155, 0.052, -0.220),
-                (-1.02, 0.125, 0.042, -0.205),
-                (-0.92, 0.020, 0.010, -0.190),
-            ],
-            IAF_GRAY,
-            ring_segments=40,
-            y_offset=station_y,
-        )
-        upper_pylon_blend.parent = root
-        lower_pylon_blend = create_loft(
-            f"{label} fuel-tank pylon lower aerodynamic blend",
-            [
-                (-1.84, 0.020, 0.010, -0.290),
-                (-1.70, 0.142, 0.038, -0.304),
-                (-1.34, 0.152, 0.044, -0.308),
-                (-1.02, 0.115, 0.032, -0.294),
-                (-0.92, 0.018, 0.009, -0.286),
-            ],
-            IAF_GRAY,
-            ring_segments=40,
-            y_offset=station_y,
-        )
-        lower_pylon_blend.parent = root
         tank = create_loft(
             f"{label} external fuel tank",
             [
@@ -2950,8 +4276,11 @@ def create_aircraft() -> bpy.types.Object:
     # show a nearly perpendicular deployment from the low wing, with a subtle
     # aft rake in profile and outboard cant in front view.  The distinctive
     # outboard door is an asymmetric right-angle wedge rather than a rectangular
-    # spat: its upper forward corner is approximately square, its aft edge fans
-    # rearward, and only the tire contact patch remains visible from outside.
+    # spat: its upper aft corner is approximately square, its forward edge flows
+    # diagonally into the leg, and only the tire contact patch remains visible.
+    sta10_gear_assemblies: list[
+        tuple[str, float, tuple[float, float, float], list[bpy.types.Object]]
+    ] = []
     for side, label in ((1.0, "Port"), (-1.0, "Starboard")):
         mount_x = -1.62
         # Keep the wheel-centre track at the referenced 2.80 m.  The trunnion
@@ -2961,6 +4290,7 @@ def create_aircraft() -> bpy.types.Object:
         wheel_x = mount_x + 0.11
         wheel_y = mount_y + 0.11 * side
         wheel_location = (wheel_x, wheel_y, -0.94)
+        moving_gear_parts: list[bpy.types.Object] = []
 
         # The wheel-well throat and trunnion housing deliberately penetrate the
         # wing skin.  This overlap is the load-bearing visual interface: no
@@ -3009,6 +4339,7 @@ def create_aircraft() -> bpy.types.Object:
             vertices=28,
         )
         vertical_strut.parent = root
+        moving_gear_parts.append(vertical_strut)
         leg_cover = landing_gear_fairing(
             f"{label} full-depth aerodynamic main-gear leg fairing",
             (mount_x, mount_y, -0.315),
@@ -3016,6 +4347,7 @@ def create_aircraft() -> bpy.types.Object:
             root,
         )
         leg_cover.parent = root
+        moving_gear_parts.append(leg_cover)
 
         # Twin lower fork arms terminate at the spanwise axle.
         for fork_offset, suffix in ((-0.062, "inboard"), (0.062, "outboard")):
@@ -3028,6 +4360,7 @@ def create_aircraft() -> bpy.types.Object:
                 vertices=28,
             )
             fork.parent = root
+            moving_gear_parts.append(fork)
         axle = cylinder_between(
             f"{label} main wheel axle",
             (wheel_location[0], wheel_y - 0.105, wheel_location[2]),
@@ -3037,39 +4370,60 @@ def create_aircraft() -> bpy.types.Object:
             vertices=32,
         )
         axle.parent = root
+        moving_gear_parts.append(axle)
+        wheel_object_names_before = set(bpy.data.objects.keys())
         landing_wheel(label, wheel_location, 0.165, 0.13, root)
+        moving_gear_parts.extend(
+            obj
+            for obj in bpy.data.objects
+            if obj.name not in wheel_object_names_before
+        )
 
         # One-sided outboard door, canted outboard from top to bottom. Its chord
         # is extended slightly at both ends while the diagonal lower cut reaches
         # close to the tire bottom. The longer boot profile conceals most of the
         # circular wheel but deliberately leaves a narrow tire crescent visible.
+        # Mirror the chordwise profile about its own centre so the square heel is
+        # aft (+X) and the streamlined diagonal toe faces the nose (-X).
         cover_top_y = mount_y + side * 0.085
         # Stand the cover just outside the tire shoulder. This maintains the
         # one-sided shield construction without surface intersections.
         cover_bottom_y = wheel_y + side * 0.140
+        cover_profile_center_x = (
+            (mount_x - 0.195) + (wheel_x + 0.225)
+        ) * 0.5
+
+        def fairing_x_aft(x: float) -> float:
+            return 2.0 * cover_profile_center_x - x
+
         wheel_cover = canted_fin_mesh(
             f"{label} asymmetric right-angle main-wheel aerodynamic cover",
             [
-                (mount_x - 0.185, cover_top_y, -0.300),
-                (mount_x + 0.055, cover_top_y + side * 0.010, -0.300),
-                (wheel_x + 0.225, cover_bottom_y, -1.070),
-                (wheel_x - 0.225, cover_bottom_y, -1.025),
-                (mount_x - 0.195, cover_top_y + side * 0.035, -0.505),
+                (fairing_x_aft(mount_x - 0.185), cover_top_y, -0.300),
+                (fairing_x_aft(mount_x + 0.055), cover_top_y + side * 0.010, -0.300),
+                (fairing_x_aft(wheel_x + 0.225), cover_bottom_y, -1.070),
+                (fairing_x_aft(wheel_x - 0.225), cover_bottom_y, -1.025),
+                (fairing_x_aft(mount_x - 0.195), cover_top_y + side * 0.035, -0.505),
             ],
             0.028,
             IAF_GRAY,
         )
         wheel_cover.parent = root
+        moving_gear_parts.append(wheel_cover)
         seam_y = mount_y + side * 0.165
         cover_seam = cylinder_between(
                 f"{label} wheel-cover upper maintenance seam",
-                (mount_x - 0.125, seam_y, -0.555),
-                (mount_x + 0.145, seam_y + side * 0.012, -0.555),
+                (fairing_x_aft(mount_x - 0.125), seam_y, -0.555),
+                (fairing_x_aft(mount_x + 0.145), seam_y + side * 0.012, -0.555),
                 0.0035,
                 SEAM,
                 vertices=10,
             )
         cover_seam.parent = root
+        moving_gear_parts.append(cover_seam)
+        sta10_gear_assemblies.append(
+            (label, side, (mount_x, mount_y, -0.345), moving_gear_parts)
+        )
 
     tail_wheel_location = (3.43, 0.0, -0.335)
 
@@ -3120,29 +4474,41 @@ def create_aircraft() -> bpy.types.Object:
     union_into_airframe(fuselage, tail_fairing, "Integral tail wheel spring fairing")
     landing_wheel("Tail", tail_wheel_location, 0.095, 0.060, root)
 
-    # The hatch perimeter is evaluated against the same analytic superellipse
-    # as the fuselage itself. A very thin ribbon avoids the floating cylinders
-    # and broken tangency that previously appeared as lines above the belly.
+    # The physical doors retain a broad conformal footprint for the animation,
+    # but the closed aircraft shows only one clean longitudinal service seam.
+    # This avoids an irregular perimeter outline across the belly mesh.
     hatch_control_loop = [
-        (-0.62, 0.145),
-        (-0.48, 0.155),
-        (-0.05, 0.145),
-        (0.08, 0.115),
-        (0.08, -0.115),
-        (-0.05, -0.145),
-        (-0.48, -0.155),
-        (-0.62, -0.145),
+        (-0.80, 0.180),
+        (-0.69, 0.205),
+        (0.12, 0.195),
+        (0.24, 0.145),
+        (0.24, -0.145),
+        (0.12, -0.195),
+        (-0.69, -0.205),
+        (-0.80, -0.180),
+    ]
+    hatch_center_seam_loop = [
+        (-0.72, 0.0014),
+        (0.16, 0.0014),
+        (0.16, -0.0014),
+        (-0.72, -0.0014),
     ]
     hatch_seam = surface_conforming_seam(
-        "Flush drone deployment hatch mesh-conforming perimeter",
-        hatch_control_loop,
+        "Flush drone deployment hatch longitudinal center seam",
+        hatch_center_seam_loop,
         fuselage_sections,
-        0.0036,
+        0.0008,
         SEAM,
         root,
-        samples_per_edge=9,
+        samples_per_edge=12,
     )
     hatch_seam["outer_mold_line"] = "flush"
+    create_sta10_deployment_system(
+        root,
+        fuselage_sections,
+        hatch_control_loop,
+        sta10_gear_assemblies,
+    )
 
     # The compact VR/visual-navigation camera is positioned well aft of the
     # propeller disk and its immediate wake.  Its recessed stereo apertures face

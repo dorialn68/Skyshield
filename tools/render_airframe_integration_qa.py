@@ -82,13 +82,14 @@ views = {
     "gimbal-fuel-and-bay": ((-4.95, -6.40, -2.20), (-1.30, -0.40, -0.40), 72),
     "gimbal-forward-third": ((-4.45, -3.85, -1.55), (-1.82, 0.0, -0.52), 82),
     "flush-drone-bay-hatch": ((-1.10, -2.05, -1.15), (-0.25, 0.0, -0.19), 98),
-    "port-navigation-light": ((-3.05, 10.45, 1.42), (-1.45, 8.91, 0.60), 108),
-    "starboard-navigation-light": ((-3.05, -10.45, 1.42), (-1.45, -8.91, 0.60), 108),
-    "winglet-75-percent-profile": ((-2.20, -10.65, 1.08), (-1.37, -8.91, 0.77), 98),
+    "port-navigation-light": ((-3.05, 10.65, 1.42), (-1.45, 9.05, 0.62), 108),
+    "starboard-navigation-light": ((-3.05, -10.65, 1.42), (-1.45, -9.05, 0.62), 108),
+    "winglet-75-percent-profile": ((-2.65, -10.65, 0.66), (-1.48, -8.92, 0.40), 92),
+    "wing-flap-seam-flush": ((-2.50, -6.20, 0.78), (-1.16, -4.65, 0.08), 112),
     "vertical-tail-airfoil-leading-edge": ((1.90, -2.25, 0.35), (3.13, 0.0, 0.25), 98),
     "horizontal-tail-airfoil-leading-edge": ((2.05, -3.25, 1.35), (3.30, 0.0, 0.91), 98),
     "tail-root-fillet": ((2.35, -2.15, -0.10), (3.20, 0.0, -0.36), 100),
-    "fuel-tank-pylon-blends": ((-2.85, -4.50, -0.92), (-1.38, -2.68, -0.27), 102),
+    "fuel-tank-pylon-blends": ((-2.65, -4.35, -0.50), (-1.40, -2.68, -0.23), 96),
     "aft-fuselage": ((4.90, -7.10, 1.15), (1.80, 0.0, 0.06), 70),
     "gimbal-barrel-cleanup": ((-3.55, -2.35, -1.05), (-2.42, 0.0, -0.42), 102),
     "gimbal-muzzle-open-bore": ((-3.50, -0.13, -0.26), (-2.75, -0.01, -0.35), 110),
@@ -96,6 +97,30 @@ views = {
     "rotax-reduction-gearbox-cutaway": ((-4.75, -2.15, 0.82), (-3.28, 0.0, 0.36), 108),
     "rotax-916isc-starboard-detail": ((-4.30, -1.90, 0.72), (-3.20, -0.02, 0.30), 112),
     "rotax-916isc-installed-three-quarter": ((-4.65, -2.80, 1.05), (-3.20, -0.02, 0.28), 98),
+    "jetson-t5000-module-detail": ((-1.35, -2.05, 0.23), (-1.35, -0.36, 0.23), 76),
+    "jetson-t5000-three-quarter": ((-2.25, -1.65, 0.70), (-1.35, -0.36, 0.23), 72),
+    "sta10-closed-magazine": ((-1.10, -2.05, -1.15), (-0.25, 0.0, -0.19), 98),
+    "sta10-closed-topside": ((-1.05, -2.45, 1.50), (-0.28, 0.0, 0.02), 88),
+    "sta10-hatch-open": ((-1.28, -2.35, -1.32), (-0.28, 0.0, -0.30), 88),
+    "sta10-twin-door-clearance": ((-0.28, -0.10, -3.10), (-0.28, 0.0, -0.20), 92),
+    "sta10-populated-magazine": ((-0.35, -1.38, -1.18), (-0.30, 0.0, -0.07), 104),
+    "sta10-first-release": ((-1.45, -2.75, -1.65), (-0.05, -0.10, -0.50), 76),
+    "sta10-two-vehicle-release": ((0.15, -5.20, -3.20), (0.45, -0.10, -0.95), 58),
+    "sta10-formation-flight": ((2.85, -5.80, -2.80), (2.49, -0.32, -1.67), 66),
+    "sta10-featured-homing-drone": ((2.25, -3.35, 0.05), (2.955, -2.15, -1.508), 76),
+    "sta10-gear-retracted": ((-4.50, 0.0, -4.20), (-1.42, 0.0, -0.42), 72),
+}
+animation_frames = {
+    "sta10-closed-magazine": 1,
+    "sta10-closed-topside": 1,
+    "sta10-hatch-open": 96,
+    "sta10-twin-door-clearance": 110,
+    "sta10-populated-magazine": 96,
+    "sta10-first-release": 145,
+    "sta10-two-vehicle-release": 205,
+    "sta10-formation-flight": 275,
+    "sta10-featured-homing-drone": 330,
+    "sta10-gear-retracted": 58,
 }
 requested_labels = {
     label.strip()
@@ -109,9 +134,44 @@ if requested_labels:
     views = {label: view for label, view in views.items() if label in requested_labels}
 for label, (location, target, lens) in views.items():
     isolated_rotax = label.startswith("rotax-")
+    isolated_jetson = label.startswith("jetson-")
     for scene_object in scene.objects:
         if scene_object.type == "MESH":
-            scene_object.hide_render = isolated_rotax and "Rotax 916" not in scene_object.name
+            scene_object.hide_render = (
+                (isolated_rotax and "Rotax 916" not in scene_object.name)
+                or (isolated_jetson and "NVIDIA Jetson T5000" not in scene_object.name)
+            )
+    scene.frame_set(animation_frames.get(label, 1))
+    drone_bay_skin = bpy.data.materials.get("Drone bay deployment skin")
+    if drone_bay_skin:
+        reveal_bay = label.startswith("sta10-") and animation_frames.get(label, 1) > 30
+        alpha = 0.0 if reveal_bay else 1.0
+        drone_bay_skin.diffuse_color[3] = alpha
+        drone_bay_bsdf = drone_bay_skin.node_tree.nodes.get("Principled BSDF")
+        if drone_bay_bsdf:
+            drone_bay_bsdf.inputs["Base Color"].default_value[3] = alpha
+            if drone_bay_bsdf.inputs.get("Alpha"):
+                drone_bay_bsdf.inputs["Alpha"].default_value = alpha
+        if hasattr(drone_bay_skin, "surface_render_method"):
+            drone_bay_skin.surface_render_method = "DITHERED" if reveal_bay else "DITHERED"
+        for door_material_name in (
+            "STA 10 physical deployment door outer",
+            "STA 10 physical deployment door inner",
+        ):
+            door_material = bpy.data.materials.get(door_material_name)
+            if not door_material:
+                continue
+            # Doors are opaque in the production asset and remain naturally
+            # hidden below the intact outer mold line while closed.
+            door_alpha = 1.0
+            door_material.diffuse_color[3] = door_alpha
+            door_bsdf = door_material.node_tree.nodes.get("Principled BSDF")
+            if door_bsdf:
+                door_bsdf.inputs["Base Color"].default_value[3] = door_alpha
+                if door_bsdf.inputs.get("Alpha"):
+                    door_bsdf.inputs["Alpha"].default_value = door_alpha
+            if hasattr(door_material, "surface_render_method"):
+                door_material.surface_render_method = "DITHERED"
     camera.location = location
     camera.data.lens = lens
     look_at(camera, target)
