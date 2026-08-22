@@ -25,9 +25,9 @@
   <link rel="preload" as="image" href="assets/opening-border-defense.png?v=1">
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css?v=v2-aero-20260821-1300">
-  <link rel="stylesheet" href="styles.css?v=v2-twin-door-interlock-20260822-1640">
+  <link rel="stylesheet" href="styles.css?v=v2-core-stations-20260822-2008">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
-  <script src="app.js?v=v2-twin-door-interlock-20260822-1640" defer></script>
+  <script src="app.js?v=v2-core-stations-20260822-2008" defer></script>
 </head>
 <body class="v2-page">
   <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
@@ -127,49 +127,20 @@
           <model-viewer id="aircraftModel" src="../airshield-ximango-direct-tanks-v30.glb?v=v2-twin-door-interlock-20260822-1640" poster="../airshield-xmango-hero-v30.jpg?v=v2-twin-door-interlock-20260822-1640" alt="מודל תלת־ממד אינטראקטיבי של פלטפורמת AI.onSuper המבוסס על Ximango" camera-controls touch-action="pan-y" interaction-prompt="auto" shadow-intensity="1.08" shadow-softness="0.82" exposure="1.04" tone-mapping="agx" environment-image="../environments/studio-softbox-1k.hdr" camera-orbit="-34deg 83deg 118%" interpolation-decay="160" field-of-view="33deg" min-field-of-view="12deg" max-field-of-view="45deg" min-camera-orbit="auto 12deg 1.5m" max-camera-orbit="auto 168deg 30m">
             <div class="model-progress" slot="progress-bar"><span></span></div>
             <button class="model-hotspot" type="button" slot="hotspot-propeller" data-position="-3.99m 0.33m 0m" data-normal="-1m 0m 0m" data-target="-3.99m 0.33m 0m" data-orbit="-75deg 76deg 2.7m" data-component="propeller" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">01</span><span class="hotspot-label">מדחף</span></button>
-            <button class="model-hotspot" type="button" slot="hotspot-engine" data-position="-3.14m 0.42m 0m" data-normal="0m 1m 0m" data-target="-3.18m 0.38m 0m" data-orbit="0deg 76deg 2.25m" data-component="engine" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">02</span><span class="hotspot-label">מנוע Rotax</span></button>
-            <button class="model-hotspot" type="button" slot="hotspot-flight-computer" data-position="-1.40m 0.22m 0.48m" data-normal="0m 0m 1m" data-target="-1.35m 0.23m 0.34m" data-orbit="-38deg 70deg 1.70m" data-component="flightComputer" data-detail-level="3" data-visibility-attribute="visible"><span class="hotspot-index">03</span><span class="hotspot-label">מחשב משימה / T5000</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-datalink" data-position="1.52m 0.25m 0m" data-normal="0m 1m 0m" data-target="1.52m 0.12m 0m" data-orbit="40deg 70deg 2.5m" data-component="datalink" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">04</span><span class="hotspot-label">קישור נתונים</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-landing-gear" data-position="-1.51m -0.91m 1.40m" data-normal="0m -1m 0m" data-target="-1.52m -0.72m 1.40m" data-orbit="-25deg 80deg 2.55m" data-component="landingGear" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">05</span><span class="hotspot-label">כן נסע ראשי</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-wing" data-position="-1.40m 0.11m 4.25m" data-normal="0m 1m 0m" data-target="-1.40m 0.04m 4.25m" data-orbit="25deg 54deg 3.2m" data-component="wing" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">06</span><span class="hotspot-label">כנף למינרית</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-tail" data-position="3.35m 1.03m 0m" data-normal="0m 1m 0m" data-target="3.24m 0.64m 0m" data-orbit="145deg 72deg 3.0m" data-component="tail" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">07</span><span class="hotspot-label">מכלול זנב</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-remote-weapon" data-position="-2.03m -0.58m -0.12m" data-normal="-1m -0.10m 0m" data-target="-1.86m -0.58m -0.08m" data-orbit="-42deg 78deg 1.65m" data-component="remoteWeapon" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">08</span><span class="hotspot-label">צריח קינטי EO/IR</span></button>
             <button class="model-hotspot" type="button" slot="hotspot-forward-camera" data-position="-2.62m -0.39m 0m" data-normal="-1m -0.15m 0m" data-target="-2.58m -0.34m 0m" data-orbit="-58deg 82deg 2.2m" data-component="forwardCamera" data-detail-level="1" data-visibility-attribute="visible"><span class="hotspot-index">09</span><span class="hotspot-label">מצלמת VR קדמית</span></button>
-            <button class="model-hotspot" type="button" slot="hotspot-fuselage-bay" data-position="-0.28m -0.34m 0m" data-normal="0m -1m 0m" data-target="-0.28m -0.30m 0m" data-orbit="-157deg 113deg 2.85m" data-component="fuselageBay" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">10</span><span class="hotspot-label">תא שיגור רחפנים</span></button>
             <button class="model-hotspot model-hotspot-aux" type="button" slot="hotspot-external-interface" data-position="-1.39m -0.33m -2.68m" data-normal="0m -1m -0.25m" data-target="-1.39m -0.29m -2.68m" data-orbit="15deg 84deg 3.1m" data-component="externalInterface" data-detail-level="2" data-visibility-attribute="visible"><span class="hotspot-index">A1</span><span class="hotspot-label">בידוני דלק</span></button>
             <button class="model-hotspot model-hotspot-aux" type="button" slot="hotspot-navigation-lights" data-position="-1.36m 0.86m 9.09m" data-normal="0m 0m 1m" data-target="-1.36m 0.78m 9.04m" data-orbit="-5deg 68deg 2.25m" data-component="navigationLights" data-detail-level="3" data-visibility-attribute="visible"><span class="hotspot-index">N1</span><span class="hotspot-label">תאורת ניווט</span></button>
             <button class="model-hotspot model-hotspot-aux" type="button" slot="hotspot-ew-resilience" data-position="1.84m 0.18m -0.16m" data-normal="0m 1m 0m" data-target="1.62m 0.08m 0m" data-orbit="38deg 72deg 2.35m" data-component="ewResilience" data-detail-level="3" data-visibility-attribute="visible"><span class="hotspot-index">EW</span><span class="hotspot-label">שרידות EW</span></button>
-            <aside class="model-focus-card" id="modelFocusCard" aria-live="polite" hidden><span class="model-focus-kicker">מיקוד רכיב · <span id="modelFocusStation"></span></span><strong id="modelFocusTitle"></strong><p id="modelFocusText"></p><dl class="model-focus-specs" id="modelFocusSpecs" hidden></dl><small class="model-focus-note" id="modelFocusNote" hidden></small><button class="model-focus-demo" type="button" id="modelFocusDemo" hidden>הפעל הדגמת שחרור</button><button type="button" id="modelFocusOverview">חזרה למצב רגיל</button></aside>
-            <aside class="model-drone-focus" id="modelDroneFocus" aria-live="polite" hidden>
-              <span>STA 10 · VEHICLE 01</span>
-              <strong>Point Blank · טיל VTOL אלקטרו־אופטי</strong>
-              <p>הכלי יוצא בתצורת X מלאה וקבועה. ארבע יחידות ההנעה בקצות הכנפיים עוברות בהדרגה מסל״ד נמוך לריחוף יציב, תצפית, עקיבה ומשימה מדויקת.</p>
-              <dl class="model-drone-specs">
-                <div><dt>אורך ציבורי</dt><dd>כ־1 מטר</dd></div>
-                <div><dt>משקל ציבורי</dt><dd>כ־10 ק״ג</dd></div>
-                <div><dt>מהירות מרבית</dt><dd>80 מטר לשנייה</dd></div>
-                <div><dt>מעטפת גובה</dt><dd>סביב 500 מטר</dd></div>
-                <div><dt>תצורה</dt><dd>VTOL וריחוף</dd></div>
-                <div><dt>חישה</dt><dd>אלקטרו־אופטית</dd></div>
-              </dl>
-              <div class="model-drone-focus-tags"><b>חישה אלקטרו־אופטית</b><b>ריחוף ותמרון</b><b>משימה מדויקת</b></div>
-              <small>הנתונים וההמחשה מבוססים על עמוד המוצר הציבורי של התעשייה האווירית. גאומטריית המגזין והשחרור היא המחשה בלבד.</small>
-              <div class="model-drone-focus-actions"><button type="button" id="modelDroneReplay">עצור הדמיה</button><button type="button" id="modelDroneOverview">חזרה למצב רגיל</button></div>
-            </aside>
-            <button class="model-drone-inspect" type="button" id="modelDroneInspect" aria-expanded="false" hidden><span>VEHICLE 01</span><b>פתח נתונים טכניים</b></button>
-            <div class="model-demo-sequence" id="modelDemoSequence" aria-label="רצף הדגמת STA 10" hidden>
-              <span data-demo-step="gear"><b>01</b> קיפול כני נסע</span>
-              <span data-demo-step="hatch"><b>02</b> פתיחת התא</span>
-              <span data-demo-step="first"><b>03</b> שחרור כלי ראשון</span>
-              <span data-demo-step="second"><b>04</b> שחרור כלי שני</span>
-              <span data-demo-step="flight"><b>05</b> טיסת מבנה</span>
-              <span data-demo-step="focus"><b>06</b> רחפן מתביית</span>
-              <button class="model-demo-stop" type="button" id="modelDemoStop">עצור וחזור למצב רגיל</button>
-            </div>
+            <aside class="model-focus-card" id="modelFocusCard" aria-live="polite" hidden><span class="model-focus-kicker">מיקוד רכיב · <span id="modelFocusStation"></span></span><strong id="modelFocusTitle"></strong><p id="modelFocusText"></p><dl class="model-focus-specs" id="modelFocusSpecs" hidden></dl><small class="model-focus-note" id="modelFocusNote" hidden></small><button type="button" id="modelFocusOverview">חזרה למצב רגיל</button></aside>
           </model-viewer>
           <div class="model-toolbar">
-            <div class="model-toolbar-main"><span class="model-status"><i aria-hidden="true"></i><b>מודל תלת־ממד אינטראקטיבי</b></span><span class="model-instruction">כל התחנות נשארות במפה · הגודל מתעדכן לפי הזום</span><div class="model-toolbar-actions"><button class="model-stations-toggle is-active" type="button" id="modelStationsToggle" aria-pressed="true"><i aria-hidden="true"><span></span></i><span>מספור תחנות</span><b id="modelStationsToggleState">מוצג</b></button><button class="model-overview-control" type="button" id="modelOverviewControl">סקירת 360°</button></div></div>
-            <div class="model-station-register" aria-label="מפת תחנות מלאה"><strong>מפת תחנות מלאה</strong><span>STA 01–10</span><span>NAV 01</span><span>EW 01</span><span>AUX 01</span><span>GCS 01 · מערכת חיצונית</span></div>
+            <div class="model-toolbar-main"><span class="model-status"><i aria-hidden="true"></i><b>מודל תלת־ממד אינטראקטיבי</b></span><span class="model-instruction">תחנות המערכת המאושרות נשארות במפה · הגודל מתעדכן לפי הזום</span><div class="model-toolbar-actions"><button class="model-stations-toggle is-active" type="button" id="modelStationsToggle" aria-pressed="true"><i aria-hidden="true"><span></span></i><span>מספור תחנות</span><b id="modelStationsToggleState">מוצג</b></button><button class="model-overview-control" type="button" id="modelOverviewControl">סקירת 360°</button></div></div>
+            <div class="model-station-register" aria-label="מפת תחנות מאושרת"><strong>מפת תחנות מאושרת</strong><span>STA 01 · 04–09</span><span>NAV 01</span><span>EW 01</span><span>AUX 01</span><span>GCS 01 · מערכת חיצונית</span></div>
             <div class="model-lighting" role="group" aria-labelledby="modelLightingLabel"><span class="model-lighting-label" id="modelLightingLabel">תאורה</span><div class="lighting-presets" role="group" aria-label="סביבת תאורה"><button class="active" type="button" data-lighting-preset="studio" aria-pressed="true">סטודיו</button><button type="button" data-lighting-preset="daylight" aria-pressed="false">אור יום</button><button type="button" data-lighting-preset="sky" aria-pressed="false">שמים</button><button type="button" data-lighting-preset="golden" aria-pressed="false">שעת זהב</button><button type="button" data-lighting-preset="night" aria-pressed="false">לילה</button><button type="button" data-lighting-preset="blackout" aria-pressed="false">החשכה</button></div><label class="model-exposure"><span>עמעום</span><input id="modelExposure" type="range" min="0.18" max="1.34" step="0.02" value="1.04"></label></div>
           </div>
           <figcaption>מודל קונספט פרמטרי · משטחי PBR צבאיים · פרופורציות מבוססות Ximango</figcaption>
